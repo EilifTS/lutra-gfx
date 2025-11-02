@@ -14,7 +14,7 @@ FetchContent_MakeAvailable(glfw3)
 
 find_package(Vulkan REQUIRED)
 
-add_executable(main src/main.cpp)
+add_executable(main src/main.cpp "src/Event.h" "src/InputManager.cpp" "src/InputManager.h" "src/Keyboard.cpp" "src/Keyboard.h" "src/Mouse.cpp" "src/Mouse.h" "src/Window.cpp" "src/Window.h" "src/Utils.h")
 target_link_libraries(main PRIVATE glfw Vulkan::Vulkan)
 target_include_directories(main PRIVATE src)
 target_compile_features(main PRIVATE cxx_std_20)
