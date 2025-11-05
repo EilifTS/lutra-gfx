@@ -1,7 +1,7 @@
 #pragma once
 #include "Utils.h"
 
-namespace ef
+namespace efvk
 {
 	enum class EventType
 	{

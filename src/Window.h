@@ -6,7 +6,7 @@
 #include "Event.h"
 
 class GLFWwindow;
-namespace ef
+namespace efvk
 {
 	class Window;
 	using WindowHandle = void*;

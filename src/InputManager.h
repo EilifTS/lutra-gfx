@@ -4,7 +4,7 @@
 #include "Event.h"
 #include <span>
 
-namespace ef
+namespace efvk
 {
 	class InputManager
 	{
@@ -21,8 +21,8 @@ namespace ef
 
 		static constexpr u32 EventTypeCount = (u32)EventType::MouseScroll + 1;
 
-		ef::MouseState mouse_state;
-		ef::KeyboardState keyboard_state;
+		MouseState mouse_state;
+		KeyboardState keyboard_state;
 		
 
 		friend class Window;

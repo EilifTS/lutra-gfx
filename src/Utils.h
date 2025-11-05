@@ -3,7 +3,7 @@
 
 using u32 = uint32_t;
 
-namespace ef
+namespace efvk
 {
 	struct MousePosition
 	{

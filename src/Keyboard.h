@@ -3,7 +3,7 @@
 #include "Utils.h"
 #include "Event.h"
 
-namespace ef
+namespace efvk
 {
 	class KeyboardState
 	{
@@ -20,7 +20,7 @@ namespace ef
 		void addKeyPress(KeyboardKey key);
 		void addKeyRelease(KeyboardKey key);
 
-		static constexpr u32 KeyboardKeyCount = (u32)ef::KeyboardKey::ESCAPE + 1;
+		static constexpr u32 KeyboardKeyCount = (u32)efvk::KeyboardKey::ESCAPE + 1;
 
 		std::array<bool, KeyboardKeyCount> keyboard_key_down { false };
 		std::array<u32, KeyboardKeyCount> keyboard_key_press_count { 0 };

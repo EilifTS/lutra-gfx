@@ -1,6 +1,6 @@
 #include "InputManager.h"
 
-namespace ef
+namespace efvk
 {
 	void InputManager::ResolveEvents(std::span<Event> events)
 	{

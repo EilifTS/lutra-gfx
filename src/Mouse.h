@@ -3,7 +3,7 @@
 #include "Utils.h"
 #include "Event.h"
 
-namespace ef
+namespace efvk
 {
 	class MouseState
 	{
