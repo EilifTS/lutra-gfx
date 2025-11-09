@@ -5,8 +5,6 @@ namespace efvk
 {
 	GraphicsContext::GraphicsContext(const Window& window)
 	{
-
-
 		std::vector<const char*> instance_extensions{};
 
 		/* Get extensions needed by GLFW */
@@ -45,7 +43,6 @@ namespace efvk
 		/* Get physical device */
 		std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
 		bool found_physical_device = false;
-		int selected_queue_family_index = -1;
 		for (vk::PhysicalDevice& pd : physical_devices)
 		{
 			std::vector<vk::QueueFamilyProperties> queue_family_props = pd.getQueueFamilyProperties();
@@ -56,12 +53,47 @@ namespace efvk
 				{
 					if (pd.getSurfaceSupportKHR(i, surface))
 					{
-						selected_queue_family_index = i;
+						queue_family_index = i;
 						found_physical_device = true;
+						physical_device = pd;
 					}
 				}
 			}
 		}
 		assert(found_physical_device);
+
+		constexpr float queue_priority = 1.0f;
+		vk::DeviceQueueCreateInfo queue_create_info{};
+		queue_create_info.queueFamilyIndex = queue_family_index;
+		queue_create_info.pQueuePriorities = &queue_priority;
+		queue_create_info.queueCount = 1;
+
+		std::vector<vk::ExtensionProperties> supported_device_extensions = physical_device.enumerateDeviceExtensionProperties();
+
+		std::vector<const char*> required_device_extensions{};
+		required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
+		for (const char* ex_name : required_device_extensions)
+		{
+			bool extension_supported = false;
+			for (const vk::ExtensionProperties& prop : supported_device_extensions)
+			{
+				if (strcmp(ex_name, prop.extensionName) == 0)
+				{
+					extension_supported = true;
+					break;
+				}
+			}
+			assert(extension_supported);
+		}
+
+		vk::DeviceCreateInfo device_info{};
+		device_info.enabledExtensionCount = required_device_extensions.size();
+		device_info.ppEnabledExtensionNames = required_device_extensions.data();
+		device_info.queueCreateInfoCount = 1;
+		device_info.pQueueCreateInfos = &queue_create_info;
+		device = physical_device.createDevice(device_info);
+
+		queue = device.getQueue(queue_family_index, 0);
 	}
 }
