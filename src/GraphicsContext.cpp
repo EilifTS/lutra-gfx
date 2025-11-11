@@ -1,10 +1,16 @@
 #include "GraphicsContext.h"
 #include <GLFW/glfw3.h>
 
+/* Vulkan HPP boiler plate for setting up a dispatcher */
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
+
 namespace efvk
 {
 	GraphicsContext::GraphicsContext(const Window& window)
 	{
+		/* First initialize step of the dispatcher */
+		VULKAN_HPP_DEFAULT_DISPATCHER.init();
+
 		std::vector<const char*> instance_extensions{};
 
 		/* Get extensions needed by GLFW */
@@ -32,6 +38,9 @@ namespace efvk
 		instance_create_info.ppEnabledExtensionNames = instance_extensions.data();
 
 		instance = vk::createInstance(instance_create_info);
+
+		/* Second initialize step of the dispatcher */
+		VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 
 		/* Create surface */
 		GLFWwindow* glfw_window = static_cast<GLFWwindow*>(window.GetHandle());
@@ -62,6 +71,7 @@ namespace efvk
 		}
 		assert(found_physical_device);
 
+		/* Create the logical device */
 		constexpr float queue_priority = 1.0f;
 		vk::DeviceQueueCreateInfo queue_create_info{};
 		queue_create_info.queueFamilyIndex = queue_family_index;
@@ -94,6 +104,10 @@ namespace efvk
 		device_info.pQueueCreateInfos = &queue_create_info;
 		device = physical_device.createDevice(device_info);
 
+		/* Third initialize step of the dispatcher */
+		VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
+
+		/* Get the device queue */
 		queue = device.getQueue(queue_family_index, 0);
 	}
 }
