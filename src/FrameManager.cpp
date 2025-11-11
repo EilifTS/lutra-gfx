@@ -2,16 +2,21 @@
 
 namespace efvk
 {
+	vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
+	{
+		/* No special logic for now, just choose the first available */
+		std::vector<vk::SurfaceFormatKHR> supported_surface_formats = phys_dev.getSurfaceFormatsKHR(surface);
+		assert(supported_surface_formats.size() > 0);
+		return supported_surface_formats[0];
+	}
+
+
 	FrameManager::FrameManager(GraphicsContext& ctx, u32 window_width, u32 window_height)
 	{
 		vk::Result result = vk::Result::eSuccess;
 
-		/* Select a surface format. No special logic for now, just choose the first available */
-		std::vector<vk::SurfaceFormatKHR> supported_surface_formats;
-		std::tie(result, supported_surface_formats) = ctx.physical_device.getSurfaceFormatsKHR(ctx.surface);
-		assert(result == vk::Result::eSuccess);
-		assert(supported_surface_formats.size() > 0);
-		const vk::SurfaceFormatKHR surface_format = supported_surface_formats[0];
+		/* Select a surface format. */
+		const vk::SurfaceFormatKHR surface_format = select_surface_format(ctx.physical_device, ctx.surface);
 
 		/* Define surface extent, this will be the same as the window size */
 		const vk::Extent2D surface_extent{
@@ -19,9 +24,7 @@ namespace efvk
 			.height = window_height,
 		};
 
-		vk::SurfaceCapabilitiesKHR surface_caps;
-		std::tie(result, surface_caps) = ctx.physical_device.getSurfaceCapabilitiesKHR(ctx.surface);
-		assert(result == vk::Result::eSuccess);
+		auto surface_caps = ctx.physical_device.getSurfaceCapabilitiesKHR(ctx.surface);
 
 		/* Select the swapchain image count, default to 3 for now */
 		constexpr u32 surface_count = 3;
@@ -54,19 +57,17 @@ namespace efvk
 			.clipped = true,
 			.oldSwapchain = VK_NULL_HANDLE,
 		};
-		std::tie(result, swapchain) = ctx.device.createSwapchainKHR(swapchain_info);
+		swapchain = ctx.device->createSwapchainKHRUnique(swapchain_info);
 		assert(result == vk::Result::eSuccess);
 
-		std::vector<vk::Image> swapchain_images;
-		std::tie(result, swapchain_images) = ctx.device.getSwapchainImagesKHR(swapchain);
-		assert(result == vk::Result::eSuccess);
+		std::vector<vk::Image> swapchain_images = ctx.device->getSwapchainImagesKHR(*swapchain);
 
 		per_frame_res.resize(surface_count);
 
 		/* Transfer swapchain images */
 		for (u32 i = 0; i < surface_count; i++)
 		{
-			per_frame_res[i].image = std::move(swapchain_images[i]);
+			per_frame_res[i].image = swapchain_images[i];
 		}
 
 		/* Initialize per frame resources */
@@ -76,31 +77,25 @@ namespace efvk
 			const vk::CommandPoolCreateInfo pool_info{
 				.queueFamilyIndex = ctx.queue_family_index,
 			};
-			std::tie(result, res.cmd_pool) = ctx.device.createCommandPool(pool_info);
-			assert(result == vk::Result::eSuccess);
+			res.cmd_pool = ctx.device->createCommandPoolUnique(pool_info);
 
 			/* Create command buffer */
 			const vk::CommandBufferAllocateInfo allocate_info{
-				.commandPool = res.cmd_pool,
+				.commandPool = *res.cmd_pool,
 				.level = vk::CommandBufferLevel::ePrimary,
 				.commandBufferCount = 1,
 			};
 			std::vector<vk::CommandBuffer> cmd_buffers;
-			std::tie(result, cmd_buffers) = ctx.device.allocateCommandBuffers(allocate_info);
-			assert(result == vk::Result::eSuccess);
-			res.cmd_buf = std::move(cmd_buffers[0]);
+			res.cmd_buf = std::move(ctx.device->allocateCommandBuffersUnique(allocate_info)[0]);
 
 			/* Create fence */
 			const vk::FenceCreateInfo fence_info{};
-			std::tie(result, res.frame_complete_fence) = ctx.device.createFence(fence_info);
-			assert(result == vk::Result::eSuccess);
+			res.frame_complete_fence = ctx.device->createFenceUnique(fence_info);
 
 			/* Create semaphores */
 			const vk::SemaphoreCreateInfo sem_info{};
-			std::tie(result, res.image_acquire_sem) = ctx.device.createSemaphore(sem_info);
-			assert(result == vk::Result::eSuccess);
-			std::tie(result, res.image_release_sem) = ctx.device.createSemaphore(sem_info);
-			assert(result == vk::Result::eSuccess);
+			res.image_acquire_sem = ctx.device->createSemaphoreUnique(sem_info);
+			res.image_release_sem = ctx.device->createSemaphoreUnique(sem_info);
 
 			/* Create image views */
 			const vk::ImageViewCreateInfo image_view_info{
@@ -115,8 +110,7 @@ namespace efvk
 					.layerCount = 1,
 				},
 			};
-			std::tie(result, res.image_view) = ctx.device.createImageView(image_view_info);
-			assert(result == vk::Result::eSuccess);
+			res.image_view = ctx.device->createImageViewUnique(image_view_info);
 		}
 	}
 
@@ -126,26 +120,24 @@ namespace efvk
 
 		/* Acquire the new image and get the image index */
 		u32 new_image_index = 0;
-		result = ctx.device.acquireNextImageKHR(swapchain, UINT64_MAX, per_frame_res[current_frame_index].image_acquire_sem, VK_NULL_HANDLE, &new_image_index);
+		result = ctx.device->acquireNextImageKHR(*swapchain, UINT64_MAX, *per_frame_res[current_frame_index].image_acquire_sem, VK_NULL_HANDLE, &new_image_index);
 		assert(result == vk::Result::eSuccess);
 
 		/* Wait for the last frame using this image index to finish (Most likely finished already) */
 		PerFrameResources& new_frame_res = per_frame_res[new_image_index];
 		if (new_frame_res.has_fence_signal)
 		{
-			result = ctx.device.waitForFences(new_frame_res.frame_complete_fence, true, UINT64_MAX);
+			result = ctx.device->waitForFences(*new_frame_res.frame_complete_fence, true, UINT64_MAX);
 			assert(result == vk::Result::eSuccess);
 
-			result = ctx.device.resetFences(new_frame_res.frame_complete_fence);
-			assert(result == vk::Result::eSuccess);
+			ctx.device->resetFences(*new_frame_res.frame_complete_fence);
 		}
 
 		/* Swap over the acquire semaphore */
 		std::swap(per_frame_res[current_frame_index].image_acquire_sem, new_frame_res.image_acquire_sem);
 
 		/* Reset command pool */
-		result = ctx.device.resetCommandPool(new_frame_res.cmd_pool);
-		assert(result == vk::Result::eSuccess);
+		ctx.device->resetCommandPool(*new_frame_res.cmd_pool);
 
 		/* Update frame index */
 		current_frame_index = new_image_index;
@@ -160,22 +152,21 @@ namespace efvk
 		/* Submit command buffer */
 		const vk::SubmitInfo submit_info{
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = &frame_res.image_acquire_sem,
+			.pWaitSemaphores = &(frame_res.image_acquire_sem.get()),
 			.commandBufferCount = 1,
-			.pCommandBuffers = &frame_res.cmd_buf,
+			.pCommandBuffers = &(frame_res.cmd_buf.get()),
 			.signalSemaphoreCount = 1,
-			.pSignalSemaphores = &frame_res.image_release_sem,
+			.pSignalSemaphores = &(frame_res.image_release_sem.get()),
 		};
-		result = ctx.queue.submit(submit_info, frame_res.frame_complete_fence);
-		assert(result == vk::Result::eSuccess);
+		ctx.queue.submit(submit_info, *frame_res.frame_complete_fence);
 		frame_res.has_fence_signal = true;
 
 		/* Present the image */
 		vk::PresentInfoKHR present_info{
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = &frame_res.image_release_sem,
+			.pWaitSemaphores = &(frame_res.image_release_sem.get()),
 			.swapchainCount = 1,
-			.pSwapchains = &swapchain,
+			.pSwapchains = &(swapchain.get()),
 			.pImageIndices = &current_frame_index,
 		};
 		result = ctx.queue.presentKHR(present_info);

@@ -1,6 +1,5 @@
 #pragma once
 
-#define VULKAN_HPP_NO_EXCEPTIONS
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #define VULKAN_HPP_TYPESAFE_CONVERSION 1
@@ -15,9 +14,9 @@ namespace efvk
 	public:
 		GraphicsContext(const Window& window, const char* app_name);
 
-		vk::Instance instance;
+		vk::UniqueInstance instance;
 		vk::PhysicalDevice physical_device;
-		vk::Device device;
+		vk::UniqueDevice device;
 		vk::Queue queue;
 		u32 queue_family_index;
 
