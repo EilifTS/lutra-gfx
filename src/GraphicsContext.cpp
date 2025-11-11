@@ -6,8 +6,10 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 
 namespace efvk
 {
-	GraphicsContext::GraphicsContext(const Window& window)
+	GraphicsContext::GraphicsContext(const Window& window, const char* app_name)
 	{
+		vk::Result result = vk::Result::eSuccess;
+
 		/* First initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init();
 
@@ -25,19 +27,22 @@ namespace efvk
 		}
 
 		/* Create instance */
-		vk::ApplicationInfo app_info{};
-		app_info.pApplicationName = "EFVK";
-		app_info.applicationVersion = 0;
-		app_info.pEngineName = "EFVK";
-		app_info.engineVersion = 0;
-		app_info.apiVersion = vk::ApiVersion13;
+		vk::ApplicationInfo app_info{
+			.pApplicationName = "",
+			.applicationVersion = 0,
+			.pEngineName = "EFVK",
+			.engineVersion = 0,
+			.apiVersion = vk::ApiVersion13,
+		};
 
-		vk::InstanceCreateInfo instance_create_info{};
-		instance_create_info.pApplicationInfo = &app_info;
-		instance_create_info.enabledExtensionCount = instance_extensions.size();
-		instance_create_info.ppEnabledExtensionNames = instance_extensions.data();
+		vk::InstanceCreateInfo instance_create_info{
+			.pApplicationInfo = &app_info,
+			.enabledExtensionCount = static_cast<u32>(instance_extensions.size()),
+			.ppEnabledExtensionNames = instance_extensions.data(),
+		};
 
-		instance = vk::createInstance(instance_create_info);
+		std::tie(result, instance) = vk::createInstance(instance_create_info);
+		assert(result == vk::Result::eSuccess);
 
 		/* Second initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
@@ -45,12 +50,15 @@ namespace efvk
 		/* Create surface */
 		GLFWwindow* glfw_window = static_cast<GLFWwindow*>(window.GetHandle());
 		VkSurfaceKHR temp_surface = VK_NULL_HANDLE;
-		VkResult result = glfwCreateWindowSurface(instance, glfw_window, nullptr, &temp_surface);
-		assert(result == VK_SUCCESS);
+		result = static_cast<vk::Result>(glfwCreateWindowSurface(instance, glfw_window, nullptr, &temp_surface));
+		assert(result == vk::Result::eSuccess);
 		surface = temp_surface;
 		
 		/* Get physical device */
-		std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
+		std::vector<vk::PhysicalDevice> physical_devices;
+		std::tie(result, physical_devices) = instance.enumeratePhysicalDevices();
+		assert(result == vk::Result::eSuccess);
+
 		bool found_physical_device = false;
 		for (vk::PhysicalDevice& pd : physical_devices)
 		{
@@ -60,7 +68,11 @@ namespace efvk
 			{
 				if (!!(queue_family_props[i].queueFlags & vk::QueueFlagBits::eGraphics))
 				{
-					if (pd.getSurfaceSupportKHR(i, surface))
+					u32 has_surface_support = 0;
+					std::tie(result, has_surface_support) = pd.getSurfaceSupportKHR(i, surface);
+					assert(result == vk::Result::eSuccess);
+
+					if (has_surface_support == 1)
 					{
 						queue_family_index = i;
 						found_physical_device = true;
@@ -73,12 +85,14 @@ namespace efvk
 
 		/* Create the logical device */
 		constexpr float queue_priority = 1.0f;
-		vk::DeviceQueueCreateInfo queue_create_info{};
-		queue_create_info.queueFamilyIndex = queue_family_index;
-		queue_create_info.pQueuePriorities = &queue_priority;
-		queue_create_info.queueCount = 1;
-
-		std::vector<vk::ExtensionProperties> supported_device_extensions = physical_device.enumerateDeviceExtensionProperties();
+		vk::DeviceQueueCreateInfo queue_create_info{
+			.queueFamilyIndex = queue_family_index,
+			.queueCount = 1,
+			.pQueuePriorities = &queue_priority,
+		};
+		std::vector<vk::ExtensionProperties> supported_device_extensions;
+		std::tie(result, supported_device_extensions) = physical_device.enumerateDeviceExtensionProperties();
+		assert(result == vk::Result::eSuccess);
 
 		std::vector<const char*> required_device_extensions{};
 		required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -97,12 +111,14 @@ namespace efvk
 			assert(extension_supported);
 		}
 
-		vk::DeviceCreateInfo device_info{};
-		device_info.enabledExtensionCount = required_device_extensions.size();
-		device_info.ppEnabledExtensionNames = required_device_extensions.data();
-		device_info.queueCreateInfoCount = 1;
-		device_info.pQueueCreateInfos = &queue_create_info;
-		device = physical_device.createDevice(device_info);
+		vk::DeviceCreateInfo device_info{
+			.queueCreateInfoCount = 1,
+			.pQueueCreateInfos = &queue_create_info,
+			.enabledExtensionCount = static_cast<u32>(required_device_extensions.size()),
+			.ppEnabledExtensionNames = required_device_extensions.data(),
+		};
+		std::tie(result, device) = physical_device.createDevice(device_info);
+		assert(result == vk::Result::eSuccess);
 
 		/* Third initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
