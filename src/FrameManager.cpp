@@ -89,13 +89,10 @@ namespace efvk
 			res.cmd_buf = std::move(ctx.device->allocateCommandBuffersUnique(allocate_info)[0]);
 
 			/* Create fence */
-			const vk::FenceCreateInfo fence_info{};
-			res.frame_complete_fence = ctx.device->createFenceUnique(fence_info);
+			res.frame_complete_fence = ctx.device->createFenceUnique({});
 
 			/* Create semaphores */
-			const vk::SemaphoreCreateInfo sem_info{};
-			res.image_acquire_sem = ctx.device->createSemaphoreUnique(sem_info);
-			res.image_release_sem = ctx.device->createSemaphoreUnique(sem_info);
+			res.image_release_sem = ctx.device->createSemaphoreUnique({});
 
 			/* Create image views */
 			const vk::ImageViewCreateInfo image_view_info{
@@ -118,9 +115,21 @@ namespace efvk
 	{
 		vk::Result result = vk::Result::eSuccess;
 
+		/* Find an acquire semaphore */
+		vk::UniqueSemaphore acquire_semahore{};
+		if (free_semaphore_queue.size() == 0)
+		{
+			acquire_semahore = ctx.device->createSemaphoreUnique({});
+		}
+		else
+		{
+			acquire_semahore = std::move(free_semaphore_queue.back());
+			free_semaphore_queue.pop_back();
+		}
+
 		/* Acquire the new image and get the image index */
 		u32 new_image_index = 0;
-		result = ctx.device->acquireNextImageKHR(*swapchain, UINT64_MAX, *per_frame_res[current_frame_index].image_acquire_sem, VK_NULL_HANDLE, &new_image_index);
+		result = ctx.device->acquireNextImageKHR(*swapchain, UINT64_MAX, *acquire_semahore, VK_NULL_HANDLE, &new_image_index);
 		assert(result == vk::Result::eSuccess);
 
 		/* Wait for the last frame using this image index to finish (Most likely finished already) */
@@ -131,10 +140,14 @@ namespace efvk
 			assert(result == vk::Result::eSuccess);
 
 			ctx.device->resetFences(*new_frame_res.frame_complete_fence);
+
+			/* This semaphore must have been signalled so we can free it. */
+			free_semaphore_queue.push_back(std::move(new_frame_res.image_acquire_sem));
 		}
 
-		/* Swap over the acquire semaphore */
-		std::swap(per_frame_res[current_frame_index].image_acquire_sem, new_frame_res.image_acquire_sem);
+		/* Store away the acquire semaphore for later */
+		assert(new_frame_res.image_acquire_sem.get() == nullptr);
+		new_frame_res.image_acquire_sem = std::move(acquire_semahore);
 
 		/* Reset command pool */
 		ctx.device->resetCommandPool(*new_frame_res.cmd_pool);

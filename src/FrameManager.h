@@ -25,6 +25,8 @@ namespace efvk
 
 	private:
 		vk::UniqueSwapchainKHR swapchain{};
+
+		std::vector<vk::UniqueSemaphore> free_semaphore_queue{};
 		std::vector<PerFrameResources> per_frame_res{};
 
 		u32 current_frame_index = 0;
