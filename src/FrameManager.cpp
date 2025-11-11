@@ -139,20 +139,29 @@ namespace efvk
 		/* Reset command pool */
 		ctx.device->resetCommandPool(*new_frame_res.cmd_pool);
 
+		/* Begin command buffer */
+		const vk::CommandBufferBeginInfo begin_info{
+			.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
+		};
+		new_frame_res.cmd_buf->begin(begin_info);
+
 		/* Update frame index */
 		current_frame_index = new_image_index;
 	}
 
 	void FrameManager::EndFrame(GraphicsContext& ctx)
 	{
-		vk::Result result = vk::Result::eSuccess;
-
 		PerFrameResources& frame_res = per_frame_res[current_frame_index];
 
 		/* Submit command buffer */
+		frame_res.cmd_buf->end();
+
+		const vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+
 		const vk::SubmitInfo submit_info{
 			.waitSemaphoreCount = 1,
 			.pWaitSemaphores = &(frame_res.image_acquire_sem.get()),
+			.pWaitDstStageMask = &wait_stage,
 			.commandBufferCount = 1,
 			.pCommandBuffers = &(frame_res.cmd_buf.get()),
 			.signalSemaphoreCount = 1,
@@ -169,7 +178,7 @@ namespace efvk
 			.pSwapchains = &(swapchain.get()),
 			.pImageIndices = &current_frame_index,
 		};
-		result = ctx.queue.presentKHR(present_info);
+		const vk::Result result = ctx.queue.presentKHR(present_info);
 		assert(result == vk::Result::eSuccess);
 	}
 }

@@ -15,6 +15,9 @@ namespace efvk
 		GraphicsContext(const Window& window, const char* app_name);
 
 		vk::UniqueInstance instance;
+#if _DEBUG /* VL */
+		vk::UniqueDebugUtilsMessengerEXT messenger;
+#endif
 		vk::PhysicalDevice physical_device;
 		vk::UniqueDevice device;
 		vk::Queue queue;

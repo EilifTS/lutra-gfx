@@ -4,11 +4,76 @@
 /* Vulkan HPP boiler plate for setting up a dispatcher */
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 
+#if _DEBUG /* VL */
+#include <iostream>
+
+VKAPI_ATTR vk::Bool32 VKAPI_CALL debug_utils_messenger_callback(
+	vk::DebugUtilsMessageSeverityFlagBitsEXT		message_severity,
+	vk::DebugUtilsMessageTypeFlagsEXT				message_type,
+	const vk::DebugUtilsMessengerCallbackDataEXT*	callback_data,
+	void*											user_data)
+{
+	if (message_severity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
+	{
+		std::cout << "VL WARNING " << callback_data->messageIdNumber << " " << callback_data->pMessageIdName << ": " << callback_data->pMessage << std::endl;
+	}
+	else if (message_severity & vk::DebugUtilsMessageSeverityFlagBitsEXT::eError)
+	{
+		std::cout << "VL ERROR " << callback_data->messageIdNumber << " " << callback_data->pMessageIdName << ": " << callback_data->pMessage << std::endl;
+	}
+	return VK_FALSE;
+}
+
+static vk::DebugUtilsMessengerCreateInfoEXT create_messenger_info()
+{
+	return vk::DebugUtilsMessengerCreateInfoEXT{
+		.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eError | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning,
+		.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance,
+		.pfnUserCallback = debug_utils_messenger_callback,
+	};
+}
+
+#endif
+
 namespace efvk
 {
 	vk::UniqueInstance create_instance(const char* app_name)
 	{
+		/* Define layers */
+		std::vector<const char*> requested_layers{};
+#if _DEBUG /* VL */
+		requested_layers.push_back("VK_LAYER_KHRONOS_validation");
+#endif
+		std::vector<vk::LayerProperties> supported_layers = vk::enumerateInstanceLayerProperties();
+		std::vector<const char*> layers{};
+		for (const char* requested_layer : requested_layers)
+		{
+			bool found = false;
+			for (const vk::LayerProperties& supported_layer : supported_layers)
+			{
+				if (strcmp(requested_layer, supported_layer.layerName) == 0)
+				{
+					found = true;
+					break;
+				}
+			}
+			if (found)
+			{
+				std::cout << "Layer enabled: " << requested_layer << std::endl;
+				layers.push_back(requested_layer);
+			}
+			else
+			{
+				std::cout << "Warning layer not enabled: " << requested_layer << std::endl;
+			}
+		}
+
+		/* Define instance extensions */
 		std::vector<const char*> instance_extensions{};
+
+#if _DEBUG /* VL */
+		instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
 
 		/* Get extensions needed by GLFW */
 		{
@@ -21,6 +86,10 @@ namespace efvk
 			}
 		}
 
+#if _DEBUG /* VL */
+		const auto messenger_info = create_messenger_info();
+#endif
+
 		/* Create instance */
 		vk::ApplicationInfo app_info{
 			.pApplicationName = app_name,
@@ -30,8 +99,15 @@ namespace efvk
 			.apiVersion = vk::ApiVersion13,
 		};
 
+
+
 		vk::InstanceCreateInfo instance_create_info{
+#if _DEBUG /* VL */
+			.pNext = &messenger_info,
+#endif
 			.pApplicationInfo = &app_info,
+			.enabledLayerCount = static_cast<u32>(layers.size()),
+			.ppEnabledLayerNames = layers.data(),
 			.enabledExtensionCount = static_cast<u32>(instance_extensions.size()),
 			.ppEnabledExtensionNames = instance_extensions.data(),
 		};
@@ -123,6 +199,10 @@ namespace efvk
 
 		/* Second initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*instance);
+
+#if _DEBUG /* VL */
+		messenger = instance->createDebugUtilsMessengerEXTUnique(create_messenger_info());
+#endif
 
 		/* Create surface */
 		surface = create_surface(*instance, window);
