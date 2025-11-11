@@ -19,11 +19,14 @@ namespace efvk
 	{
 	public:
 		FrameManager(GraphicsContext& ctx, u32 window_width, u32 window_height);
+		~FrameManager();
 
 		void StartFrame(GraphicsContext& ctx);
 		void EndFrame(GraphicsContext& ctx);
 
 	private:
+		vk::Device dev{};
+
 		vk::UniqueSwapchainKHR swapchain{};
 
 		std::vector<vk::UniqueSemaphore> free_semaphore_queue{};

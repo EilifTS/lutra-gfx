@@ -2,7 +2,7 @@
 
 namespace efvk
 {
-	vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
+	static vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
 	{
 		/* No special logic for now, just choose the first available */
 		std::vector<vk::SurfaceFormatKHR> supported_surface_formats = phys_dev.getSurfaceFormatsKHR(surface);
@@ -10,13 +10,44 @@ namespace efvk
 		return supported_surface_formats[0];
 	}
 
+	static void change_layout(vk::CommandBuffer cmd_buf, vk::Image image, u32 queue_family_index, vk::ImageLayout old_layout, vk::ImageLayout new_layout)
+	{
+		vk::ImageSubresourceRange range{
+			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		};
+
+		const vk::ImageMemoryBarrier image_barrier{
+			.srcAccessMask = vk::AccessFlagBits::eNone,
+			.dstAccessMask = vk::AccessFlagBits::eNone,
+			.oldLayout = old_layout,
+			.newLayout = new_layout,
+			.srcQueueFamilyIndex = queue_family_index,
+			.dstQueueFamilyIndex = queue_family_index,
+			.image = image,
+			.subresourceRange = range,
+		};
+
+		cmd_buf.pipelineBarrier(
+			vk::PipelineStageFlagBits::eAllCommands,
+			vk::PipelineStageFlagBits::eAllCommands,
+			vk::DependencyFlagBits::eByRegion,
+			{},
+			{},
+			image_barrier
+		);
+	}
 
 	FrameManager::FrameManager(GraphicsContext& ctx, u32 window_width, u32 window_height)
 	{
 		vk::Result result = vk::Result::eSuccess;
+		dev = *ctx.device;
 
 		/* Select a surface format. */
-		const vk::SurfaceFormatKHR surface_format = select_surface_format(ctx.physical_device, ctx.surface);
+		const vk::SurfaceFormatKHR surface_format = select_surface_format(ctx.physical_device, *ctx.surface);
 
 		/* Define surface extent, this will be the same as the window size */
 		const vk::Extent2D surface_extent{
@@ -24,7 +55,7 @@ namespace efvk
 			.height = window_height,
 		};
 
-		auto surface_caps = ctx.physical_device.getSurfaceCapabilitiesKHR(ctx.surface);
+		auto surface_caps = ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface);
 
 		/* Select the swapchain image count, default to 3 for now */
 		constexpr u32 surface_count = 3;
@@ -43,7 +74,7 @@ namespace efvk
 		constexpr vk::PresentModeKHR present_mode = vk::PresentModeKHR::eFifo;
 
 		const vk::SwapchainCreateInfoKHR swapchain_info{
-			.surface = ctx.surface,
+			.surface = *ctx.surface,
 			.minImageCount = surface_count,
 			.imageFormat = surface_format.format,
 			.imageColorSpace = surface_format.colorSpace,
@@ -111,6 +142,11 @@ namespace efvk
 		}
 	}
 
+	FrameManager::~FrameManager()
+	{
+		dev.waitIdle();
+	}
+
 	void FrameManager::StartFrame(GraphicsContext& ctx)
 	{
 		vk::Result result = vk::Result::eSuccess;
@@ -138,6 +174,7 @@ namespace efvk
 		{
 			result = ctx.device->waitForFences(*new_frame_res.frame_complete_fence, true, UINT64_MAX);
 			assert(result == vk::Result::eSuccess);
+			new_frame_res.has_fence_signal = false;
 
 			ctx.device->resetFences(*new_frame_res.frame_complete_fence);
 
@@ -149,6 +186,9 @@ namespace efvk
 		assert(new_frame_res.image_acquire_sem.get() == nullptr);
 		new_frame_res.image_acquire_sem = std::move(acquire_semahore);
 
+		/* Update frame index */
+		current_frame_index = new_image_index;
+
 		/* Reset command pool */
 		ctx.device->resetCommandPool(*new_frame_res.cmd_pool);
 
@@ -158,13 +198,16 @@ namespace efvk
 		};
 		new_frame_res.cmd_buf->begin(begin_info);
 
-		/* Update frame index */
-		current_frame_index = new_image_index;
+		/* Transition the image layout to allow rendering */
+		change_layout(*new_frame_res.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 	}
 
 	void FrameManager::EndFrame(GraphicsContext& ctx)
 	{
 		PerFrameResources& frame_res = per_frame_res[current_frame_index];
+
+		/* Transition the image layout to prepare for present */
+		change_layout(*frame_res.cmd_buf, frame_res.image, ctx.queue_family_index, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR);
 
 		/* Submit command buffer */
 		frame_res.cmd_buf->end();

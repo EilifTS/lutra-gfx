@@ -115,13 +115,13 @@ namespace efvk
 		return vk::createInstanceUnique(instance_create_info);
 	}
 
-	vk::SurfaceKHR create_surface(vk::Instance instance, const Window& window)
+	vk::UniqueSurfaceKHR create_surface(vk::Instance instance, const Window& window)
 	{
 		GLFWwindow* glfw_window = static_cast<GLFWwindow*>(window.GetHandle());
 		VkSurfaceKHR temp_surface = VK_NULL_HANDLE;
 		VkResult result = glfwCreateWindowSurface(instance, glfw_window, nullptr, &temp_surface);
 		assert(result == VK_SUCCESS);
-		return temp_surface;
+		return vk::UniqueSurfaceKHR(temp_surface, instance);
 	}
 
 	std::pair<vk::PhysicalDevice, u32> select_physical_device_and_queue_family(vk::Instance instance, vk::SurfaceKHR surface)
@@ -208,7 +208,7 @@ namespace efvk
 		surface = create_surface(*instance, window);
 		
 		/* Get physical device */
-		std::tie(physical_device, queue_family_index) = select_physical_device_and_queue_family(instance.get(), surface);
+		std::tie(physical_device, queue_family_index) = select_physical_device_and_queue_family(instance.get(), *surface);
 
 		/* Create the logical device */
 		device = create_device(physical_device, queue_family_index);
@@ -218,5 +218,13 @@ namespace efvk
 
 		/* Get the device queue */
 		queue = device->getQueue(queue_family_index, 0);
+	}
+
+	GraphicsContext::~GraphicsContext()
+	{
+		if (device.get() != nullptr)
+		{
+			device->waitIdle();
+		}
 	}
 }

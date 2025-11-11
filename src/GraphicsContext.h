@@ -13,6 +13,7 @@ namespace efvk
 	{
 	public:
 		GraphicsContext(const Window& window, const char* app_name);
+		~GraphicsContext();
 
 		vk::UniqueInstance instance;
 #if _DEBUG /* VL */
@@ -23,7 +24,7 @@ namespace efvk
 		vk::Queue queue;
 		u32 queue_family_index;
 
-		vk::SurfaceKHR surface;
+		vk::UniqueSurfaceKHR surface;
 
 	private:
 		
