@@ -1,4 +1,7 @@
 #include <efvk/GraphicsContext.h>
+
+#include "GraphicsContextImpl.h"
+#include "VulkanHPP.h"
 #include <GLFW/glfw3.h>
 
 /* Vulkan HPP boiler plate for setting up a dispatcher */
@@ -191,40 +194,45 @@ namespace efvk
 
 	GraphicsContext::GraphicsContext(const Window& window, const char* app_name)
 	{
+		pimpl = std::make_unique<Impl>();
+
 		/* First initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init();
 
 		/* Create instance */
-		instance = create_instance(app_name);
+		pimpl->instance = create_instance(app_name);
 
 		/* Second initialize step of the dispatcher */
-		VULKAN_HPP_DEFAULT_DISPATCHER.init(*instance);
+		VULKAN_HPP_DEFAULT_DISPATCHER.init(*pimpl->instance);
 
 #if _DEBUG /* VL */
-		messenger = instance->createDebugUtilsMessengerEXTUnique(create_messenger_info());
+		pimpl->messenger = pimpl->instance->createDebugUtilsMessengerEXTUnique(create_messenger_info());
 #endif
 
 		/* Create surface */
-		surface = create_surface(*instance, window);
+		pimpl->surface = create_surface(*pimpl->instance, window);
 		
 		/* Get physical device */
-		std::tie(physical_device, queue_family_index) = select_physical_device_and_queue_family(instance.get(), *surface);
+		std::tie(pimpl->physical_device, pimpl->queue_family_index) = select_physical_device_and_queue_family(pimpl->instance.get(), *pimpl->surface);
 
 		/* Create the logical device */
-		device = create_device(physical_device, queue_family_index);
+		pimpl->device = create_device(pimpl->physical_device, pimpl->queue_family_index);
 
 		/* Third initialize step of the dispatcher */
-		VULKAN_HPP_DEFAULT_DISPATCHER.init(*device);
+		VULKAN_HPP_DEFAULT_DISPATCHER.init(*pimpl->device);
 
 		/* Get the device queue */
-		queue = device->getQueue(queue_family_index, 0);
+		pimpl->queue = pimpl->device->getQueue(pimpl->queue_family_index, 0);
 	}
 
 	GraphicsContext::~GraphicsContext()
 	{
-		if (device.get() != nullptr)
+		if (pimpl->device.get() != nullptr)
 		{
-			device->waitIdle();
+			pimpl->device->waitIdle();
 		}
 	}
+
+	GraphicsContext::GraphicsContext(GraphicsContext&&) = default;
+	GraphicsContext& GraphicsContext::operator=(GraphicsContext&&) = default;
 }

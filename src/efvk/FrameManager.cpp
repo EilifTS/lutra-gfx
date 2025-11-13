@@ -1,7 +1,32 @@
 #include <efvk/FrameManager.h>
 
+#include "GraphicsContextImpl.h"
+#include "VulkanHPP.h"
+
 namespace efvk
 {
+	struct PerFrameResources
+	{
+		vk::UniqueCommandPool cmd_pool{};
+		vk::UniqueCommandBuffer cmd_buf{};
+		bool has_fence_signal{ false };
+		vk::UniqueFence frame_complete_fence{};
+		vk::UniqueSemaphore image_acquire_sem{};
+		vk::UniqueSemaphore image_release_sem{};
+		vk::Image image{};
+		vk::UniqueImageView image_view{};
+	};
+
+	struct FrameManager::Impl
+	{
+		vk::Device dev{};
+
+		vk::UniqueSwapchainKHR swapchain{};
+
+		std::vector<vk::UniqueSemaphore> free_semaphore_queue{};
+		std::vector<PerFrameResources> per_frame_res{};
+	};
+
 	static vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
 	{
 		/* No special logic for now, just choose the first available */
@@ -41,10 +66,14 @@ namespace efvk
 		);
 	}
 
-	FrameManager::FrameManager(GraphicsContext& ctx, u32 window_width, u32 window_height)
+	FrameManager::FrameManager(GraphicsContext& public_ctx, u32 window_width, u32 window_height)
 	{
 		vk::Result result = vk::Result::eSuccess;
-		dev = *ctx.device;
+		GraphicsContext::Impl& ctx = *public_ctx.pimpl;
+
+		pimpl = std::make_unique<Impl>();
+
+		pimpl->dev = *ctx.device;
 
 		/* Select a surface format. */
 		const vk::SurfaceFormatKHR surface_format = select_surface_format(ctx.physical_device, *ctx.surface);
@@ -88,21 +117,21 @@ namespace efvk
 			.clipped = true,
 			.oldSwapchain = VK_NULL_HANDLE,
 		};
-		swapchain = ctx.device->createSwapchainKHRUnique(swapchain_info);
+		pimpl->swapchain = ctx.device->createSwapchainKHRUnique(swapchain_info);
 		assert(result == vk::Result::eSuccess);
 
-		std::vector<vk::Image> swapchain_images = ctx.device->getSwapchainImagesKHR(*swapchain);
+		std::vector<vk::Image> swapchain_images = ctx.device->getSwapchainImagesKHR(*pimpl->swapchain);
 
-		per_frame_res.resize(surface_count);
+		pimpl->per_frame_res.resize(surface_count);
 
 		/* Transfer swapchain images */
 		for (u32 i = 0; i < surface_count; i++)
 		{
-			per_frame_res[i].image = swapchain_images[i];
+			pimpl->per_frame_res[i].image = swapchain_images[i];
 		}
 
 		/* Initialize per frame resources */
-		for (PerFrameResources& res : per_frame_res)
+		for (PerFrameResources& res : pimpl->per_frame_res)
 		{
 			/* Create command pool */
 			const vk::CommandPoolCreateInfo pool_info{
@@ -144,32 +173,36 @@ namespace efvk
 
 	FrameManager::~FrameManager()
 	{
-		dev.waitIdle();
+		pimpl->dev.waitIdle();
 	}
 
-	void FrameManager::StartFrame(GraphicsContext& ctx)
+	FrameManager::FrameManager(FrameManager&&) = default;
+	FrameManager& FrameManager::operator=(FrameManager&&) = default;
+
+	void FrameManager::StartFrame(GraphicsContext& public_ctx)
 	{
 		vk::Result result = vk::Result::eSuccess;
+		GraphicsContext::Impl& ctx = *public_ctx.pimpl;
 
 		/* Find an acquire semaphore */
 		vk::UniqueSemaphore acquire_semahore{};
-		if (free_semaphore_queue.size() == 0)
+		if (pimpl->free_semaphore_queue.size() == 0)
 		{
 			acquire_semahore = ctx.device->createSemaphoreUnique({});
 		}
 		else
 		{
-			acquire_semahore = std::move(free_semaphore_queue.back());
-			free_semaphore_queue.pop_back();
+			acquire_semahore = std::move(pimpl->free_semaphore_queue.back());
+			pimpl->free_semaphore_queue.pop_back();
 		}
 
 		/* Acquire the new image and get the image index */
 		u32 new_image_index = 0;
-		result = ctx.device->acquireNextImageKHR(*swapchain, UINT64_MAX, *acquire_semahore, VK_NULL_HANDLE, &new_image_index);
+		result = ctx.device->acquireNextImageKHR(*pimpl->swapchain, UINT64_MAX, *acquire_semahore, VK_NULL_HANDLE, &new_image_index);
 		assert(result == vk::Result::eSuccess);
 
 		/* Wait for the last frame using this image index to finish (Most likely finished already) */
-		PerFrameResources& new_frame_res = per_frame_res[new_image_index];
+		PerFrameResources& new_frame_res = pimpl->per_frame_res[new_image_index];
 		if (new_frame_res.has_fence_signal)
 		{
 			result = ctx.device->waitForFences(*new_frame_res.frame_complete_fence, true, UINT64_MAX);
@@ -179,7 +212,7 @@ namespace efvk
 			ctx.device->resetFences(*new_frame_res.frame_complete_fence);
 
 			/* This semaphore must have been signalled so we can free it. */
-			free_semaphore_queue.push_back(std::move(new_frame_res.image_acquire_sem));
+			pimpl->free_semaphore_queue.push_back(std::move(new_frame_res.image_acquire_sem));
 		}
 
 		/* Store away the acquire semaphore for later */
@@ -202,9 +235,11 @@ namespace efvk
 		change_layout(*new_frame_res.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 	}
 
-	void FrameManager::EndFrame(GraphicsContext& ctx)
+	void FrameManager::EndFrame(GraphicsContext& public_ctx)
 	{
-		PerFrameResources& frame_res = per_frame_res[current_frame_index];
+		GraphicsContext::Impl& ctx = *public_ctx.pimpl;
+
+		PerFrameResources& frame_res = pimpl->per_frame_res[current_frame_index];
 
 		/* Transition the image layout to prepare for present */
 		change_layout(*frame_res.cmd_buf, frame_res.image, ctx.queue_family_index, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR);
@@ -231,7 +266,7 @@ namespace efvk
 			.waitSemaphoreCount = 1,
 			.pWaitSemaphores = &(frame_res.image_release_sem.get()),
 			.swapchainCount = 1,
-			.pSwapchains = &(swapchain.get()),
+			.pSwapchains = &(pimpl->swapchain.get()),
 			.pImageIndices = &current_frame_index,
 		};
 		const vk::Result result = ctx.queue.presentKHR(present_info);

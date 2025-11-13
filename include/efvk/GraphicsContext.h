@@ -1,32 +1,28 @@
 #pragma once
-
-#define VULKAN_HPP_NO_CONSTRUCTORS
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#define VULKAN_HPP_TYPESAFE_CONVERSION 1
-#include <vulkan/vulkan.hpp>
+#include <memory>
 
 #include "Window.h"
+#include "Utils.h"
 
 namespace efvk
 {
+	class FrameManager;
+
 	class GraphicsContext
 	{
 	public:
 		GraphicsContext(const Window& window, const char* app_name);
 		~GraphicsContext();
 
-		vk::UniqueInstance instance;
-#if _DEBUG /* VL */
-		vk::UniqueDebugUtilsMessengerEXT messenger;
-#endif
-		vk::PhysicalDevice physical_device;
-		vk::UniqueDevice device;
-		vk::Queue queue;
-		u32 queue_family_index;
-
-		vk::UniqueSurfaceKHR surface;
+		GraphicsContext(const GraphicsContext&) = delete;
+		GraphicsContext(GraphicsContext&&);
+		GraphicsContext& operator=(const GraphicsContext&) = delete;
+		GraphicsContext& operator=(GraphicsContext&&);
 
 	private:
-		
+		friend FrameManager;
+
+		struct Impl;
+		std::unique_ptr<Impl> pimpl{};
 	};
 }
