@@ -1,8 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.28)
 project(efvk LANGUAGES CXX)
 
-add_subdirectory ("src")
-
 include(FetchContent)
 FetchContent_Declare(glfw3
     GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -14,7 +12,16 @@ FetchContent_MakeAvailable(glfw3)
 
 find_package(Vulkan REQUIRED)
 
-add_executable(main src/main.cpp "src/Event.h" "src/InputManager.cpp" "src/InputManager.h" "src/Keyboard.cpp" "src/Keyboard.h" "src/Mouse.cpp" "src/Mouse.h" "src/Window.cpp" "src/Window.h" "src/Utils.h" "src/GraphicsContext.h" "src/GraphicsContext.cpp" "src/FrameManager.h" "src/FrameManager.cpp")
+file(GLOB EFVK_INCLUDES
+    include/efvk/*.h
+)
+
+file(GLOB EFVK_SOURCES
+    src/efvk/*.h
+    src/efvk/*.cpp
+)
+
+add_executable(main src/main.cpp ${EFVK_INCLUDES} ${EFVK_SOURCES})
 target_link_libraries(main PRIVATE glfw Vulkan::Vulkan)
-target_include_directories(main PRIVATE src)
+target_include_directories(main PRIVATE "include")
 target_compile_features(main PRIVATE cxx_std_20)

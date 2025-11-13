@@ -1,7 +1,7 @@
 ﻿#include <iostream>
-#include "Window.h"
-#include "GraphicsContext.h"
-#include "FrameManager.h"
+#include <efvk/Window.h>
+#include <efvk/GraphicsContext.h>
+#include <efvk/FrameManager.h>
 
 int main()
 {
