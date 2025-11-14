@@ -14,6 +14,7 @@ find_package(Vulkan REQUIRED)
 
 file(GLOB EFVK_INCLUDES
     include/efvk/*.h
+    include/efvk/math/*.h
 )
 
 file(GLOB EFVK_SOURCES
