@@ -1,11 +1,12 @@
 #pragma once
 #include "VulkanHPP.h"
+#include "CommandBuffer.h"
 
 namespace efvk
 {
 	struct PerFrameResources
 	{
-		vk::UniqueCommandBuffer cmd_buf{};
+		CommandBuffer cmd_buf{};
 		bool has_fence_signal{ false };
 		vk::UniqueFence frame_complete_fence{};
 		vk::UniqueSemaphore image_acquire_sem{};
@@ -27,7 +28,7 @@ namespace efvk
 
 		vk::CommandBuffer GetCurrentCommandBuffer()
 		{
-			return *per_frame_res[current_frame_index].cmd_buf;
+			return *per_frame_res[current_frame_index].cmd_buf.cmd_buf;
 		}
 
 		vk::Image GetCurrentImage()

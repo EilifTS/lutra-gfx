@@ -154,13 +154,7 @@ namespace efvk
 		for (PerFrameResources& res : pimpl->per_frame_res)
 		{
 			/* Create command buffer */
-			const vk::CommandBufferAllocateInfo allocate_info{
-				.commandPool = *ctx.cmd_pool,
-				.level = vk::CommandBufferLevel::ePrimary,
-				.commandBufferCount = 1,
-			};
-			std::vector<vk::CommandBuffer> cmd_buffers;
-			res.cmd_buf = std::move(ctx.device->allocateCommandBuffersUnique(allocate_info)[0]);
+			res.cmd_buf = CommandBuffer(ctx);
 
 			/* Create fence */
 			res.frame_complete_fence = ctx.device->createFenceUnique({});
@@ -237,16 +231,16 @@ namespace efvk
 		pimpl->current_frame_index = new_image_index;
 
 		/* Reset command buffer */
-		new_frame_res.cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+		new_frame_res.cmd_buf.cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 
 		/* Begin command buffer */
 		const vk::CommandBufferBeginInfo begin_info{
 			.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
 		};
-		new_frame_res.cmd_buf->begin(begin_info);
+		new_frame_res.cmd_buf.cmd_buf->begin(begin_info);
 
 		/* Transition the image layout to allow rendering */
-		change_layout(*new_frame_res.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+		change_layout(*new_frame_res.cmd_buf.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 
 		/* Clear image */
 		vk::ClearColorValue clear_color_value{};
@@ -263,8 +257,8 @@ namespace efvk
 			.layerCount = 1,
 		};
 
-		new_frame_res.cmd_buf->clearColorImage(new_frame_res.image, vk::ImageLayout::eGeneral, clear_color_value, range);
-		image_barrier(*new_frame_res.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eColorAttachmentWrite);
+		new_frame_res.cmd_buf.cmd_buf->clearColorImage(new_frame_res.image, vk::ImageLayout::eGeneral, clear_color_value, range);
+		image_barrier(*new_frame_res.cmd_buf.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eColorAttachmentWrite);
 	}
 
 	void FrameManager::EndFrame(GraphicsContext& public_ctx)
@@ -274,10 +268,10 @@ namespace efvk
 		PerFrameResources& frame_res = pimpl->per_frame_res[pimpl->current_frame_index];
 
 		/* Transition the image layout to prepare for present */
-		change_layout(*frame_res.cmd_buf, frame_res.image, ctx.queue_family_index, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR);
+		change_layout(*frame_res.cmd_buf.cmd_buf, frame_res.image, ctx.queue_family_index, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR);
 
 		/* Submit command buffer */
-		frame_res.cmd_buf->end();
+		frame_res.cmd_buf.cmd_buf->end();
 
 		const vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
@@ -286,7 +280,7 @@ namespace efvk
 			.pWaitSemaphores = &(frame_res.image_acquire_sem.get()),
 			.pWaitDstStageMask = &wait_stage,
 			.commandBufferCount = 1,
-			.pCommandBuffers = &(frame_res.cmd_buf.get()),
+			.pCommandBuffers = &(frame_res.cmd_buf.cmd_buf.get()),
 			.signalSemaphoreCount = 1,
 			.pSignalSemaphores = &(frame_res.image_release_sem.get()),
 		};
