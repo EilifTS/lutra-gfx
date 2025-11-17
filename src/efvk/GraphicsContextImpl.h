@@ -16,6 +16,8 @@ namespace efvk
 
 		vk::UniqueSurfaceKHR surface;
 
+		VmaAllocator vma_allocator;
+
 		vk::UniqueCommandPool cmd_pool{};
 	};
 }

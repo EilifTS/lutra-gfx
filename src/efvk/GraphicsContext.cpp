@@ -233,6 +233,20 @@ namespace efvk
 		/* Get the device queue */
 		pimpl->queue = pimpl->device->getQueue(pimpl->queue_family_index, 0);
 
+		/* Create the Vulkan Memory Allocator */
+		VmaVulkanFunctions vma_vk_functions{};
+		vma_vk_functions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+		vma_vk_functions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+
+		VmaAllocatorCreateInfo vma_info{};
+		vma_info.instance = *pimpl->instance;
+		vma_info.physicalDevice = pimpl->physical_device;
+		vma_info.device = *pimpl->device;
+		vma_info.vulkanApiVersion = vk::ApiVersion13;
+		vma_info.pVulkanFunctions = &vma_vk_functions;
+		VkResult result = vmaCreateAllocator(&vma_info, &pimpl->vma_allocator);
+		assert(result == VK_SUCCESS);
+
 		/* Create the command pool */
 		const vk::CommandPoolCreateInfo pool_info{
 			.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
@@ -246,6 +260,11 @@ namespace efvk
 		if (pimpl->device.get() != nullptr)
 		{
 			pimpl->device->waitIdle();
+		}
+
+		if (pimpl->vma_allocator != VK_NULL_HANDLE)
+		{
+			vmaDestroyAllocator(pimpl->vma_allocator);
 		}
 	}
 
