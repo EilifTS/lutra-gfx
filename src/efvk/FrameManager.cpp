@@ -84,7 +84,6 @@ namespace efvk
 		);
 	}
 
-
 	FrameManager::FrameManager(GraphicsContext& public_ctx, u32 window_width, u32 window_height)
 	{
 		vk::Result result = vk::Result::eSuccess;
@@ -154,15 +153,9 @@ namespace efvk
 		/* Initialize per frame resources */
 		for (PerFrameResources& res : pimpl->per_frame_res)
 		{
-			/* Create command pool */
-			const vk::CommandPoolCreateInfo pool_info{
-				.queueFamilyIndex = ctx.queue_family_index,
-			};
-			res.cmd_pool = ctx.device->createCommandPoolUnique(pool_info);
-
 			/* Create command buffer */
 			const vk::CommandBufferAllocateInfo allocate_info{
-				.commandPool = *res.cmd_pool,
+				.commandPool = *ctx.cmd_pool,
 				.level = vk::CommandBufferLevel::ePrimary,
 				.commandBufferCount = 1,
 			};
@@ -243,8 +236,8 @@ namespace efvk
 		/* Update frame index */
 		pimpl->current_frame_index = new_image_index;
 
-		/* Reset command pool */
-		ctx.device->resetCommandPool(*new_frame_res.cmd_pool);
+		/* Reset command buffer */
+		new_frame_res.cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 
 		/* Begin command buffer */
 		const vk::CommandBufferBeginInfo begin_info{

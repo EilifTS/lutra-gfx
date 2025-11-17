@@ -232,6 +232,13 @@ namespace efvk
 
 		/* Get the device queue */
 		pimpl->queue = pimpl->device->getQueue(pimpl->queue_family_index, 0);
+
+		/* Create the command pool */
+		const vk::CommandPoolCreateInfo pool_info{
+			.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+			.queueFamilyIndex = pimpl->queue_family_index,
+		};
+		pimpl->cmd_pool = pimpl->device->createCommandPoolUnique(pool_info);
 	}
 
 	GraphicsContext::~GraphicsContext()

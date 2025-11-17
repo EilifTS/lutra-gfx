@@ -15,5 +15,7 @@ namespace efvk
 		u32 queue_family_index;
 
 		vk::UniqueSurfaceKHR surface;
+
+		vk::UniqueCommandPool cmd_pool{};
 	};
 }

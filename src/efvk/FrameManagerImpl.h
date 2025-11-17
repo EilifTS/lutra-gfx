@@ -5,7 +5,6 @@ namespace efvk
 {
 	struct PerFrameResources
 	{
-		vk::UniqueCommandPool cmd_pool{};
 		vk::UniqueCommandBuffer cmd_buf{};
 		bool has_fence_signal{ false };
 		vk::UniqueFence frame_complete_fence{};
