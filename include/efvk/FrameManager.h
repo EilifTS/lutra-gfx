@@ -19,10 +19,10 @@ namespace efvk
 		void StartFrame(GraphicsContext& ctx);
 		void EndFrame(GraphicsContext& ctx);
 
-	private:
 		struct Impl;
 		std::unique_ptr<Impl> pimpl{};
 
+	private:
 		u32 current_frame_index = 0;
 	};
 }

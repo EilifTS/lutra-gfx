@@ -2,6 +2,7 @@
 #include <efvk/Window.h>
 #include <efvk/GraphicsContext.h>
 #include <efvk/FrameManager.h>
+#include <efvk/SpriteBatch.h>
 
 int main()
 {
@@ -9,12 +10,19 @@ int main()
 
 	efvk::GraphicsContext graphics_context(window, "EFVK");
 	efvk::FrameManager frame_manager(graphics_context, 800, 600);
+	efvk::SpriteBatch sb(graphics_context);
 
 	while (window.IsOpen()) {
 		window.RetrieveEvents();
 		frame_manager.StartFrame(graphics_context);
+
+		sb.Begin();
+		sb.End(frame_manager);
+
 		frame_manager.EndFrame(graphics_context);
 	}
+
+	graphics_context.WaitIdle();
 
 	return 0;
 }

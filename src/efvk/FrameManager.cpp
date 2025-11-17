@@ -1,37 +1,24 @@
 #include <efvk/FrameManager.h>
 
 #include "GraphicsContextImpl.h"
-#include "VulkanHPP.h"
+#include "FrameManagerImpl.h"
+
+#include <iostream>
 
 namespace efvk
 {
-	struct PerFrameResources
-	{
-		vk::UniqueCommandPool cmd_pool{};
-		vk::UniqueCommandBuffer cmd_buf{};
-		bool has_fence_signal{ false };
-		vk::UniqueFence frame_complete_fence{};
-		vk::UniqueSemaphore image_acquire_sem{};
-		vk::UniqueSemaphore image_release_sem{};
-		vk::Image image{};
-		vk::UniqueImageView image_view{};
-	};
-
-	struct FrameManager::Impl
-	{
-		vk::Device dev{};
-
-		vk::UniqueSwapchainKHR swapchain{};
-
-		std::vector<vk::UniqueSemaphore> free_semaphore_queue{};
-		std::vector<PerFrameResources> per_frame_res{};
-	};
-
 	static vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
 	{
 		/* No special logic for now, just choose the first available */
 		std::vector<vk::SurfaceFormatKHR> supported_surface_formats = phys_dev.getSurfaceFormatsKHR(surface);
 		assert(supported_surface_formats.size() > 0);
+		for (auto f : supported_surface_formats)
+		{
+			if (f.format == vk::Format::eR8G8B8A8Unorm)
+			{
+				return f;
+			}
+		}
 		return supported_surface_formats[0];
 	}
 
@@ -66,6 +53,38 @@ namespace efvk
 		);
 	}
 
+	static void image_barrier(vk::CommandBuffer cmd_buf, vk::Image image, u32 queue_family_index, vk::PipelineStageFlags src_stage, vk::PipelineStageFlags dst_stage, vk::AccessFlags src_access, vk::AccessFlagBits dst_access)
+	{
+		vk::ImageSubresourceRange range{
+			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		};
+
+		const vk::ImageMemoryBarrier image_barrier{
+			.srcAccessMask = src_access,
+			.dstAccessMask = dst_access,
+			.oldLayout = vk::ImageLayout::eGeneral,
+			.newLayout = vk::ImageLayout::eGeneral,
+			.srcQueueFamilyIndex = queue_family_index,
+			.dstQueueFamilyIndex = queue_family_index,
+			.image = image,
+			.subresourceRange = range,
+		};
+
+		cmd_buf.pipelineBarrier(
+			vk::PipelineStageFlagBits::eAllCommands,
+			vk::PipelineStageFlagBits::eAllCommands,
+			vk::DependencyFlagBits::eByRegion,
+			{},
+			{},
+			image_barrier
+		);
+	}
+
+
 	FrameManager::FrameManager(GraphicsContext& public_ctx, u32 window_width, u32 window_height)
 	{
 		vk::Result result = vk::Result::eSuccess;
@@ -74,6 +93,8 @@ namespace efvk
 		pimpl = std::make_unique<Impl>();
 
 		pimpl->dev = *ctx.device;
+		pimpl->window_width = window_width;
+		pimpl->window_height = window_height;
 
 		/* Select a surface format. */
 		const vk::SurfaceFormatKHR surface_format = select_surface_format(ctx.physical_device, *ctx.surface);
@@ -109,7 +130,7 @@ namespace efvk
 			.imageColorSpace = surface_format.colorSpace,
 			.imageExtent = surface_extent,
 			.imageArrayLayers = 1,
-			.imageUsage = vk::ImageUsageFlagBits::eColorAttachment,
+			.imageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst,
 			.imageSharingMode = vk::SharingMode::eExclusive,
 			.preTransform = pre_transform,
 			.compositeAlpha = composite_alpha,
@@ -220,7 +241,7 @@ namespace efvk
 		new_frame_res.image_acquire_sem = std::move(acquire_semahore);
 
 		/* Update frame index */
-		current_frame_index = new_image_index;
+		pimpl->current_frame_index = new_image_index;
 
 		/* Reset command pool */
 		ctx.device->resetCommandPool(*new_frame_res.cmd_pool);
@@ -233,13 +254,31 @@ namespace efvk
 
 		/* Transition the image layout to allow rendering */
 		change_layout(*new_frame_res.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+
+		/* Clear image */
+		vk::ClearColorValue clear_color_value{};
+		clear_color_value.float32[0] = 0.0f;
+		clear_color_value.float32[1] = 1.0f;
+		clear_color_value.float32[2] = 0.0f;
+		clear_color_value.float32[3] = 1.0f;
+
+		const vk::ImageSubresourceRange range{
+			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		};
+
+		new_frame_res.cmd_buf->clearColorImage(new_frame_res.image, vk::ImageLayout::eGeneral, clear_color_value, range);
+		image_barrier(*new_frame_res.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eColorAttachmentWrite);
 	}
 
 	void FrameManager::EndFrame(GraphicsContext& public_ctx)
 	{
 		GraphicsContext::Impl& ctx = *public_ctx.pimpl;
 
-		PerFrameResources& frame_res = pimpl->per_frame_res[current_frame_index];
+		PerFrameResources& frame_res = pimpl->per_frame_res[pimpl->current_frame_index];
 
 		/* Transition the image layout to prepare for present */
 		change_layout(*frame_res.cmd_buf, frame_res.image, ctx.queue_family_index, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR);
@@ -267,7 +306,7 @@ namespace efvk
 			.pWaitSemaphores = &(frame_res.image_release_sem.get()),
 			.swapchainCount = 1,
 			.pSwapchains = &(pimpl->swapchain.get()),
-			.pImageIndices = &current_frame_index,
+			.pImageIndices = &pimpl->current_frame_index,
 		};
 		const vk::Result result = ctx.queue.presentKHR(present_info);
 		assert(result == vk::Result::eSuccess);

@@ -183,7 +183,16 @@ namespace efvk
 			assert(extension_supported);
 		}
 
-		vk::DeviceCreateInfo device_info{
+		vk::PhysicalDeviceVulkan13Features features13{
+			.dynamicRendering = true,
+		};
+
+		vk::PhysicalDeviceFeatures2 features2{
+			.pNext = &features13,
+		};
+
+		const vk::DeviceCreateInfo device_info{
+			.pNext = &features2,
 			.queueCreateInfoCount = 1,
 			.pQueueCreateInfos = &queue_create_info,
 			.enabledExtensionCount = static_cast<u32>(required_device_extensions.size()),
@@ -235,4 +244,9 @@ namespace efvk
 
 	GraphicsContext::GraphicsContext(GraphicsContext&&) = default;
 	GraphicsContext& GraphicsContext::operator=(GraphicsContext&&) = default;
+
+	void GraphicsContext::WaitIdle()
+	{
+		pimpl->device->waitIdle();
+	}
 }

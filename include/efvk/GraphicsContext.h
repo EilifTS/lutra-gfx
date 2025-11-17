@@ -19,8 +19,7 @@ namespace efvk
 		GraphicsContext& operator=(const GraphicsContext&) = delete;
 		GraphicsContext& operator=(GraphicsContext&&);
 
-	private:
-		friend FrameManager;
+		void WaitIdle();
 
 		struct Impl;
 		std::unique_ptr<Impl> pimpl{};

@@ -1,0 +1,2 @@
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T vs_6_0 -E VS SpriteBatchShader.hlsl -Fo SpriteBatchShader.vert.spv
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T ps_6_0 -E PS SpriteBatchShader.hlsl -Fo SpriteBatchShader.frag.spv

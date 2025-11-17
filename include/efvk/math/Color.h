@@ -1,5 +1,4 @@
 #pragma once
-#include <EFLib/Common/IntDefs.h>
 #include "vec.h"
 
 namespace ef
@@ -25,10 +24,10 @@ namespace ef
 		}
 		inline Color(const vec4& c)
 		{
-			Assert(c.x >= 0.0f && c.x <= 1.0f);
-			Assert(c.y >= 0.0f && c.y <= 1.0f);
-			Assert(c.z >= 0.0f && c.z <= 1.0f);
-			Assert(c.w >= 0.0f && c.w <= 1.0f);
+			assert(c.x >= 0.0f && c.x <= 1.0f);
+			assert(c.y >= 0.0f && c.y <= 1.0f);
+			assert(c.z >= 0.0f && c.z <= 1.0f);
+			assert(c.w >= 0.0f && c.w <= 1.0f);
 			auto temp = c * 255.9999f;
 			r = u8(temp.x);
 			g = u8(temp.y);

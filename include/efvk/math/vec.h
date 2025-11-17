@@ -1,7 +1,8 @@
 #pragma once
-#include <EFLib/Utility/Assert.h>
 #include <cmath>
-#include <EFLib/Common/IntDefs.h>
+#include <cassert>
+
+#include "IntDefs.h"
 
 namespace ef
 {
@@ -419,14 +420,14 @@ namespace ef
 		};
 		inline float operator[](int i) const
 		{
-			Assert(i >= 0 && i < 2);
+			assert(i >= 0 && i < 2);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			return 0.0f;
 		};
 		inline float& operator[](int i)
 		{
-			Assert(i >= 0 && i < 2);
+			assert(i >= 0 && i < 2);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			return x;
@@ -585,7 +586,7 @@ namespace ef
 		};
 		inline float operator[](int i) const
 		{
-			Assert(i >= 0 && i < 3);
+			assert(i >= 0 && i < 3);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			if (i == 2) return z;
@@ -593,7 +594,7 @@ namespace ef
 		};
 		inline float& operator[](int i)
 		{
-			Assert(i >= 0 && i < 3);
+			assert(i >= 0 && i < 3);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			if (i == 2) return z;
@@ -754,7 +755,7 @@ namespace ef
 		};
 		inline float operator[](int i) const
 		{
-			Assert(i >= 0 && i < 4);
+			assert(i >= 0 && i < 4);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			if (i == 2) return z;
@@ -763,7 +764,7 @@ namespace ef
 		};
 		inline float& operator[](int i)
 		{
-			Assert(i >= 0 && i < 4);
+			assert(i >= 0 && i < 4);
 			if (i == 0) return x;
 			if (i == 1) return y;
 			if (i == 2) return z;
