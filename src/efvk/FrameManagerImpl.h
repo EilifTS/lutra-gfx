@@ -26,9 +26,9 @@ namespace efvk
 		u32 window_height{};
 		u32 current_frame_index = 0;
 
-		vk::CommandBuffer GetCurrentCommandBuffer()
+		CommandBuffer& GetCurrentCommandBuffer()
 		{
-			return *per_frame_res[current_frame_index].cmd_buf.cmd_buf;
+			return per_frame_res[current_frame_index].cmd_buf;
 		}
 
 		vk::Image GetCurrentImage()

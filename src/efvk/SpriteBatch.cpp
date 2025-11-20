@@ -4,14 +4,13 @@
 #include "GraphicsContextImpl.h"
 #include "VulkanHPP.h"
 #include "GraphicsPipeline.h"
+#include "Buffer.h"
 
 namespace efvk
 {
 	struct SpriteBatch::Impl
 	{
-		vk::UniqueBuffer vertex_buffer{};
-		vk::UniqueBuffer index_buffer{};
-		vk::UniqueBuffer sprite_buffer{};
+		Buffer sprite_buffer{};
 
 		GraphicsPipeline pipeline{};
 	};
@@ -20,29 +19,13 @@ namespace efvk
 	{
 		pimpl = std::make_unique<Impl>();
 
-		/* Create vertex buffer */
-		const vk::BufferCreateInfo vertex_buffer_info{
-			.size = 0, // TODO: Find out
-			.usage = vk::BufferUsageFlagBits::eVertexBuffer,
-		};
-
-		pimpl->vertex_buffer = ctx.pimpl->device->createBufferUnique(vertex_buffer_info);
-
-		/* Create index buffer */
-		const vk::BufferCreateInfo index_buffer_info{
-			.size = 0, // TODO: Find out
-			.usage = vk::BufferUsageFlagBits::eIndexBuffer,
-		};
-
-		pimpl->index_buffer = ctx.pimpl->device->createBufferUnique(index_buffer_info);
-
 		/* Create buffer for sprite data */
 		const vk::BufferCreateInfo sprite_buffer_info{
 			.size = 0, // TODO: Find out
 			.usage = vk::BufferUsageFlagBits::eUniformBuffer,
 		};
 
-		pimpl->sprite_buffer = ctx.pimpl->device->createBufferUnique(sprite_buffer_info);
+		pimpl->sprite_buffer = Buffer(*ctx.pimpl, 10000, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, 0);
 
 		/* Create graphics pipeline */
 		
@@ -60,10 +43,13 @@ namespace efvk
 
 	void SpriteBatch::End(FrameManager& frame_manager)
 	{
-		vk::CommandBuffer cmd_buf = frame_manager.pimpl->GetCurrentCommandBuffer();
+		CommandBuffer& cmd_buf = frame_manager.pimpl->GetCurrentCommandBuffer();
 
 		if (sprite_list.size() > 0)
 		{
+			/* Upload sprite data */
+			cmd_buf.ScheduleUpload(sprite_list.data(), sprite_list.size() * sizeof(Sprite), pimpl->sprite_buffer);
+
 			const vk::RenderingAttachmentInfo color_attachment_info{
 			.imageView = frame_manager.pimpl->GetCurrentImageView(),
 			.imageLayout = vk::ImageLayout::eGeneral,
@@ -80,8 +66,8 @@ namespace efvk
 				.pColorAttachments = &color_attachment_info,
 			};
 
-			cmd_buf.beginRendering(rendering_info);
-			cmd_buf.bindPipeline(vk::PipelineBindPoint::eGraphics, pimpl->pipeline.GetPipeline());
+			cmd_buf.cmd_buf->beginRendering(rendering_info);
+			cmd_buf.cmd_buf->bindPipeline(vk::PipelineBindPoint::eGraphics, pimpl->pipeline.GetPipeline());
 
 			const vk::Viewport viewport{
 				.x = 0.0f,
@@ -97,12 +83,12 @@ namespace efvk
 				.extent = { width, height },
 			};
 
-			cmd_buf.setViewport(0, viewport);
-			cmd_buf.setScissor(0, scissor);
+			cmd_buf.cmd_buf->setViewport(0, viewport);
+			cmd_buf.cmd_buf->setScissor(0, scissor);
 
-			cmd_buf.draw(6, static_cast<u32>(sprite_list.size()), 0, 0);
+			cmd_buf.cmd_buf->draw(6, static_cast<u32>(sprite_list.size()), 0, 0);
 			
-			cmd_buf.endRendering();
+			cmd_buf.cmd_buf->endRendering();
 		}
 	}
 }

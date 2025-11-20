@@ -53,7 +53,7 @@ namespace efvk
 		);
 	}
 
-	static void image_barrier(vk::CommandBuffer cmd_buf, vk::Image image, u32 queue_family_index, vk::PipelineStageFlags src_stage, vk::PipelineStageFlags dst_stage, vk::AccessFlags src_access, vk::AccessFlagBits dst_access)
+	static void image_barrier(vk::CommandBuffer cmd_buf, vk::Image image, vk::PipelineStageFlags src_stage, vk::PipelineStageFlags dst_stage, vk::AccessFlags src_access, vk::AccessFlagBits dst_access)
 	{
 		vk::ImageSubresourceRange range{
 			.aspectMask = vk::ImageAspectFlagBits::eColor,
@@ -68,15 +68,15 @@ namespace efvk
 			.dstAccessMask = dst_access,
 			.oldLayout = vk::ImageLayout::eGeneral,
 			.newLayout = vk::ImageLayout::eGeneral,
-			.srcQueueFamilyIndex = queue_family_index,
-			.dstQueueFamilyIndex = queue_family_index,
+			.srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+			.dstQueueFamilyIndex = vk::QueueFamilyIgnored,
 			.image = image,
 			.subresourceRange = range,
 		};
 
 		cmd_buf.pipelineBarrier(
-			vk::PipelineStageFlagBits::eAllCommands,
-			vk::PipelineStageFlagBits::eAllCommands,
+			src_stage,
+			dst_stage,
 			vk::DependencyFlagBits::eByRegion,
 			{},
 			{},
@@ -231,7 +231,7 @@ namespace efvk
 		pimpl->current_frame_index = new_image_index;
 
 		/* Reset command buffer */
-		new_frame_res.cmd_buf.cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+		new_frame_res.cmd_buf.Reset();
 
 		/* Begin command buffer */
 		const vk::CommandBufferBeginInfo begin_info{
@@ -258,7 +258,7 @@ namespace efvk
 		};
 
 		new_frame_res.cmd_buf.cmd_buf->clearColorImage(new_frame_res.image, vk::ImageLayout::eGeneral, clear_color_value, range);
-		image_barrier(*new_frame_res.cmd_buf.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eColorAttachmentWrite);
+		image_barrier(*new_frame_res.cmd_buf.cmd_buf, new_frame_res.image, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eColorAttachmentWrite);
 	}
 
 	void FrameManager::EndFrame(GraphicsContext& public_ctx)

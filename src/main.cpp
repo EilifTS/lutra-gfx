@@ -17,6 +17,13 @@ int main()
 		frame_manager.StartFrame(graphics_context);
 
 		sb.Begin();
+
+		const efvk::Sprite s{
+			.position = ef::vec2(0.5f, 0.5f),
+			.size = ef::vec2(10.0f, 10.0f),
+			.color = ef::Color::Blue(),
+		};
+		sb.Draw(s);
 		sb.End(frame_manager);
 
 		frame_manager.EndFrame(graphics_context);
