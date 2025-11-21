@@ -36,8 +36,8 @@ VSVarying VS(VSInput input)
     
     const SpriteInfo sprite_info = sprite_data[input.instance_id];
     const float2 screen_size = float2(800.0, 600.0); /* Hard coded screen size for now */
-    const float2 sprite_position = sprite_info.position / screen_size;
-    const float2 sprite_size = 0.5 * sprite_info.size / screen_size;
+    const float2 sprite_position = 2.0f * (sprite_info.position - 0.5 * screen_size) / screen_size;
+    const float2 sprite_size = sprite_info.size / screen_size;
     const uint4 sprite_color_int = (sprite_info.color.xxxx >> uint4(24, 16, 8, 0)) & uint(0xFF).xxxx;
     const float4 sprite_color = float4(sprite_color_int) / 255.0;
     

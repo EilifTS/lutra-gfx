@@ -8,6 +8,8 @@
 
 namespace efvk
 {
+	static constexpr u32 max_sprites_per_batch = 10000;
+
 	struct SpriteBatch::Impl
 	{
 		vk::Device dev{};
@@ -27,7 +29,7 @@ namespace efvk
 			.usage = vk::BufferUsageFlagBits::eUniformBuffer,
 		};
 
-		pimpl->sprite_buffer = Buffer(*ctx.pimpl, 10000, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, 0);
+		pimpl->sprite_buffer = Buffer(*ctx.pimpl, max_sprites_per_batch * sizeof(Sprite), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, 0);
 
 		/* Create graphics pipeline */
 		pimpl->pipeline = GraphicsPipeline(*ctx.pimpl->device, "shaders/SpriteBatchShader.vert.spv", "shaders/SpriteBatchShader.frag.spv");

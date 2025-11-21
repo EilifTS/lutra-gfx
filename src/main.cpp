@@ -18,12 +18,18 @@ int main()
 
 		sb.Begin();
 
-		const efvk::Sprite s{
-			.position = ef::vec2(0.5f, 0.5f),
+		const efvk::Sprite s1{
+			.position = ef::vec2(5.0f, 5.0f),
 			.size = ef::vec2(10.0f, 10.0f),
 			.color = ef::Color::Blue(),
 		};
-		sb.Draw(s);
+		const efvk::Sprite s2{
+			.position = ef::vec2(400.0f, 150.0f),
+			.size = ef::vec2(10.0f, 300.0f),
+			.color = ef::Color::Blue(),
+		};
+		sb.Draw(s1);
+		sb.Draw(s2);
 		sb.End(frame_manager);
 
 		frame_manager.EndFrame(graphics_context);
