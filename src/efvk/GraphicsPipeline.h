@@ -11,11 +11,14 @@ namespace efvk
 
 		void Compile(vk::Device dev);
 
+		vk::DescriptorSetLayout GetDescriptorSetLayout() { return *desc_layout; }
+		vk::PipelineLayout GetPipelineLayout() { return *layout; }
 		vk::Pipeline GetPipeline() { return *pipeline; }
 
 	private:
 		vk::UniqueShaderModule vs_module{};
 		vk::UniqueShaderModule ps_module{};
+		vk::UniqueDescriptorSetLayout desc_layout{};
 		vk::UniquePipelineLayout layout{};
 		vk::UniquePipeline pipeline{};
 	};

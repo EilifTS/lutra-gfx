@@ -10,7 +10,7 @@ namespace efvk
 	{
 	public:
 		Buffer() {};
-		Buffer(GraphicsContext::Impl& ctx, u32 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags);
+		Buffer(GraphicsContext::Impl& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags);
 		~Buffer();
 
 		Buffer(const Buffer&) = delete;
@@ -19,9 +19,11 @@ namespace efvk
 			allocator = rhs.allocator;
 			allocation = rhs.allocation;
 			buffer = rhs.buffer;
+			size = rhs.size;
 			rhs.allocator = VK_NULL_HANDLE;
 			rhs.allocation = VK_NULL_HANDLE;
 			rhs.buffer = VK_NULL_HANDLE;
+			rhs.size = 0;
 		}
 		Buffer& operator=(const Buffer&) = delete;
 		Buffer& operator=(Buffer&& rhs) noexcept
@@ -29,9 +31,11 @@ namespace efvk
 			allocator = rhs.allocator;
 			allocation = rhs.allocation;
 			buffer = rhs.buffer;
+			size = rhs.size;
 			rhs.allocator = VK_NULL_HANDLE;
 			rhs.allocation = VK_NULL_HANDLE;
 			rhs.buffer = VK_NULL_HANDLE;
+			rhs.size = 0;
 			return *this;
 		}
 

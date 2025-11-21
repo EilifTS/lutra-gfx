@@ -27,7 +27,7 @@ namespace efvk
 	}
 
 	CommandBuffer::CommandBuffer(GraphicsContext::Impl& ctx)
-		: ctx(&ctx), buffer_memory_allocator(ctx, chunk_size)
+		: ctx(&ctx), buffer_memory_allocator(ctx, chunk_size), descriptor_allocator(ctx)
 	{
 		/* Create command buffer */
 		const vk::CommandBufferAllocateInfo allocate_info{
@@ -67,6 +67,7 @@ namespace efvk
 	void CommandBuffer::Reset()
 	{
 		buffer_memory_allocator.Reset(*ctx);
+		descriptor_allocator.Reset();
 		cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 	}
 }

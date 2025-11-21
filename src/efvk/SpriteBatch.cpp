@@ -10,14 +10,16 @@ namespace efvk
 {
 	struct SpriteBatch::Impl
 	{
+		vk::Device dev{};
 		Buffer sprite_buffer{};
-
 		GraphicsPipeline pipeline{};
 	};
 
 	SpriteBatch::SpriteBatch(GraphicsContext& ctx)
 	{
 		pimpl = std::make_unique<Impl>();
+
+		pimpl->dev = *ctx.pimpl->device;
 
 		/* Create buffer for sprite data */
 		const vk::BufferCreateInfo sprite_buffer_info{
@@ -28,7 +30,6 @@ namespace efvk
 		pimpl->sprite_buffer = Buffer(*ctx.pimpl, 10000, vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, 0);
 
 		/* Create graphics pipeline */
-		
 		pimpl->pipeline = GraphicsPipeline(*ctx.pimpl->device, "shaders/SpriteBatchShader.vert.spv", "shaders/SpriteBatchShader.frag.spv");
 		pimpl->pipeline.Compile(*ctx.pimpl->device);
 	}
@@ -50,16 +51,32 @@ namespace efvk
 			/* Upload sprite data */
 			cmd_buf.ScheduleUpload(sprite_list.data(), sprite_list.size() * sizeof(Sprite), pimpl->sprite_buffer);
 
+			vk::DescriptorSet set = cmd_buf.AllocateDescriptorSet(pimpl->pipeline.GetDescriptorSetLayout());
+
+			const vk::DescriptorBufferInfo desc_buffer_info{
+				.buffer = pimpl->sprite_buffer.buffer,
+				.range = pimpl->sprite_buffer.Size(),
+			};
+
+			const vk::WriteDescriptorSet desc_writes{
+				.dstSet = set,
+				.dstBinding = 0,
+				.descriptorCount = 1,
+				.descriptorType = vk::DescriptorType::eStorageBuffer,
+				.pBufferInfo = &desc_buffer_info,
+			};
+			pimpl->dev.updateDescriptorSets(desc_writes, {});
+
 			const vk::RenderingAttachmentInfo color_attachment_info{
-			.imageView = frame_manager.pimpl->GetCurrentImageView(),
-			.imageLayout = vk::ImageLayout::eGeneral,
-			.loadOp = vk::AttachmentLoadOp::eLoad,
-			.storeOp = vk::AttachmentStoreOp::eStore,
+				.imageView = frame_manager.pimpl->GetCurrentImageView(),
+				.imageLayout = vk::ImageLayout::eGeneral,
+				.loadOp = vk::AttachmentLoadOp::eLoad,
+				.storeOp = vk::AttachmentStoreOp::eStore,
 			};
 
 			const u32 width = frame_manager.pimpl->window_width;
 			const u32 height = frame_manager.pimpl->window_height;
-			vk::RenderingInfo rendering_info{
+			const vk::RenderingInfo rendering_info{
 				.renderArea = { 0, 0, width, height},
 				.layerCount = 1,
 				.colorAttachmentCount = 1,
@@ -68,6 +85,7 @@ namespace efvk
 
 			cmd_buf.cmd_buf->beginRendering(rendering_info);
 			cmd_buf.cmd_buf->bindPipeline(vk::PipelineBindPoint::eGraphics, pimpl->pipeline.GetPipeline());
+			cmd_buf.cmd_buf->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pimpl->pipeline.GetPipelineLayout(), 0, set, {});
 
 			const vk::Viewport viewport{
 				.x = 0.0f,

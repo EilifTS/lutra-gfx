@@ -2,6 +2,7 @@
 #include <efvk/GraphicsContext.h>
 #include "GraphicsContextImpl.h"
 #include "BufferMemoryAllocator.h"
+#include "DescriptorAllocator.h"
 
 namespace efvk
 {
@@ -19,11 +20,13 @@ namespace efvk
 		vk::UniqueCommandBuffer cmd_buf{};
 
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
+		vk::DescriptorSet AllocateDescriptorSet(vk::DescriptorSetLayout layout) { return descriptor_allocator.Alloc(layout); };
 		void Reset();
 
 	private:
 		GraphicsContext::Impl* ctx{};
 
 		BufferMemoryAllocator buffer_memory_allocator{};
+		DescriptorAllocator descriptor_allocator{};
 	};
 }

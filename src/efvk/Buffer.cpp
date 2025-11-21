@@ -2,7 +2,7 @@
 
 namespace efvk
 {
-	Buffer::Buffer(GraphicsContext::Impl& ctx, u32 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags)
+	Buffer::Buffer(GraphicsContext::Impl& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags)
 		: size(size)
 	{
 		allocator = ctx.vma_allocator;

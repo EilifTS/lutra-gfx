@@ -37,6 +37,28 @@ namespace efvk
 
 	void GraphicsPipeline::Compile(vk::Device dev)
 	{
+		/* Create descriptor set layout */
+		const vk::DescriptorSetLayoutBinding desc_layout_binding{
+			.binding = 0,
+			.descriptorType = vk::DescriptorType::eStorageBuffer,
+			.descriptorCount = 1,
+			.stageFlags = vk::ShaderStageFlagBits::eVertex,
+		};
+
+		const vk::DescriptorSetLayoutCreateInfo desc_layout_info{
+			.bindingCount = 1,
+			.pBindings = &desc_layout_binding,
+		};
+
+		desc_layout = dev.createDescriptorSetLayoutUnique(desc_layout_info);
+
+		/* Create pipeline layout */
+		const vk::PipelineLayoutCreateInfo layout_info{
+			.setLayoutCount = 1,
+			.pSetLayouts = &desc_layout.get(),
+		};
+		layout = dev.createPipelineLayoutUnique(layout_info);
+
 		const vk::Format color_attachment_format = vk::Format::eR8G8B8A8Unorm;
 		const vk::PipelineRenderingCreateInfo rendering_info{
 			.colorAttachmentCount = 1,
@@ -100,9 +122,6 @@ namespace efvk
 			.dynamicStateCount = sizeof(dynamic_states) / sizeof(vk::DynamicState),
 			.pDynamicStates = dynamic_states
 		};
-
-		const vk::PipelineLayoutCreateInfo layout_info{};
-		layout = dev.createPipelineLayoutUnique(layout_info);
 
 		const vk::GraphicsPipelineCreateInfo pipeline_info{
 			.pNext = &rendering_info,
