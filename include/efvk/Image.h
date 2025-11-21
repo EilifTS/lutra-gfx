@@ -1,0 +1,23 @@
+#pragma once
+#include <vector>
+#include <efvk/math/IntDefs.h>
+
+namespace efvk
+{
+	class Image
+	{
+	public:
+		Image() {};
+
+		void Load(const char* filename);
+
+		u32 Width() const { return width; }
+		u32 Height() const { return height; }
+		char GetData(u32 i) const { return data[i]; }
+
+	private:
+		u32 width{};
+		u32 height{};
+		std::vector<char> data{};
+	};
+}

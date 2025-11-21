@@ -3,6 +3,7 @@
 #include <efvk/GraphicsContext.h>
 #include <efvk/FrameManager.h>
 #include <efvk/SpriteBatch.h>
+#include <efvk/Image.h>
 
 int main()
 {
@@ -11,6 +12,23 @@ int main()
 	efvk::GraphicsContext graphics_context(window, "EFVK");
 	efvk::FrameManager frame_manager(graphics_context, 800, 600);
 	efvk::SpriteBatch sb(graphics_context);
+
+	/* Temp image load test */
+	efvk::Image test_img{};
+	test_img.Load("textures/test.png");
+	for (u32 y = 0; y < test_img.Height(); y++)
+	{
+		for (u32 x = 0; x < test_img.Width(); x++)
+		{
+			printf("(%hhx %hhx %hhx %hhx) ", 
+				test_img.GetData(4 * (y * test_img.Width() + x) + 0),
+				test_img.GetData(4 * (y * test_img.Width() + x) + 1),
+				test_img.GetData(4 * (y * test_img.Width() + x) + 2),
+				test_img.GetData(4 * (y * test_img.Width() + x) + 3)
+			);
+		}
+		printf("\n");
+	}
 
 	while (window.IsOpen()) {
 		window.RetrieveEvents();
