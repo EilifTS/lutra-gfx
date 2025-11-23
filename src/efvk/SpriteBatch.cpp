@@ -56,7 +56,7 @@ namespace efvk
 			vk::DescriptorSet set = cmd_buf.AllocateDescriptorSet(pimpl->pipeline.GetDescriptorSetLayout());
 
 			const vk::DescriptorBufferInfo desc_buffer_info{
-				.buffer = pimpl->sprite_buffer.buffer,
+				.buffer = pimpl->sprite_buffer.buffer.GetBuffer(),
 				.range = pimpl->sprite_buffer.Size(),
 			};
 

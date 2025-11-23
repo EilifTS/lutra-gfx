@@ -22,37 +22,6 @@ namespace efvk
 		return supported_surface_formats[0];
 	}
 
-	static void change_layout(vk::CommandBuffer cmd_buf, vk::Image image, u32 queue_family_index, vk::ImageLayout old_layout, vk::ImageLayout new_layout)
-	{
-		vk::ImageSubresourceRange range{
-			.aspectMask = vk::ImageAspectFlagBits::eColor,
-			.baseMipLevel = 0,
-			.levelCount = 1,
-			.baseArrayLayer = 0,
-			.layerCount = 1,
-		};
-
-		const vk::ImageMemoryBarrier image_barrier{
-			.srcAccessMask = vk::AccessFlagBits::eNone,
-			.dstAccessMask = vk::AccessFlagBits::eNone,
-			.oldLayout = old_layout,
-			.newLayout = new_layout,
-			.srcQueueFamilyIndex = queue_family_index,
-			.dstQueueFamilyIndex = queue_family_index,
-			.image = image,
-			.subresourceRange = range,
-		};
-
-		cmd_buf.pipelineBarrier(
-			vk::PipelineStageFlagBits::eAllCommands,
-			vk::PipelineStageFlagBits::eAllCommands,
-			vk::DependencyFlagBits::eByRegion,
-			{},
-			{},
-			image_barrier
-		);
-	}
-
 	static void image_barrier(vk::CommandBuffer cmd_buf, vk::Image image, vk::PipelineStageFlags src_stage, vk::PipelineStageFlags dst_stage, vk::AccessFlags src_access, vk::AccessFlagBits dst_access)
 	{
 		vk::ImageSubresourceRange range{
@@ -233,14 +202,8 @@ namespace efvk
 		/* Reset command buffer */
 		new_frame_res.cmd_buf.Reset();
 
-		/* Begin command buffer */
-		const vk::CommandBufferBeginInfo begin_info{
-			.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
-		};
-		new_frame_res.cmd_buf.cmd_buf->begin(begin_info);
-
 		/* Transition the image layout to allow rendering */
-		change_layout(*new_frame_res.cmd_buf.cmd_buf, new_frame_res.image, ctx.queue_family_index, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+		change_layout(*new_frame_res.cmd_buf.cmd_buf, new_frame_res.image, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 
 		/* Clear image */
 		vk::ClearColorValue clear_color_value{};
@@ -268,7 +231,7 @@ namespace efvk
 		PerFrameResources& frame_res = pimpl->per_frame_res[pimpl->current_frame_index];
 
 		/* Transition the image layout to prepare for present */
-		change_layout(*frame_res.cmd_buf.cmd_buf, frame_res.image, ctx.queue_family_index, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR);
+		change_layout(*frame_res.cmd_buf.cmd_buf, frame_res.image, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR);
 
 		/* Submit command buffer */
 		frame_res.cmd_buf.cmd_buf->end();

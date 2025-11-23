@@ -4,6 +4,7 @@
 #include <efvk/FrameManager.h>
 #include <efvk/SpriteBatch.h>
 #include <efvk/Image.h>
+#include <efvk/Texture.h>
 
 int main()
 {
@@ -16,21 +17,10 @@ int main()
 	/* Temp image load test */
 	efvk::Image test_img{};
 	test_img.Load("textures/test.png");
-	for (u32 y = 0; y < test_img.Height(); y++)
-	{
-		for (u32 x = 0; x < test_img.Width(); x++)
-		{
-			printf("(%hhx %hhx %hhx %hhx) ", 
-				test_img.GetData(4 * (y * test_img.Width() + x) + 0),
-				test_img.GetData(4 * (y * test_img.Width() + x) + 1),
-				test_img.GetData(4 * (y * test_img.Width() + x) + 2),
-				test_img.GetData(4 * (y * test_img.Width() + x) + 3)
-			);
-		}
-		printf("\n");
-	}
+	efvk::Texture texture(graphics_context, test_img);
 
-	while (window.IsOpen()) {
+	while (window.IsOpen()) 
+	{
 		window.RetrieveEvents();
 		frame_manager.StartFrame(graphics_context);
 

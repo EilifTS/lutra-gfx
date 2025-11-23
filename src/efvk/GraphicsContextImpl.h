@@ -5,18 +5,18 @@ namespace efvk
 {
 	struct GraphicsContext::Impl
 	{
-		vk::UniqueInstance instance;
+		vk::UniqueInstance instance{};
 #if _DEBUG /* VL */
-		vk::UniqueDebugUtilsMessengerEXT messenger;
+		vk::UniqueDebugUtilsMessengerEXT messenger{};
 #endif
-		vk::PhysicalDevice physical_device;
-		vk::UniqueDevice device;
-		vk::Queue queue;
-		u32 queue_family_index;
+		vk::PhysicalDevice physical_device{};
+		vk::UniqueDevice device{};
+		vk::Queue queue{};
+		u32 queue_family_index{};
 
-		vk::UniqueSurfaceKHR surface;
+		vk::UniqueSurfaceKHR surface{};
 
-		VmaAllocator vma_allocator;
+		VmaAllocator vma_allocator{};
 
 		vk::UniqueCommandPool cmd_pool{};
 	};

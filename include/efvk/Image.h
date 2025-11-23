@@ -13,6 +13,7 @@ namespace efvk
 
 		u32 Width() const { return width; }
 		u32 Height() const { return height; }
+		const char* GetDataPtr() const { return data.data(); }
 		char GetData(u32 i) const { return data[i]; }
 
 	private:

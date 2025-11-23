@@ -1,4 +1,5 @@
 #include "CommandBuffer.h"
+#include "TextureImpl.h"
 
 namespace efvk
 {
@@ -37,6 +38,13 @@ namespace efvk
 		};
 		std::vector<vk::CommandBuffer> cmd_buffers;
 		cmd_buf = std::move(ctx.device->allocateCommandBuffersUnique(allocate_info)[0]);
+
+		/* Begin command buffer */
+		const vk::CommandBufferBeginInfo begin_info{
+			.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
+		};
+
+		cmd_buf->begin(begin_info);
 	}
 
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer)
@@ -61,7 +69,38 @@ namespace efvk
 			.size = size,
 		};
 
-		cmd_buf->copyBuffer(allocation.buffer, dst_buffer.buffer, buffer_copy);
+		cmd_buf->copyBuffer(allocation.buffer, dst_buffer.buffer.GetBuffer(), buffer_copy);
+	}
+
+	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture& dst_image)
+	{
+		/* Calculate buffer size */
+		const u64 bytes_per_pixel = 4; /* 4bytes per pixel, have to do this properly at some point */
+		const u64 buffer_size = dst_image.Width() * dst_image.Height() * bytes_per_pixel;
+
+		/* Allocate */
+		BufferMemoryAllocation allocation = buffer_memory_allocator.Alloc(*ctx, buffer_size, 1);
+
+		/* CPU -> GPU Copy */
+		std::memcpy(allocation.ptr, src_ptr, buffer_size);
+
+		/* Flush */
+		VkResult result = vmaFlushAllocation(ctx->vma_allocator, allocation.vma_allocation, allocation.offset, allocation.size);
+		assert(result == VK_SUCCESS);
+
+		/* Barrier */
+		buffer_barrier(*cmd_buf, allocation.buffer, allocation.offset, allocation.size, vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eHostWrite, vk::AccessFlagBits::eTransferRead);
+
+		/* GPU -> GPU COPY */
+		const vk::BufferImageCopy buffer_image_copy{
+			.bufferOffset = allocation.offset,
+			.bufferRowLength = dst_image.Width() * bytes_per_pixel,
+			.bufferImageHeight = dst_image.Height(),
+			.imageSubresource = { vk::ImageAspectFlagBits::eColor, 0, 0, 1 },
+			.imageExtent = { dst_image.Width(), dst_image.Height(), 1 },
+		};
+
+		cmd_buf->copyBufferToImage(allocation.buffer, dst_image.pimpl->image.GetImage(), vk::ImageLayout::eGeneral, buffer_image_copy);
 	}
 
 	void CommandBuffer::Reset()
@@ -69,5 +108,31 @@ namespace efvk
 		buffer_memory_allocator.Reset(*ctx);
 		descriptor_allocator.Reset();
 		cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+
+		/* Begin command buffer */
+		const vk::CommandBufferBeginInfo begin_info{
+			.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
+		};
+
+		cmd_buf->begin(begin_info);
+	}
+
+	void SubmitAndWait(GraphicsContext::Impl& ctx, CommandBuffer& cmd_buf)
+	{
+		vk::UniqueFence fence = ctx.device->createFenceUnique({});
+
+		/* Submit command buffer */
+		cmd_buf.cmd_buf->end();
+
+		const vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eNone;
+
+		const vk::SubmitInfo submit_info{
+			.pWaitDstStageMask = &wait_stage,
+			.commandBufferCount = 1,
+			.pCommandBuffers = &cmd_buf.cmd_buf.get(),
+		};
+		ctx.queue.submit(submit_info, *fence);
+
+		ctx.device->waitForFences(fence.get(), true, UINT64_MAX);
 	}
 }

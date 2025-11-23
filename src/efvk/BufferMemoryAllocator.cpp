@@ -46,8 +46,8 @@ namespace efvk
 			current_chunk_ptr = reinterpret_cast<intptr_t>(chunks.back().Map(*ctx.device));
 		}
 		BufferMemoryAllocation allocation{
-			.buffer = chunks.back().buffer,
-			.vma_allocation = chunks.back().allocation,
+			.buffer = chunks.back().buffer.GetBuffer(),
+			.vma_allocation = chunks.back().buffer.GetAllocation(),
 			.ptr = reinterpret_cast<char*>(current_chunk_ptr + current_chunk_offset),
 			.offset = current_chunk_offset,
 			.size = size,

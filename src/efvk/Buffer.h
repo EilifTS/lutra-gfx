@@ -11,41 +11,17 @@ namespace efvk
 	public:
 		Buffer() {};
 		Buffer(GraphicsContext::Impl& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags);
-		~Buffer();
 
 		Buffer(const Buffer&) = delete;
-		Buffer(Buffer&& rhs) noexcept
-		{
-			allocator = rhs.allocator;
-			allocation = rhs.allocation;
-			buffer = rhs.buffer;
-			size = rhs.size;
-			rhs.allocator = VK_NULL_HANDLE;
-			rhs.allocation = VK_NULL_HANDLE;
-			rhs.buffer = VK_NULL_HANDLE;
-			rhs.size = 0;
-		}
+		Buffer(Buffer&& rhs) noexcept = default;
 		Buffer& operator=(const Buffer&) = delete;
-		Buffer& operator=(Buffer&& rhs) noexcept
-		{
-			allocator = rhs.allocator;
-			allocation = rhs.allocation;
-			buffer = rhs.buffer;
-			size = rhs.size;
-			rhs.allocator = VK_NULL_HANDLE;
-			rhs.allocation = VK_NULL_HANDLE;
-			rhs.buffer = VK_NULL_HANDLE;
-			rhs.size = 0;
-			return *this;
-		}
+		Buffer& operator=(Buffer&& rhs) noexcept = default;
 
 		u64 Size() const { return size; }
 		void* Map(vk::Device device);
 		void Unmap(vk::Device device);
 
-		VmaAllocator allocator{};
-		VmaAllocation allocation{};
-		vk::Buffer buffer{};
+		VMABuffer buffer;
 
 	private:
 		u64 size{};
