@@ -32,8 +32,12 @@ namespace efvk
 		pimpl->sprite_buffer = Buffer(*ctx.pimpl, max_sprites_per_batch * sizeof(Sprite), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, 0);
 
 		/* Create graphics pipeline */
-		pimpl->pipeline = GraphicsPipeline(*ctx.pimpl->device, "shaders/SpriteBatchShader.vert.spv", "shaders/SpriteBatchShader.frag.spv");
-		pimpl->pipeline.Compile(*ctx.pimpl->device);
+		GraphicsPipelineInfo pipeline_info{};
+		pipeline_info.vs_name = "shaders/SpriteBatchShader.vert.spv";
+		pipeline_info.ps_name = "shaders/SpriteBatchShader.frag.spv";
+		pipeline_info.AddStorageBuffer(0, GraphicsPipelineInfo::Binding::Stage::Vertex);
+
+		pimpl->pipeline = GraphicsPipeline(*ctx.pimpl->device, pipeline_info);
 	}
 
 	SpriteBatch::~SpriteBatch()

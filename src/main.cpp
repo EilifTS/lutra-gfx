@@ -19,12 +19,16 @@ int main()
 	test_img.Load("textures/test.png");
 	efvk::Texture texture(graphics_context, test_img);
 
+	/* Create camera */
+	ef::Camera2D cam(ef::vec2(window.Width(), window.Height()));
+	cam.GetPosition() = cam.GetCameraSize() * 0.5f;
+
 	while (window.IsOpen()) 
 	{
 		window.RetrieveEvents();
 		frame_manager.StartFrame(graphics_context);
 
-		sb.Begin();
+		sb.Begin(cam);
 
 		const efvk::Sprite s1{
 			.position = ef::vec2(5.0f, 5.0f),

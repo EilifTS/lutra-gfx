@@ -4,6 +4,31 @@
 
 namespace efvk
 {
+	static vk::DescriptorType convertDescriptorType(GraphicsPipelineInfo::Binding::Type type)
+	{
+		switch (type)
+		{
+		case GraphicsPipelineInfo::Binding::Type::Sampler: return vk::DescriptorType::eSampler;
+		case GraphicsPipelineInfo::Binding::Type::SampledImage: return vk::DescriptorType::eSampledImage;
+		case GraphicsPipelineInfo::Binding::Type::StorageImage: return vk::DescriptorType::eStorageImage;
+		case GraphicsPipelineInfo::Binding::Type::UniformBuffer: return vk::DescriptorType::eUniformBuffer;
+		case GraphicsPipelineInfo::Binding::Type::StorageBuffer: return vk::DescriptorType::eStorageBuffer;
+		}
+		assert(0);
+		return vk::DescriptorType::eSampler;
+	}
+
+	static vk::ShaderStageFlagBits convertDescriptorStage(GraphicsPipelineInfo::Binding::Stage stage)
+	{
+		switch (stage)
+		{
+		case GraphicsPipelineInfo::Binding::Stage::Vertex: return vk::ShaderStageFlagBits::eVertex;
+		case GraphicsPipelineInfo::Binding::Stage::Fragment: return vk::ShaderStageFlagBits::eFragment;
+		}
+		assert(0);
+		return vk::ShaderStageFlagBits::eVertex;
+	}
+
 	static std::vector<uint32_t> load_spriv_data(const char* path)
 	{
 		std::ifstream file(path, std::ios::ate | std::ios::binary);
@@ -29,25 +54,27 @@ namespace efvk
 		return dev.createShaderModuleUnique(vs_module_info);
 	}
 
-	GraphicsPipeline::GraphicsPipeline(vk::Device dev, const char* vs_name, const char* ps_name)
+	GraphicsPipeline::GraphicsPipeline(vk::Device dev, const GraphicsPipelineInfo& info)
 	{
-		vs_module = create_shader_module(dev, vs_name);
-		ps_module = create_shader_module(dev, ps_name);
-	}
+		vs_module = create_shader_module(dev, info.vs_name);
+		ps_module = create_shader_module(dev, info.ps_name);
 
-	void GraphicsPipeline::Compile(vk::Device dev)
-	{
 		/* Create descriptor set layout */
-		const vk::DescriptorSetLayoutBinding desc_layout_binding{
-			.binding = 0,
-			.descriptorType = vk::DescriptorType::eStorageBuffer,
-			.descriptorCount = 1,
-			.stageFlags = vk::ShaderStageFlagBits::eVertex,
-		};
+		std::vector<vk::DescriptorSetLayoutBinding> desc_layout_bindings{};
+		for (u32 i = 0; i < static_cast<u32>(info.bindings.size()); i++)
+		{
+			const auto& b = info.bindings[i];
+			desc_layout_bindings.push_back({
+				.binding = b.binding_index,
+				.descriptorType = convertDescriptorType(b.type),
+				.descriptorCount = b.count,
+				.stageFlags = convertDescriptorStage(b.stage),
+			});
+		}
 
 		const vk::DescriptorSetLayoutCreateInfo desc_layout_info{
-			.bindingCount = 1,
-			.pBindings = &desc_layout_binding,
+			.bindingCount = static_cast<u32>(desc_layout_bindings.size()),
+			.pBindings = desc_layout_bindings.data(),
 		};
 
 		desc_layout = dev.createDescriptorSetLayoutUnique(desc_layout_info);
@@ -141,4 +168,5 @@ namespace efvk
 		assert(res == vk::Result::eSuccess);
 		pipeline = std::move(ppl);
 	}
+
 }
