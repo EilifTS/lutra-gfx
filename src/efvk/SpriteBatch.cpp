@@ -35,7 +35,9 @@ namespace efvk
 		GraphicsPipelineInfo pipeline_info{};
 		pipeline_info.vs_name = "shaders/SpriteBatchShader.vert.spv";
 		pipeline_info.ps_name = "shaders/SpriteBatchShader.frag.spv";
-		pipeline_info.AddStorageBuffer(0, GraphicsPipelineInfo::Binding::Stage::Vertex);
+		pipeline_info.AddTexture(0, GraphicsPipelineInfo::Binding::Stage::Fragment);
+		pipeline_info.AddImmutableSampler(1, SamplerType::LinearClamp, GraphicsPipelineInfo::Binding::Stage::Fragment);
+		pipeline_info.AddStorageBuffer(2, GraphicsPipelineInfo::Binding::Stage::Vertex);
 
 		pimpl->pipeline = GraphicsPipeline(*ctx.pimpl->device, pipeline_info);
 	}
@@ -57,62 +59,14 @@ namespace efvk
 			/* Upload sprite data */
 			cmd_buf.ScheduleUpload(sprite_list.data(), sprite_list.size() * sizeof(Sprite), pimpl->sprite_buffer);
 
-			vk::DescriptorSet set = cmd_buf.AllocateDescriptorSet(pimpl->pipeline.GetDescriptorSetLayout());
+			cmd_buf.BeginRendering(frame_manager.pimpl->GetCurrentImageView(), frame_manager.pimpl->window_width, frame_manager.pimpl->window_height);
 
-			const vk::DescriptorBufferInfo desc_buffer_info{
-				.buffer = pimpl->sprite_buffer.buffer.GetBuffer(),
-				.range = pimpl->sprite_buffer.Size(),
-			};
+			cmd_buf.BindPipeline(pimpl->pipeline);
+			cmd_buf.BindBuffer(pimpl->sprite_buffer, 2);
 
-			const vk::WriteDescriptorSet desc_writes{
-				.dstSet = set,
-				.dstBinding = 0,
-				.descriptorCount = 1,
-				.descriptorType = vk::DescriptorType::eStorageBuffer,
-				.pBufferInfo = &desc_buffer_info,
-			};
-			pimpl->dev.updateDescriptorSets(desc_writes, {});
-
-			const vk::RenderingAttachmentInfo color_attachment_info{
-				.imageView = frame_manager.pimpl->GetCurrentImageView(),
-				.imageLayout = vk::ImageLayout::eGeneral,
-				.loadOp = vk::AttachmentLoadOp::eLoad,
-				.storeOp = vk::AttachmentStoreOp::eStore,
-			};
-
-			const u32 width = frame_manager.pimpl->window_width;
-			const u32 height = frame_manager.pimpl->window_height;
-			const vk::RenderingInfo rendering_info{
-				.renderArea = { 0, 0, width, height},
-				.layerCount = 1,
-				.colorAttachmentCount = 1,
-				.pColorAttachments = &color_attachment_info,
-			};
-
-			cmd_buf.cmd_buf->beginRendering(rendering_info);
-			cmd_buf.cmd_buf->bindPipeline(vk::PipelineBindPoint::eGraphics, pimpl->pipeline.GetPipeline());
-			cmd_buf.cmd_buf->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pimpl->pipeline.GetPipelineLayout(), 0, set, {});
-
-			const vk::Viewport viewport{
-				.x = 0.0f,
-				.y = 0.0f,
-				.width = static_cast<float>(width),
-				.height = static_cast<float>(height),
-				.minDepth = 0.0f,
-				.maxDepth = 1.0f,
-			};
-
-			const vk::Rect2D scissor{
-				.offset = { 0, 0 },
-				.extent = { width, height },
-			};
-
-			cmd_buf.cmd_buf->setViewport(0, viewport);
-			cmd_buf.cmd_buf->setScissor(0, scissor);
-
-			cmd_buf.cmd_buf->draw(6, static_cast<u32>(sprite_list.size()), 0, 0);
+			cmd_buf.Draw(6, static_cast<u32>(sprite_list.size()));
 			
-			cmd_buf.cmd_buf->endRendering();
+			cmd_buf.EndRendering();
 		}
 	}
 }

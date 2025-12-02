@@ -4,6 +4,15 @@
 
 namespace efvk
 {
+	enum class SamplerType
+	{
+		None,
+		LinearClamp,
+		LinearWrap,
+		PointClamp,
+		PointWrap
+	};
+
 	struct GraphicsPipelineInfo
 	{
 		const char* vs_name{};
@@ -30,11 +39,20 @@ namespace efvk
 			Type type{};
 			u32 count{};
 			Stage stage{};
+			SamplerType sampler_type{};
 		};
 
+		void AddImmutableSampler(u32 binding, SamplerType type, Binding::Stage stage)
+		{
+			bindings.push_back({ binding, Binding::Type::Sampler, 1, stage, type });
+		}
+		void AddTexture(u32 binding, Binding::Stage stage)
+		{
+			bindings.push_back({ binding, Binding::Type::SampledImage, 1, stage, SamplerType::None });
+		}
 		void AddStorageBuffer(u32 binding, Binding::Stage stage)
 		{
-			bindings.push_back({ binding, Binding::Type::StorageBuffer, 1, stage });
+			bindings.push_back({ binding, Binding::Type::StorageBuffer, 1, stage, SamplerType::None });
 		}
 
 		std::vector<Binding> bindings{};
@@ -46,8 +64,6 @@ namespace efvk
 		GraphicsPipeline() {};
 		GraphicsPipeline(vk::Device dev, const GraphicsPipelineInfo& info);
 
-		void Compile(vk::Device dev);
-
 		vk::DescriptorSetLayout GetDescriptorSetLayout() { return *desc_layout; }
 		vk::PipelineLayout GetPipelineLayout() { return *layout; }
 		vk::Pipeline GetPipeline() { return *pipeline; }
@@ -58,5 +74,7 @@ namespace efvk
 		vk::UniqueDescriptorSetLayout desc_layout{};
 		vk::UniquePipelineLayout layout{};
 		vk::UniquePipeline pipeline{};
+		
+		std::vector<vk::UniqueSampler> samplers{};
 	};
 }

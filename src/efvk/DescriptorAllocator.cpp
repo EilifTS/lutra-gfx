@@ -23,7 +23,7 @@ namespace efvk
 		pool = ctx.device->createDescriptorPoolUnique(pool_info);
 	}
 
-	vk::DescriptorSet DescriptorAllocator::Alloc(vk::DescriptorSetLayout& layout)
+	vk::DescriptorSet DescriptorAllocator::Alloc(vk::DescriptorSetLayout layout)
 	{
 		const vk::DescriptorSetAllocateInfo alloc_info{
 			.descriptorPool = *pool,

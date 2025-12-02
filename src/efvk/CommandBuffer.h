@@ -4,9 +4,12 @@
 #include "GraphicsContextImpl.h"
 #include "BufferMemoryAllocator.h"
 #include "DescriptorAllocator.h"
+#include "DescriptorWriteCache.h"
 
 namespace efvk
 {
+	class GraphicsPipeline;
+
 	class CommandBuffer
 	{
 	public:
@@ -20,9 +23,18 @@ namespace efvk
 
 		vk::UniqueCommandBuffer cmd_buf{};
 
+		void BeginRendering(vk::ImageView image_view, u32 width, u32 height);
+		void EndRendering();
+
+		vk::DescriptorSet AllocateDescriptorSet(vk::DescriptorSetLayout layout) { return descriptor_allocator.Alloc(layout); };
+		void BindPipeline(GraphicsPipeline& pipeline);
+		void BindBuffer(Buffer& buffer, u32 binding);
+
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);
-		vk::DescriptorSet AllocateDescriptorSet(vk::DescriptorSetLayout layout) { return descriptor_allocator.Alloc(layout); };
+
+		void Draw(u32 vertex_count, u32 instance_count);
+
 		void Reset();
 
 	private:
@@ -30,6 +42,9 @@ namespace efvk
 
 		BufferMemoryAllocator buffer_memory_allocator{};
 		DescriptorAllocator descriptor_allocator{};
+		DescriptorWriteCache descriptor_write_cache{};
+
+		GraphicsPipeline* bound_pipeline{};
 	};
 
 	void SubmitAndWait(GraphicsContext::Impl& ctx, CommandBuffer& cmd_buf);

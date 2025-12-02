@@ -1,5 +1,8 @@
-//Texture2D textures[EF_SPRITE_BATCH_SHADER_MAX_TEXTURES] : register(t0, space1);
-//SamplerState linear_clamp : register(s0, space0);
+[[vk::binding(0, 0)]]
+Texture2D texture;
+
+[[vk::binding(1, 0)]]
+SamplerState linear_clamp;
 
 struct SpriteInfo
 {
@@ -8,7 +11,7 @@ struct SpriteInfo
     float depth;
     uint color;
 };
-[[vk::binding(0, 0)]]
+[[vk::binding(2, 0)]]
 StructuredBuffer<SpriteInfo> sprite_data;
 
 struct VSInput

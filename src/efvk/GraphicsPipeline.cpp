@@ -54,6 +54,53 @@ namespace efvk
 		return dev.createShaderModuleUnique(vs_module_info);
 	}
 
+	static vk::Filter getFilter(SamplerType type)
+	{
+		switch (type)
+		{
+		case SamplerType::LinearClamp:
+		case SamplerType::LinearWrap:
+			return vk::Filter::eLinear;
+		case SamplerType::PointClamp:
+		case SamplerType::PointWrap:
+			return vk::Filter::eNearest;
+		default:
+			assert(0);
+		}
+	}
+
+	static vk::SamplerAddressMode getAddressMode(SamplerType type)
+	{
+		switch (type)
+		{
+		case SamplerType::LinearClamp:
+		case SamplerType::PointClamp:
+			return vk::SamplerAddressMode::eClampToEdge;
+		case SamplerType::LinearWrap:
+		case SamplerType::PointWrap:
+			return vk::SamplerAddressMode::eRepeat;
+		default:
+			assert(0);
+		}
+	}
+
+	static vk::UniqueSampler create_sampler(vk::Device dev, SamplerType type)
+	{
+		const vk::Filter filter = getFilter(type);
+		const vk::SamplerAddressMode address_mode = getAddressMode(type);
+
+		const vk::SamplerCreateInfo info{
+			.magFilter = filter,
+			.minFilter = filter,
+			.addressModeU = address_mode,
+			.addressModeV = address_mode,
+			.addressModeW = address_mode,
+			.maxLod = vk::LodClampNone,
+		};
+
+		return dev.createSamplerUnique(info);
+	}
+
 	GraphicsPipeline::GraphicsPipeline(vk::Device dev, const GraphicsPipelineInfo& info)
 	{
 		vs_module = create_shader_module(dev, info.vs_name);
@@ -64,12 +111,28 @@ namespace efvk
 		for (u32 i = 0; i < static_cast<u32>(info.bindings.size()); i++)
 		{
 			const auto& b = info.bindings[i];
-			desc_layout_bindings.push_back({
-				.binding = b.binding_index,
-				.descriptorType = convertDescriptorType(b.type),
-				.descriptorCount = b.count,
-				.stageFlags = convertDescriptorStage(b.stage),
-			});
+			if (b.type == GraphicsPipelineInfo::Binding::Type::Sampler)
+			{
+				samplers.push_back(create_sampler(dev, b.sampler_type));
+
+				desc_layout_bindings.push_back({
+					.binding = b.binding_index,
+					.descriptorType = convertDescriptorType(b.type),
+					.descriptorCount = b.count,
+					.stageFlags = convertDescriptorStage(b.stage),
+					.pImmutableSamplers = &samplers.back().get()
+				});
+			}
+			else
+			{
+				desc_layout_bindings.push_back({
+					.binding = b.binding_index,
+					.descriptorType = convertDescriptorType(b.type),
+					.descriptorCount = b.count,
+					.stageFlags = convertDescriptorStage(b.stage),
+				});
+			}
+			
 		}
 
 		const vk::DescriptorSetLayoutCreateInfo desc_layout_info{

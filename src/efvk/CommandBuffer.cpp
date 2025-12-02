@@ -1,5 +1,6 @@
 #include "CommandBuffer.h"
 #include "TextureImpl.h"
+#include "GraphicsPipeline.h"
 
 namespace efvk
 {
@@ -45,6 +46,59 @@ namespace efvk
 		};
 
 		cmd_buf->begin(begin_info);
+	}
+
+	void CommandBuffer::BeginRendering(vk::ImageView image_view, u32 width, u32 height)
+	{
+		const vk::RenderingAttachmentInfo color_attachment_info{
+				.imageView = image_view,
+				.imageLayout = vk::ImageLayout::eGeneral,
+				.loadOp = vk::AttachmentLoadOp::eLoad,
+				.storeOp = vk::AttachmentStoreOp::eStore,
+		};
+
+		const vk::RenderingInfo rendering_info{
+			.renderArea = { 0, 0, width, height},
+			.layerCount = 1,
+			.colorAttachmentCount = 1,
+			.pColorAttachments = &color_attachment_info,
+		};
+
+		cmd_buf->beginRendering(rendering_info);
+
+		const vk::Viewport viewport{
+			.x = 0.0f,
+			.y = 0.0f,
+			.width = static_cast<float>(width),
+			.height = static_cast<float>(height),
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f,
+		};
+
+		const vk::Rect2D scissor{
+			.offset = { 0, 0 },
+			.extent = { width, height },
+		};
+
+		cmd_buf->setViewport(0, viewport);
+		cmd_buf->setScissor(0, scissor);
+	}
+
+	void CommandBuffer::EndRendering()
+	{
+		cmd_buf->endRendering();
+	}
+
+	void CommandBuffer::BindPipeline(GraphicsPipeline& pipeline)
+	{
+		bound_pipeline = &pipeline;
+		descriptor_write_cache.Clear();
+		cmd_buf->bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.GetPipeline());
+	}
+
+	void CommandBuffer::BindBuffer(Buffer& buffer, u32 binding)
+	{
+		descriptor_write_cache.AddBufferWrite(binding, buffer.buffer.GetBuffer(), buffer.Size());
 	}
 
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer)
@@ -101,6 +155,20 @@ namespace efvk
 		};
 
 		cmd_buf->copyBufferToImage(allocation.buffer, dst_image.pimpl->image.GetImage(), vk::ImageLayout::eGeneral, buffer_image_copy);
+	}
+
+	void CommandBuffer::Draw(u32 vertex_count, u32 instance_count)
+	{
+		assert(bound_pipeline != nullptr);
+
+		if (descriptor_write_cache.IsDirty())
+		{
+			vk::DescriptorSet descriptor_set = descriptor_allocator.Alloc(bound_pipeline->GetDescriptorSetLayout());
+			descriptor_write_cache.Flush(*ctx->device, descriptor_set);
+			cmd_buf->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, bound_pipeline->GetPipelineLayout(), 0, descriptor_set, {});
+		}
+
+		cmd_buf->draw(vertex_count, instance_count, 0, 0);
 	}
 
 	void CommandBuffer::Reset()
