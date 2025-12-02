@@ -12,5 +12,6 @@ namespace efvk
 		vk::Format format{};
 		u32 width{};
 		u32 height{};
+		vk::UniqueImageView view{};
 	};
 }

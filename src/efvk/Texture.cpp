@@ -33,6 +33,24 @@ namespace efvk
 		pimpl->dev = *ctx.pimpl->device;
 		pimpl->image = VMACreateImage(ctx.pimpl->vma_allocator, &image_info, &vma_info, nullptr);
 
+		/* Create view */
+		const vk::ImageViewCreateInfo view_info{
+			.image = pimpl->image.GetImage(),
+			.viewType = vk::ImageViewType::e2D,
+			.format = image_info.format,
+			.components = {},
+			.subresourceRange = {
+				.aspectMask = vk::ImageAspectFlagBits::eColor,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			}
+		};
+
+		pimpl->view = ctx.pimpl->device->createImageViewUnique(view_info);
+
+		/* Initialize content */
 		CommandBuffer cmd_buf(*ctx.pimpl);
 		change_layout(cmd_buf.cmd_buf.get(), pimpl->image.GetImage(), vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 		cmd_buf.ScheduleUpload(image.GetDataPtr(), *this);

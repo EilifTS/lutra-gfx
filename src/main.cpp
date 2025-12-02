@@ -42,7 +42,7 @@ int main()
 		};
 		sb.Draw(s1);
 		sb.Draw(s2);
-		sb.End(frame_manager);
+		sb.End(frame_manager, texture);
 
 		frame_manager.EndFrame(graphics_context);
 	}

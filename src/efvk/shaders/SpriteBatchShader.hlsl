@@ -23,7 +23,7 @@ struct VSInput
 struct VSVarying
 {
     float4 position : SV_Position;
-    //float2 uv : TexCoord0;
+    float2 uv : TexCoord0;
     float4 color : TexCoord1;
     //int texture_id : TexCoord3;
 };
@@ -70,6 +70,7 @@ VSVarying VS(VSInput input)
         rectangle_offset = float2(-1.0, 1.0);
     }
     output.position = float4(sprite_position + rectangle_offset * sprite_size, 0.5, 1.0);
+    output.uv = float2(rectangle_offset * 0.5 + float2(0.5f, 0.5f));
     output.color = sprite_color;
 
     return output;
@@ -82,7 +83,7 @@ PSOutput PS(VSVarying input)
     output.color = input.color;
     //if (input.texture_id != -1)
    // {
-    //    output.color *= textures[input.texture_id].Sample(TEXTURE_SAMPLER, input.uv);
+    output.color *= texture.Sample(linear_clamp, input.uv);
     //}
 
     return output;

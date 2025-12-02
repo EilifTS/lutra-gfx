@@ -29,6 +29,7 @@ namespace efvk
 		vk::DescriptorSet AllocateDescriptorSet(vk::DescriptorSetLayout layout) { return descriptor_allocator.Alloc(layout); };
 		void BindPipeline(GraphicsPipeline& pipeline);
 		void BindBuffer(Buffer& buffer, u32 binding);
+		void BindTexture(Texture& texture, u32 binding);
 
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);

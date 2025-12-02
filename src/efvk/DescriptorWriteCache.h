@@ -15,12 +15,19 @@ namespace efvk
 			is_dirty = true;
 		};
 
+		void AddImageWrite(u32 binding, vk::ImageView view)
+		{
+			image_write_infos.push_back({ binding, view });
+			is_dirty = true;
+		};
+
 		bool IsDirty() const { return is_dirty; };
 
 		void Flush(vk::Device dev, vk::DescriptorSet set);
 		void Clear()
 		{
 			buffer_write_infos.clear();
+			image_write_infos.clear();
 			is_dirty = false;
 		}
 
@@ -33,6 +40,14 @@ namespace efvk
 		};
 
 		std::vector<BufferWriteInfo> buffer_write_infos{};
+
+		struct ImageWriteInfo
+		{
+			u32 binding{};
+			vk::ImageView image_view{};
+		};
+
+		std::vector<ImageWriteInfo> image_write_infos{};
 
 		bool is_dirty{ false };
 	};

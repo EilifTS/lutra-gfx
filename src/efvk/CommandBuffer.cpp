@@ -101,6 +101,11 @@ namespace efvk
 		descriptor_write_cache.AddBufferWrite(binding, buffer.buffer.GetBuffer(), buffer.Size());
 	}
 
+	void CommandBuffer::BindTexture(Texture& texture, u32 binding)
+	{
+		descriptor_write_cache.AddImageWrite(binding, *texture.pimpl->view);
+	}
+
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer)
 	{
 		/* Allocate */
@@ -148,9 +153,12 @@ namespace efvk
 		/* GPU -> GPU COPY */
 		const vk::BufferImageCopy buffer_image_copy{
 			.bufferOffset = allocation.offset,
-			.bufferRowLength = dst_image.Width() * bytes_per_pixel,
-			.bufferImageHeight = dst_image.Height(),
-			.imageSubresource = { vk::ImageAspectFlagBits::eColor, 0, 0, 1 },
+			.imageSubresource = { 
+				.aspectMask = vk::ImageAspectFlagBits::eColor,
+				.mipLevel = 0,
+				.baseArrayLayer = 0,
+				.layerCount = 1
+			},
 			.imageExtent = { dst_image.Width(), dst_image.Height(), 1 },
 		};
 

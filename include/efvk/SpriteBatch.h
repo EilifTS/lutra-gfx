@@ -6,6 +6,7 @@
 
 #include "GraphicsContext.h"
 #include "FrameManager.h"
+#include "Texture.h"
 
 namespace efvk
 {
@@ -39,7 +40,7 @@ namespace efvk
 			this->camera = &camera;
 			sprite_list.clear();
 		}
-		void End(FrameManager& frame_manager);
+		void End(FrameManager& frame_manager, Texture& tex);
 		void Draw(const Sprite& sprite)
 		{
 			assert(camera != nullptr);
