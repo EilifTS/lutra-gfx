@@ -50,6 +50,10 @@ namespace efvk
 		{
 			bindings.push_back({ binding, Binding::Type::SampledImage, 1, stage, SamplerType::None });
 		}
+		void AddTextures(u32 binding, u32 count, Binding::Stage stage)
+		{
+			bindings.push_back({ binding, Binding::Type::SampledImage, count, stage, SamplerType::None });
+		}
 		void AddStorageBuffer(u32 binding, Binding::Stage stage)
 		{
 			bindings.push_back({ binding, Binding::Type::StorageBuffer, 1, stage, SamplerType::None });

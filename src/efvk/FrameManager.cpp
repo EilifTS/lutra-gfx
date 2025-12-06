@@ -208,7 +208,7 @@ namespace efvk
 		/* Clear image */
 		vk::ClearColorValue clear_color_value{};
 		clear_color_value.float32[0] = 0.0f;
-		clear_color_value.float32[1] = 1.0f;
+		clear_color_value.float32[1] = 0.0f;
 		clear_color_value.float32[2] = 0.0f;
 		clear_color_value.float32[3] = 1.0f;
 

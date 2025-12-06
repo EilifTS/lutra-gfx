@@ -98,7 +98,7 @@ file(GLOB TEXTURES
 foreach(TEXTURE_FILE_PATH IN LISTS TEXTURES)
 file(RELATIVE_PATH TEXTURE_FILE_NAME ${TEXTURE_SRC_DIR} ${TEXTURE_FILE_PATH})
 add_custom_command(
-    TARGET copy_textures PRE_BUILD
+    TARGET copy_textures POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${TEXTURE_FILE_PATH}
             ${CMAKE_CURRENT_BINARY_DIR}/textures/${TEXTURE_FILE_NAME}

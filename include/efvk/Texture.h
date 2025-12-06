@@ -9,6 +9,7 @@ namespace efvk
 	class Texture
 	{
 	public:
+		Texture();
 		Texture(GraphicsContext& ctx, const Image& image);
 		~Texture();
 

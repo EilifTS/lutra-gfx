@@ -15,9 +15,13 @@ int main()
 	efvk::SpriteBatch sb(graphics_context);
 
 	/* Temp image load test */
-	efvk::Image test_img{};
-	test_img.Load("textures/test.png");
-	efvk::Texture texture(graphics_context, test_img);
+	efvk::Image test_img1{};
+	test_img1.Load("textures/test.png");
+	efvk::Texture texture1(graphics_context, test_img1);
+
+	efvk::Image test_img2{};
+	test_img2.Load("textures/test2.png");
+	efvk::Texture texture2(graphics_context, test_img2);
 
 	/* Create camera */
 	ef::Camera2D cam(ef::vec2(window.Width(), window.Height()));
@@ -33,16 +37,23 @@ int main()
 		const efvk::Sprite s1{
 			.position = ef::vec2(5.0f, 5.0f),
 			.size = ef::vec2(10.0f, 10.0f),
-			.color = ef::Color::Blue(),
+			.texture = &texture1,
+			.color = ef::Color::Red(),
 		};
 		const efvk::Sprite s2{
 			.position = ef::vec2(400.0f, 150.0f),
 			.size = ef::vec2(10.0f, 300.0f),
-			.color = ef::Color::Blue(),
+			.color = ef::Color::Red(),
+		};
+		const efvk::Sprite s3{
+			.position = ef::vec2(500.0f, 150.0f),
+			.size = ef::vec2(16.0f, 16.0f),
+			.texture = &texture2,
 		};
 		sb.Draw(s1);
 		sb.Draw(s2);
-		sb.End(frame_manager, texture);
+		sb.Draw(s3);
+		sb.End(frame_manager);
 
 		frame_manager.EndFrame(graphics_context);
 	}

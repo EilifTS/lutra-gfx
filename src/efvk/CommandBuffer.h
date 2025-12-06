@@ -30,6 +30,7 @@ namespace efvk
 		void BindPipeline(GraphicsPipeline& pipeline);
 		void BindBuffer(Buffer& buffer, u32 binding);
 		void BindTexture(Texture& texture, u32 binding);
+		void BindTextures(std::span<Texture*> textures, u32 binding);
 
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);

@@ -106,6 +106,17 @@ namespace efvk
 		descriptor_write_cache.AddImageWrite(binding, *texture.pimpl->view);
 	}
 
+	void CommandBuffer::BindTextures(std::span<Texture*> textures, u32 binding)
+	{
+		/* TODO: Remove vector usage? */
+		std::vector<vk::ImageView> views(textures.size());
+		for (u32 i = 0; i < static_cast<u32>(textures.size()); i++)
+		{
+			views[i] = *textures[i]->pimpl->view;
+		}
+		descriptor_write_cache.AddImageArrayWrite(binding, views);
+	}
+
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer)
 	{
 		/* Allocate */
@@ -209,6 +220,7 @@ namespace efvk
 		};
 		ctx.queue.submit(submit_info, *fence);
 
-		ctx.device->waitForFences(fence.get(), true, UINT64_MAX);
+		const vk::Result result = ctx.device->waitForFences(fence.get(), true, UINT64_MAX);
+		assert(result == vk::Result::eSuccess);
 	}
 }

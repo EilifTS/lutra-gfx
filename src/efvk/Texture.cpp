@@ -7,6 +7,8 @@
 
 namespace efvk
 {
+	Texture::Texture(){}
+
 	Texture::Texture(GraphicsContext& ctx, const Image& image)
 	{
 		pimpl = std::make_unique<Texture::Impl>();

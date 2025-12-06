@@ -9,48 +9,28 @@ namespace efvk
 		assert(is_dirty);
 
 		std::array<vk::WriteDescriptorSet, max_writes> writes{};
-		std::array<vk::DescriptorBufferInfo, max_writes> buffer_infos{};
-		std::array<vk::DescriptorImageInfo, max_writes> image_infos{};
 
 		u32 write_index = 0;
-		for (const BufferWriteInfo& buffer_write_info : buffer_write_infos)
+		for (const WriteInfo& write_info : write_infos)
 		{
-			buffer_infos[write_index] = {
-				.buffer = buffer_write_info.buffer,
-				.range = buffer_write_info.buffer_size,
-			};
-
-			writes[write_index] = {
-				.dstSet = set,
-				.dstBinding = buffer_write_info.binding,
-				.descriptorCount = 1,
-				.descriptorType = vk::DescriptorType::eStorageBuffer,
-				.pBufferInfo = &buffer_infos[write_index],
-			};
-
-			write_index++;
-
-			if (write_index == max_writes)
+			const vk::DescriptorBufferInfo* buffer_info_ptr = nullptr;
+			const vk::DescriptorImageInfo* image_info_ptr = nullptr;
+			if (write_info.write_type == vk::DescriptorType::eStorageBuffer)
 			{
-				dev.updateDescriptorSets(write_index, writes.data(), 0, {});
-				Clear();
-				write_index = 0;
+				buffer_info_ptr = &buffer_write_infos[write_info.additional_info_index];
 			}
-		}
-
-		for (const ImageWriteInfo& image_write_info : image_write_infos)
-		{
-			image_infos[write_index] = {
-				.imageView = image_write_info.image_view,
-				.imageLayout = vk::ImageLayout::eGeneral,
-			};
+			else
+			{
+				image_info_ptr = &image_write_infos[write_info.additional_info_index];
+			}
 
 			writes[write_index] = {
 				.dstSet = set,
-				.dstBinding = image_write_info.binding,
-				.descriptorCount = 1,
-				.descriptorType = vk::DescriptorType::eSampledImage,
-				.pImageInfo = &image_infos[write_index],
+				.dstBinding = write_info.binding,
+				.descriptorCount = write_info.descriptor_count,
+				.descriptorType = write_info.write_type,
+				.pImageInfo = image_info_ptr,
+				.pBufferInfo = buffer_info_ptr,
 			};
 
 			write_index++;
