@@ -5,6 +5,9 @@
 #include <efvk/SpriteBatch.h>
 #include <efvk/Image.h>
 #include <efvk/Texture.h>
+#include <efvk/ImGuiWrapper.h>
+
+#include <imgui.h>
 
 int main()
 {
@@ -13,6 +16,8 @@ int main()
 	efvk::GraphicsContext graphics_context(window, "EFVK");
 	efvk::FrameManager frame_manager(graphics_context, 800, 600);
 	efvk::SpriteBatch sb(graphics_context);
+
+	efvk::ImGuiWrapper::Initialize(window, graphics_context);
 
 	/* Temp image load test */
 	efvk::Image test_img1{};
@@ -31,6 +36,11 @@ int main()
 	{
 		window.RetrieveEvents();
 		frame_manager.StartFrame(graphics_context);
+		efvk::ImGuiWrapper::StartFrame();
+
+		ImGui::Begin("Hello ImGui!");
+
+		ImGui::End();
 
 		sb.Begin(cam);
 
@@ -55,10 +65,12 @@ int main()
 		sb.Draw(s3);
 		sb.End(frame_manager);
 
+		efvk::ImGuiWrapper::EndFrame(frame_manager);
 		frame_manager.EndFrame(graphics_context);
 	}
 
 	graphics_context.WaitIdle();
+	efvk::ImGuiWrapper::ShutDown();
 
 	return 0;
 }

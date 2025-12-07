@@ -167,6 +167,7 @@ namespace efvk
 		auto supported_device_extensions = physical_device.enumerateDeviceExtensionProperties();
 
 		std::vector<const char*> required_device_extensions{};
+		required_device_extensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
 		required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
 		for (const char* ex_name : required_device_extensions)

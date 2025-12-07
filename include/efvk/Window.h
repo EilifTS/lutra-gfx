@@ -5,7 +5,7 @@
 
 #include "Event.h"
 
-class GLFWwindow;
+struct GLFWwindow;
 namespace efvk
 {
 	class Window;

@@ -67,6 +67,7 @@ namespace efvk
 		default:
 			assert(0);
 		}
+		return vk::Filter::eLinear;
 	}
 
 	static vk::SamplerAddressMode getAddressMode(SamplerType type)
@@ -82,6 +83,7 @@ namespace efvk
 		default:
 			assert(0);
 		}
+		return vk::SamplerAddressMode::eClampToEdge;
 	}
 
 	static vk::UniqueSampler create_sampler(vk::Device dev, SamplerType type)
