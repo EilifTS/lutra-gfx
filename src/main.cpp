@@ -13,11 +13,12 @@ int main()
 
 	efvk::GraphicsContext graphics_context(window, "EFVK");
 	efvk::FrameManager frame_manager(graphics_context, 800, 600);
-	efvk::SpriteBatch sb(graphics_context);
 
 #ifdef USE_IMGUI
-	efvk::ImGuiWrapper::Initialize(window, graphics_context);
+	efvk::ImGuiWrapperScope imgui_scope(window, graphics_context);
 #endif
+
+	efvk::SpriteBatch sb(graphics_context);
 
 	/* Temp image load test */
 	efvk::Image test_img1{};
@@ -41,6 +42,7 @@ int main()
 #ifdef USE_IMGUI
 		efvk::ImGuiWrapper::StartFrame();
 		ImGui::Begin("Hello ImGui!");
+		efvk::ImGuiWrapper::Image(texture2, { 128.0f, 128.0f });
 		ImGui::End();
 #endif
 
@@ -75,10 +77,6 @@ int main()
 	}
 
 	graphics_context.WaitIdle();
-
-#ifdef USE_IMGUI
-	efvk::ImGuiWrapper::ShutDown();
-#endif
 
 	return 0;
 }

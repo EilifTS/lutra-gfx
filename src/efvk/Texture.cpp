@@ -5,6 +5,10 @@
 #include "TextureImpl.h"
 #include "CommandBuffer.h"
 
+#ifdef USE_IMGUI
+#include <backends/imgui_impl_vulkan.h>
+#endif
+
 namespace efvk
 {
 	Texture::Texture(){}
@@ -52,6 +56,21 @@ namespace efvk
 
 		pimpl->view = ctx.pimpl->device->createImageViewUnique(view_info);
 
+		/* Initialize ImGui resources */
+#ifdef USE_IMGUI
+		const vk::SamplerCreateInfo sampler_info{
+			.magFilter = vk::Filter::eNearest,
+			.minFilter = vk::Filter::eNearest,
+			.addressModeU = vk::SamplerAddressMode::eClampToEdge,
+			.addressModeV = vk::SamplerAddressMode::eClampToEdge,
+			.addressModeW = vk::SamplerAddressMode::eClampToEdge,
+			.maxLod = vk::LodClampNone,
+		};
+		pimpl->imgui_sampler = ctx.pimpl->device->createSamplerUnique(sampler_info);
+
+		pimpl->imgui_set = ImGui_ImplVulkan_AddTexture(*pimpl->imgui_sampler, *pimpl->view, VK_IMAGE_LAYOUT_GENERAL);
+#endif
+
 		/* Initialize content */
 		CommandBuffer cmd_buf(*ctx.pimpl);
 		change_layout(cmd_buf.cmd_buf.get(), pimpl->image.GetImage(), vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
@@ -59,7 +78,15 @@ namespace efvk
 		SubmitAndWait(*ctx.pimpl, cmd_buf);
 	}
 
-	Texture::~Texture() {};
+	Texture::~Texture()
+	{
+#ifdef USE_IMGUI
+		if (pimpl != nullptr && pimpl->imgui_set != VK_NULL_HANDLE)
+		{
+			ImGui_ImplVulkan_RemoveTexture(pimpl->imgui_set);
+		}
+#endif
+	};
 	Texture::Texture(Texture&&) = default;
 	Texture& Texture::operator=(Texture&&) = default;
 
@@ -70,4 +97,10 @@ namespace efvk
 	u32 Texture::Height() const {
 		return pimpl->height;
 	}
+
+#ifdef USE_IMGUI
+	void* Texture::GetImGuiID() const {
+		return static_cast<void*>(pimpl->imgui_set);
+	}
+#endif
 }

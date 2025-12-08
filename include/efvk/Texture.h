@@ -24,6 +24,10 @@ namespace efvk
 		u32 Width() const;
 		u32 Height() const;
 
+#ifdef USE_IMGUI
+		void* GetImGuiID() const;
+#endif
+
 	private:
 	};
 }

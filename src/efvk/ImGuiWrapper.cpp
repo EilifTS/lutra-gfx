@@ -15,18 +15,19 @@
 
 namespace efvk
 {
+	static constexpr u32 max_extra_textures = 256;
 	static vk::UniqueDescriptorPool descriptor_pool{};
 
 	static void InitVulkanResources(GraphicsContext::Impl& ctx)
 	{
 		/* Create descriptor pool */
 		const vk::DescriptorPoolSize pool_sizes[] = {
-			{ vk::DescriptorType::eCombinedImageSampler, 1 }
+			{ vk::DescriptorType::eCombinedImageSampler, 1 + max_extra_textures }
 		};
 
 		const vk::DescriptorPoolCreateInfo desc_pool_info{
 			.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-			.maxSets = 1,
+			.maxSets = 1 + max_extra_textures,
 			.poolSizeCount = 1,
 			.pPoolSizes = pool_sizes,
 		};
@@ -42,7 +43,7 @@ namespace efvk
 	{
 		if (err == VK_SUCCESS)
 			return;
-		fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+		fprintf(stderr, "[vulkan] Error: VkResult = %s\n", vk::to_string(static_cast<vk::Result>(err)).c_str());
 		if (err < 0)
 			abort();
 	}
@@ -122,6 +123,24 @@ namespace efvk
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 		CleanupVulkanResources();
+	}
+
+
+	void ImGuiWrapper::Image(const efvk::Texture& texture, const ef::vec2& size)
+	{
+		ImGui::Image(texture.GetImGuiID(), ImVec2(size.x, size.y));
+	}
+	void ImGuiWrapper::Image(const efvk::Texture& texture, const ef::Rectanglef& src_rect, const ef::vec2& size)
+	{
+		const ef::vec2 uv0 = src_rect.Position();
+		const ef::vec2 uv1 = src_rect.Position() + src_rect.Size();
+		ImGui::Image(texture.GetImGuiID(), ImVec2(size.x, size.y), ImVec2(uv0.x, uv0.y), ImVec2(uv1.x, uv1.y));
+	}
+	bool ImGuiWrapper::ImageButton(const char* id, const efvk::Texture& texture, const ef::Rectanglef& src_rect, const ef::vec2& size)
+	{
+		const ef::vec2 uv0 = src_rect.Position();
+		const ef::vec2 uv1 = src_rect.Position() + src_rect.Size();
+		return ImGui::ImageButton(id, texture.GetImGuiID(), ImVec2(size.x, size.y), ImVec2(uv0.x, uv0.y), ImVec2(uv1.x, uv1.y));
 	}
 }
 

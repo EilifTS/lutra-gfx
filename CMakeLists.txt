@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.28)
 project(efvk LANGUAGES CXX)
 
-set(ENABLE_IMGUI OFF CACHE BOOL "" FORCE)
+set(ENABLE_IMGUI ON CACHE BOOL "" FORCE)
 
 # Define library files
 file(GLOB EFVK_INCLUDES
