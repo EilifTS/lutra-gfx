@@ -7,8 +7,6 @@
 #include <efvk/Texture.h>
 #include <efvk/ImGuiWrapper.h>
 
-#include <imgui.h>
-
 int main()
 {
 	efvk::Window window(800, 600, "EFVK");
@@ -17,7 +15,9 @@ int main()
 	efvk::FrameManager frame_manager(graphics_context, 800, 600);
 	efvk::SpriteBatch sb(graphics_context);
 
+#ifdef USE_IMGUI
 	efvk::ImGuiWrapper::Initialize(window, graphics_context);
+#endif
 
 	/* Temp image load test */
 	efvk::Image test_img1{};
@@ -36,11 +36,13 @@ int main()
 	{
 		window.RetrieveEvents();
 		frame_manager.StartFrame(graphics_context);
+
+
+#ifdef USE_IMGUI
 		efvk::ImGuiWrapper::StartFrame();
-
 		ImGui::Begin("Hello ImGui!");
-
 		ImGui::End();
+#endif
 
 		sb.Begin(cam);
 
@@ -65,12 +67,18 @@ int main()
 		sb.Draw(s3);
 		sb.End(frame_manager);
 
+#ifdef USE_IMGUI
 		efvk::ImGuiWrapper::EndFrame(frame_manager);
+#endif
+
 		frame_manager.EndFrame(graphics_context);
 	}
 
 	graphics_context.WaitIdle();
+
+#ifdef USE_IMGUI
 	efvk::ImGuiWrapper::ShutDown();
+#endif
 
 	return 0;
 }

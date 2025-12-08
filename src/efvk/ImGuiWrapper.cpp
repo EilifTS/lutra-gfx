@@ -1,3 +1,5 @@
+#ifdef USE_IMGUI
+
 #include <efvk/ImGuiWrapper.h>
 #include <efvk/GraphicsContext.h>
 #include <efvk/FrameManager.h>
@@ -122,3 +124,5 @@ namespace efvk
 		CleanupVulkanResources();
 	}
 }
+
+#endif

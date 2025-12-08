@@ -1,8 +1,25 @@
 ﻿cmake_minimum_required (VERSION 3.28)
 project(efvk LANGUAGES CXX)
 
+set(ENABLE_IMGUI OFF CACHE BOOL "" FORCE)
+
+# Define library files
+file(GLOB EFVK_INCLUDES
+    include/efvk/*.h
+    include/efvk/math/*.h
+)
+
+file(GLOB EFVK_SOURCES
+    src/efvk/*.h
+    src/efvk/*.cpp
+)
+
+# Create target
+add_executable(main src/main.cpp ${EFVK_INCLUDES} ${EFVK_SOURCES})
+
 # Find Vulkan SDK
 find_package(Vulkan REQUIRED)
+target_link_libraries(main PRIVATE Vulkan::Vulkan)
 
 # GLFW3
 include(FetchContent)
@@ -14,6 +31,7 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(glfw3)
+target_link_libraries(main PRIVATE glfw)
 
 # ZLIB-NG
 FetchContent_Declare(
@@ -29,6 +47,7 @@ FetchContent_MakeAvailable(zlib-ng)
 set(ZLIB_INCLUDE_DIR "${CMAKE_BINARY_DIR}/zlib-ng" CACHE BOOL "Path to zlib include directory")
 set(ZLIB_LIBRARY ZLIB::ZLIB CACHE STRING "Path to zlib library")
 add_library(ZLIB::ZLIB ALIAS zlib)
+target_link_libraries(main PRIVATE ZLIB::ZLIB)
 
 # SPNG
 FetchContent_Declare(
@@ -42,47 +61,42 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SPNG_STATIC ON CACHE BOOL "" FORCE)
 set(SPNG_SHARED OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spng)
+target_link_libraries(main PRIVATE spng_static)
 
 # ImGUI
-FetchContent_Declare(
-    imgui
-    GIT_REPOSITORY https://github.com/ocornut/imgui.git
-    GIT_TAG v1.91.0
-    GIT_SHALLOW ON
-    EXCLUDE_FROM_ALL
-    SYSTEM)
-FetchContent_MakeAvailable(imgui)
+if (ENABLE_IMGUI)
+    FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG v1.91.0
+        GIT_SHALLOW ON
+        EXCLUDE_FROM_ALL
+        SYSTEM)
+    FetchContent_MakeAvailable(imgui)
 
-set(IMGUI_SRC
-    ${imgui_SOURCE_DIR}/imgui.cpp
-    ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_tables.cpp
-    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
-)
+    set(IMGUI_SRC
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+    )
 
-add_library(imgui STATIC ${IMGUI_SRC})
-target_include_directories(
-    imgui PUBLIC
-    ${imgui_SOURCE_DIR}
-    ${imgui_SOURCE_DIR}/backends
-)
-target_link_libraries(imgui PUBLIC glfw Vulkan::Vulkan)
+    add_library(imgui STATIC ${IMGUI_SRC})
+    target_include_directories(
+        imgui PUBLIC
+        ${imgui_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}/backends
+    )
+    target_link_libraries(imgui PUBLIC glfw Vulkan::Vulkan)
 
-# Define library files
-file(GLOB EFVK_INCLUDES
-    include/efvk/*.h
-    include/efvk/math/*.h
-)
+    add_compile_definitions(USE_IMGUI)
+    target_link_libraries(main PRIVATE imgui)
+endif()
 
-file(GLOB EFVK_SOURCES
-    src/efvk/*.h
-    src/efvk/*.cpp
-)
 
-add_executable(main src/main.cpp ${EFVK_INCLUDES} ${EFVK_SOURCES})
-target_link_libraries(main PRIVATE glfw spng_static ZLIB::ZLIB Vulkan::Vulkan imgui)
+
 target_include_directories(main PRIVATE "include")
 target_compile_features(main PRIVATE cxx_std_20)
 

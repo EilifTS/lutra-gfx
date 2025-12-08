@@ -1,4 +1,7 @@
 #pragma once
+#ifdef USE_IMGUI
+
+#include <imgui.h>
 #include <efvk/math/Rectangle.h>
 
 namespace efvk
@@ -19,4 +22,6 @@ namespace efvk
 		//bool ImageButton(const char* id, const ef::Texture2D& texture, const ef::Rectanglef& src_rect, const ef::vec2& size);
 	}
 }
+
+#endif
 
