@@ -1,6 +1,7 @@
 #pragma once
 #include <efvk/GraphicsContext.h>
 #include <efvk/Texture.h>
+#include <efvk/Buffer.h>
 #include "GraphicsContextImpl.h"
 #include "BufferMemoryAllocator.h"
 #include "DescriptorAllocator.h"

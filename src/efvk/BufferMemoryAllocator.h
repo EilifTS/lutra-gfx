@@ -1,7 +1,7 @@
 #pragma once
 #include <efvk/math/IntDefs.h>
 
-#include "Buffer.h"
+#include "internal/BufferInternal.h"
 #include "GraphicsContextImpl.h"
 
 namespace efvk
@@ -34,7 +34,7 @@ namespace efvk
 
 		void* first_chunk_ptr = nullptr;
 		u64 chunk_size{};
-		std::vector<Buffer> chunks{};
+		std::vector<BufferInternal> chunks{};
 		intptr_t current_chunk_ptr{};
 		u64 current_chunk_offset{};
 	};

@@ -7,6 +7,7 @@
 #include "GraphicsContext.h"
 #include "FrameManager.h"
 #include "Texture.h"
+#include "Buffer.h"
 
 #include <array>
 
@@ -104,8 +105,10 @@ namespace efvk
 			u32 padding{};
 		};
 
-		static constexpr u32 max_texture_count = 16;
 		std::vector<SpriteInternal> sprite_list{};
+		Buffer sprite_buffer{};
+
+		static constexpr u32 max_texture_count = 16;
 		std::unordered_map<Texture*, u32> texture_index_lookup{};
 		std::array<Texture*, max_texture_count> texture_array{};
 		u32 texture_count{};

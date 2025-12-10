@@ -1,32 +1,28 @@
-#include "Buffer.h"
+#include <efvk/Buffer.h>
+#include "internal/BufferInternal.h"
 
 namespace efvk
 {
-	Buffer::Buffer(GraphicsContext::Impl& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags)
-		: size(size)
+	Buffer::Buffer() {}
+
+	Buffer::Buffer(GraphicsContext& ctx, u64 size, BufferType type)
 	{
-		const vk::BufferCreateInfo buffer_info{
-			.size = size,
-			.usage = usage,
-		};
+		vk::BufferUsageFlags usage_flags = vk::BufferUsageFlagBits::eTransferSrc | vk::BufferUsageFlagBits::eTransferDst;
 
-		VmaAllocationCreateInfo vma_info{};
-		vma_info.usage = VMA_MEMORY_USAGE_AUTO;
-		vma_info.flags = vma_flags;
+		if (type == BufferType::StorageBuffer)
+		{
+			usage_flags |= vk::BufferUsageFlagBits::eStorageBuffer;
+		}
 
-		buffer = VMACreateBuffer(ctx.vma_allocator, &buffer_info, &vma_info, nullptr);
+		internal = std::make_unique<BufferInternal>(*ctx.pimpl, size, usage_flags, 0);
 	}
 
-	void* Buffer::Map(vk::Device device)
-	{
-		void* mapped_ptr = nullptr;
-		VkResult result = vmaMapMemory(buffer.GetAllocator(), buffer.GetAllocation(), &mapped_ptr);
-		assert(result == VK_SUCCESS);
-		return mapped_ptr;
-	}
+	Buffer::~Buffer() {}
 
-	void Buffer::Unmap(vk::Device device)
-	{
-		vmaUnmapMemory(buffer.GetAllocator(), buffer.GetAllocation());
-	}
+	Buffer::Buffer(Buffer&&) = default;
+	Buffer& Buffer::operator=(Buffer&&) = default;
+
+	u64 Buffer::Size() const { return internal->Size(); }
+	void* Buffer::Map(GraphicsContext& ctx) { return internal->Map(*ctx.pimpl->device); }
+	void Buffer::Unmap(GraphicsContext& ctx) { internal->Unmap(*ctx.pimpl->device); }
 }

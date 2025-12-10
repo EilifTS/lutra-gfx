@@ -4,7 +4,6 @@
 #include "GraphicsContextImpl.h"
 #include "VulkanHPP.h"
 #include "GraphicsPipeline.h"
-#include "Buffer.h"
 
 namespace efvk
 {
@@ -13,7 +12,6 @@ namespace efvk
 	struct SpriteBatch::Impl
 	{
 		vk::Device dev{};
-		Buffer sprite_buffer{};
 		GraphicsPipeline pipeline{};
 	};
 
@@ -23,7 +21,7 @@ namespace efvk
 
 		pimpl->dev = *ctx.pimpl->device;
 
-		pimpl->sprite_buffer = Buffer(*ctx.pimpl, max_sprites_per_batch * sizeof(SpriteInternal), vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst, 0);
+		sprite_buffer = Buffer(ctx, max_sprites_per_batch * sizeof(SpriteInternal), BufferType::StorageBuffer);
 
 		/* Create graphics pipeline */
 		GraphicsPipelineInfo pipeline_info{};
@@ -58,12 +56,12 @@ namespace efvk
 		if (sprite_list.size() > 0)
 		{
 			/* Upload sprite data */
-			cmd_buf.ScheduleUpload(sprite_list.data(), sprite_list.size() * sizeof(SpriteInternal), pimpl->sprite_buffer);
+			cmd_buf.ScheduleUpload(sprite_list.data(), sprite_list.size() * sizeof(SpriteInternal), sprite_buffer);
 
 			cmd_buf.BeginRendering(frame_manager.pimpl->GetCurrentImageView(), frame_manager.pimpl->window_width, frame_manager.pimpl->window_height);
 
 			cmd_buf.BindPipeline(pimpl->pipeline);
-			cmd_buf.BindBuffer(pimpl->sprite_buffer, 0);
+			cmd_buf.BindBuffer(sprite_buffer, 0);
 			cmd_buf.BindTextures(texture_array, 2);
 
 			cmd_buf.Draw(6, static_cast<u32>(sprite_list.size()));

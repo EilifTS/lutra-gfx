@@ -16,7 +16,7 @@ namespace efvk
 	BufferMemoryAllocator::BufferMemoryAllocator(GraphicsContext::Impl& ctx, u64 chunk_size)
 		: ctx(&ctx), chunk_size(chunk_size)
 	{
-		chunks.push_back(Buffer(ctx, chunk_size, buffer_usage, vma_flags));
+		chunks.push_back(BufferInternal(ctx, chunk_size, buffer_usage, vma_flags));
 		current_chunk_offset = 0;
 		first_chunk_ptr = chunks.back().Map(*ctx.device);
 		current_chunk_ptr = reinterpret_cast<intptr_t>(first_chunk_ptr);
@@ -41,7 +41,7 @@ namespace efvk
 		{
 			/* Allocate a new block */
 			const u64 new_block_size = std::max(chunk_size, size);
-			chunks.push_back(Buffer(ctx, new_block_size, buffer_usage, vma_flags));
+			chunks.push_back(BufferInternal(ctx, new_block_size, buffer_usage, vma_flags));
 			current_chunk_offset = 0;
 			current_chunk_ptr = reinterpret_cast<intptr_t>(chunks.back().Map(*ctx.device));
 		}

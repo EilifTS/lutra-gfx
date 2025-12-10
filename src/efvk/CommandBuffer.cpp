@@ -1,6 +1,7 @@
 #include "CommandBuffer.h"
 #include "TextureImpl.h"
 #include "GraphicsPipeline.h"
+#include "internal/BufferInternal.h"
 
 namespace efvk
 {
@@ -98,7 +99,7 @@ namespace efvk
 
 	void CommandBuffer::BindBuffer(Buffer& buffer, u32 binding)
 	{
-		descriptor_write_cache.AddBufferWrite(binding, buffer.buffer.GetBuffer(), buffer.Size());
+		descriptor_write_cache.AddBufferWrite(binding, buffer.internal->buffer.GetBuffer(), buffer.Size());
 	}
 
 	void CommandBuffer::BindTexture(Texture& texture, u32 binding)
@@ -139,7 +140,7 @@ namespace efvk
 			.size = size,
 		};
 
-		cmd_buf->copyBuffer(allocation.buffer, dst_buffer.buffer.GetBuffer(), buffer_copy);
+		cmd_buf->copyBuffer(allocation.buffer, dst_buffer.internal->buffer.GetBuffer(), buffer_copy);
 	}
 
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture& dst_image)

@@ -12,6 +12,8 @@ file(GLOB EFVK_INCLUDES
 file(GLOB EFVK_SOURCES
     src/efvk/*.h
     src/efvk/*.cpp
+    src/efvk/internal/*.h
+    src/efvk/internal/*.cpp
 )
 
 # Create target
