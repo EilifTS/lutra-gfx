@@ -6,6 +6,8 @@
 
 namespace efvk
 {
+	class TextureInternal;
+
 	class Texture
 	{
 	public:
@@ -18,8 +20,7 @@ namespace efvk
 		Texture& operator=(const Texture&) = delete;
 		Texture& operator=(Texture&&);
 
-		struct Impl;
-		std::unique_ptr<Impl> pimpl{};
+		std::unique_ptr<TextureInternal> internal{};
 
 		u32 Width() const;
 		u32 Height() const;
@@ -27,7 +28,5 @@ namespace efvk
 #ifdef USE_IMGUI
 		void* GetImGuiID() const;
 #endif
-
-	private:
 	};
 }

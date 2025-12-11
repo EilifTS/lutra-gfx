@@ -10,6 +10,8 @@
 namespace efvk
 {
 	class GraphicsPipeline;
+	/* TODO: remove this WA */
+	class TextureInternal;
 
 	class CommandBuffer
 	{
@@ -35,6 +37,9 @@ namespace efvk
 
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);
+
+		/* TODO: remove this WA */
+		void ScheduleUpload(const void* src_ptr, TextureInternal& dst_texture);
 
 		void Draw(u32 vertex_count, u32 instance_count);
 

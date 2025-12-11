@@ -1,7 +1,7 @@
 #include "CommandBuffer.h"
-#include "TextureImpl.h"
 #include "GraphicsPipeline.h"
 #include "internal/BufferInternal.h"
+#include "internal/TextureInternal.h"
 
 namespace efvk
 {
@@ -104,7 +104,7 @@ namespace efvk
 
 	void CommandBuffer::BindTexture(Texture& texture, u32 binding)
 	{
-		descriptor_write_cache.AddImageWrite(binding, *texture.pimpl->view);
+		descriptor_write_cache.AddImageWrite(binding, *texture.internal->view);
 	}
 
 	void CommandBuffer::BindTextures(std::span<Texture*> textures, u32 binding)
@@ -113,7 +113,7 @@ namespace efvk
 		std::vector<vk::ImageView> views(textures.size());
 		for (u32 i = 0; i < static_cast<u32>(textures.size()); i++)
 		{
-			views[i] = *textures[i]->pimpl->view;
+			views[i] = *textures[i]->internal->view;
 		}
 		descriptor_write_cache.AddImageArrayWrite(binding, views);
 	}
@@ -145,9 +145,14 @@ namespace efvk
 
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture& dst_image)
 	{
+		ScheduleUpload(src_ptr, *dst_image.internal);
+	}
+
+	void CommandBuffer::ScheduleUpload(const void* src_ptr, TextureInternal& dst_image)
+	{
 		/* Calculate buffer size */
 		const u64 bytes_per_pixel = 4; /* 4bytes per pixel, have to do this properly at some point */
-		const u64 buffer_size = dst_image.Width() * dst_image.Height() * bytes_per_pixel;
+		const u64 buffer_size = dst_image.width * dst_image.height * bytes_per_pixel;
 
 		/* Allocate */
 		BufferMemoryAllocation allocation = buffer_memory_allocator.Alloc(*ctx, buffer_size, 1);
@@ -165,16 +170,16 @@ namespace efvk
 		/* GPU -> GPU COPY */
 		const vk::BufferImageCopy buffer_image_copy{
 			.bufferOffset = allocation.offset,
-			.imageSubresource = { 
+			.imageSubresource = {
 				.aspectMask = vk::ImageAspectFlagBits::eColor,
 				.mipLevel = 0,
 				.baseArrayLayer = 0,
 				.layerCount = 1
 			},
-			.imageExtent = { dst_image.Width(), dst_image.Height(), 1 },
+			.imageExtent = { dst_image.width, dst_image.height, 1 },
 		};
 
-		cmd_buf->copyBufferToImage(allocation.buffer, dst_image.pimpl->image.GetImage(), vk::ImageLayout::eGeneral, buffer_image_copy);
+		cmd_buf->copyBufferToImage(allocation.buffer, dst_image.vma_image.GetImage(), vk::ImageLayout::eGeneral, buffer_image_copy);
 	}
 
 	void CommandBuffer::Draw(u32 vertex_count, u32 instance_count)
