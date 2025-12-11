@@ -4,7 +4,7 @@
 #include <efvk/GraphicsContext.h>
 #include <efvk/FrameManager.h>
 #include <efvk/Window.h>
-#include "FrameManagerImpl.h"
+#include "internal/FrameManagerInternal.h"
 #include "internal/GraphicsContextInternal.h"
 
 #include <imgui.h>
@@ -96,17 +96,17 @@ namespace efvk
 		ImGui::Render();
 		ImDrawData* draw_data = ImGui::GetDrawData();
 
-		vk::CommandBuffer cmd_buf = *frame_manager.pimpl->GetCurrentCommandBuffer().cmd_buf;
+		vk::CommandBuffer cmd_buf = *frame_manager.internal->GetCurrentCommandBuffer().cmd_buf;
 
 		const vk::RenderingAttachmentInfo render_attachment_info{
-			.imageView = frame_manager.pimpl->GetCurrentImageView(),
+			.imageView = frame_manager.internal->GetCurrentImageView(),
 			.imageLayout = vk::ImageLayout::eGeneral,
 			.loadOp = vk::AttachmentLoadOp::eLoad,
 			.storeOp = vk::AttachmentStoreOp::eStore,
 		};
 
 		const vk::RenderingInfo rendering_info{
-			.renderArea = { 0, 0, frame_manager.pimpl->window_width, frame_manager.pimpl->window_height },
+			.renderArea = { 0, 0, frame_manager.internal->window_width, frame_manager.internal->window_height },
 			.layerCount = 1,
 			.colorAttachmentCount = 1,
 			.pColorAttachments = &render_attachment_info,

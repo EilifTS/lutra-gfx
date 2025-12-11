@@ -6,6 +6,8 @@
 
 namespace efvk
 {
+	class FrameManagerInternal;
+
 	class FrameManager
 	{
 	public:
@@ -20,10 +22,6 @@ namespace efvk
 		void StartFrame(GraphicsContext& ctx);
 		void EndFrame(GraphicsContext& ctx);
 
-		struct Impl;
-		std::unique_ptr<Impl> pimpl{};
-
-	private:
-		u32 current_frame_index = 0;
+		std::unique_ptr<FrameManagerInternal> internal{};
 	};
 }

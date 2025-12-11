@@ -1,6 +1,6 @@
 #include <efvk/SpriteBatch.h>
 
-#include "FrameManagerImpl.h"
+#include "internal/FrameManagerInternal.h"
 #include "VulkanHPP.h"
 #include "GraphicsPipeline.h"
 #include "internal/GraphicsContextInternal.h"
@@ -51,14 +51,14 @@ namespace efvk
 
 	void SpriteBatch::End(FrameManager& frame_manager)
 	{
-		CommandBuffer& cmd_buf = frame_manager.pimpl->GetCurrentCommandBuffer();
+		CommandBuffer& cmd_buf = frame_manager.internal->GetCurrentCommandBuffer();
 
 		if (sprite_list.size() > 0)
 		{
 			/* Upload sprite data */
 			cmd_buf.ScheduleUpload(sprite_list.data(), sprite_list.size() * sizeof(SpriteInternal), sprite_buffer);
 
-			cmd_buf.BeginRendering(frame_manager.pimpl->GetCurrentImageView(), frame_manager.pimpl->window_width, frame_manager.pimpl->window_height);
+			cmd_buf.BeginRendering(frame_manager.internal->GetCurrentImageView(), frame_manager.internal->window_width, frame_manager.internal->window_height);
 
 			cmd_buf.BindPipeline(pimpl->pipeline);
 			cmd_buf.BindBuffer(sprite_buffer, 0);
