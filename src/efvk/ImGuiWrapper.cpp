@@ -4,8 +4,8 @@
 #include <efvk/GraphicsContext.h>
 #include <efvk/FrameManager.h>
 #include <efvk/Window.h>
-#include "GraphicsContextImpl.h"
 #include "FrameManagerImpl.h"
+#include "internal/GraphicsContextInternal.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -18,7 +18,7 @@ namespace efvk
 	static constexpr u32 max_extra_textures = 256;
 	static vk::UniqueDescriptorPool descriptor_pool{};
 
-	static void InitVulkanResources(GraphicsContext::Impl& ctx)
+	static void InitVulkanResources(GraphicsContextInternal& ctx)
 	{
 		/* Create descriptor pool */
 		const vk::DescriptorPoolSize pool_sizes[] = {
@@ -53,7 +53,7 @@ namespace efvk
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 
-		InitVulkanResources(*ctx.pimpl);
+		InitVulkanResources(*ctx.internal);
 
 		ImGui_ImplGlfw_InitForVulkan(reinterpret_cast<GLFWwindow*>(window.GetHandle()), true);
 
@@ -64,11 +64,11 @@ namespace efvk
 		};
 
 		ImGui_ImplVulkan_InitInfo vulkan_info = {};
-		vulkan_info.Instance = *ctx.pimpl->instance;
-		vulkan_info.PhysicalDevice = ctx.pimpl->physical_device;
-		vulkan_info.Device = *ctx.pimpl->device;
-		vulkan_info.QueueFamily = ctx.pimpl->queue_family_index;
-		vulkan_info.Queue = ctx.pimpl->queue;
+		vulkan_info.Instance = *ctx.internal->instance;
+		vulkan_info.PhysicalDevice = ctx.internal->physical_device;
+		vulkan_info.Device = *ctx.internal->device;
+		vulkan_info.QueueFamily = ctx.internal->queue_family_index;
+		vulkan_info.Queue = ctx.internal->queue;
 		vulkan_info.PipelineCache = VK_NULL_HANDLE;
 		vulkan_info.DescriptorPool = *descriptor_pool;
 		vulkan_info.MinImageCount = 3;

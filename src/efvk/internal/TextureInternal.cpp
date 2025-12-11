@@ -1,6 +1,5 @@
 #include "TextureInternal.h"
 
-#include "../GraphicsContextImpl.h"
 #include "../CommandBuffer.h"
 
 #ifdef USE_IMGUI
@@ -9,7 +8,7 @@
 
 namespace efvk
 {
-	TextureInternal::TextureInternal(GraphicsContext::Impl& ctx, const Image& image)
+	TextureInternal::TextureInternal(GraphicsContextInternal& ctx, const Image& image)
 	{
 		VmaAllocationCreateInfo vma_info{};
 		vma_info.usage = VMA_MEMORY_USAGE_AUTO;

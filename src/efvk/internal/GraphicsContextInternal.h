@@ -1,10 +1,17 @@
 #pragma once
-#include "VulkanHPP.h"
+#include "../VulkanHPP.h"
+#include <efvk/Window.h>
 
 namespace efvk
 {
-	struct GraphicsContext::Impl
+	class GraphicsContextInternal
 	{
+	public:
+		GraphicsContextInternal(const Window& window, const char* app_name);
+		~GraphicsContextInternal();
+
+		void WaitIdle();
+
 		vk::UniqueInstance instance{};
 #if _DEBUG /* VL */
 		vk::UniqueDebugUtilsMessengerEXT messenger{};

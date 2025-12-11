@@ -1,7 +1,7 @@
 #pragma once
 #include <efvk/GraphicsContext.h>
 #include <efvk/math/IntDefs.h>
-#include "../GraphicsContextImpl.h"
+#include "GraphicsContextInternal.h"
 #include "../VulkanHPP.h"
 
 namespace efvk
@@ -10,7 +10,7 @@ namespace efvk
 	{
 	public:
 		BufferInternal() {};
-		BufferInternal(GraphicsContext::Impl& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags);
+		BufferInternal(GraphicsContextInternal& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags);
 
 		BufferInternal(const BufferInternal&) = delete;
 		BufferInternal(BufferInternal&& rhs) noexcept = default;

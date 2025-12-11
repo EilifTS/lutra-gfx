@@ -2,10 +2,10 @@
 #include <efvk/GraphicsContext.h>
 #include <efvk/Texture.h>
 #include <efvk/Buffer.h>
-#include "GraphicsContextImpl.h"
 #include "BufferMemoryAllocator.h"
 #include "DescriptorAllocator.h"
 #include "DescriptorWriteCache.h"
+#include "internal/GraphicsContextInternal.h"
 
 namespace efvk
 {
@@ -17,7 +17,7 @@ namespace efvk
 	{
 	public:
 		CommandBuffer() {};
-		CommandBuffer(GraphicsContext::Impl& ctx);
+		CommandBuffer(GraphicsContextInternal& ctx);
 
 		CommandBuffer(const CommandBuffer&) = delete;
 		CommandBuffer(CommandBuffer&&) = default;
@@ -46,7 +46,7 @@ namespace efvk
 		void Reset();
 
 	private:
-		GraphicsContext::Impl* ctx{};
+		GraphicsContextInternal* ctx{};
 
 		BufferMemoryAllocator buffer_memory_allocator{};
 		DescriptorAllocator descriptor_allocator{};
@@ -55,5 +55,5 @@ namespace efvk
 		GraphicsPipeline* bound_pipeline{};
 	};
 
-	void SubmitAndWait(GraphicsContext::Impl& ctx, CommandBuffer& cmd_buf);
+	void SubmitAndWait(GraphicsContextInternal& ctx, CommandBuffer& cmd_buf);
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "../VulkanHPP.h"
-#include <efvk/GraphicsContext.h>
 #include <efvk/Image.h>
+#include "GraphicsContextInternal.h"
 
 namespace efvk
 {
@@ -9,7 +9,7 @@ namespace efvk
 	{
 	public:
 		TextureInternal() {};
-		TextureInternal(GraphicsContext::Impl& ctx, const Image& image);
+		TextureInternal(GraphicsContextInternal& ctx, const Image& image);
 		~TextureInternal();
 
 #ifdef USE_IMGUI

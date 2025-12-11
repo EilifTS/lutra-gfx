@@ -2,7 +2,7 @@
 #include <efvk/math/IntDefs.h>
 
 #include "internal/BufferInternal.h"
-#include "GraphicsContextImpl.h"
+#include "internal/GraphicsContextInternal.h"
 
 namespace efvk
 {
@@ -19,18 +19,18 @@ namespace efvk
 	{
 	public:
 		BufferMemoryAllocator() {};
-		BufferMemoryAllocator(GraphicsContext::Impl& ctx, u64 chunk_size);
+		BufferMemoryAllocator(GraphicsContextInternal& ctx, u64 chunk_size);
 		BufferMemoryAllocator(const BufferMemoryAllocator&) = delete;
 		BufferMemoryAllocator(BufferMemoryAllocator&&) = default;
 		BufferMemoryAllocator& operator=(const BufferMemoryAllocator&) = delete;
 		BufferMemoryAllocator& operator=(BufferMemoryAllocator&&) = default;
 		~BufferMemoryAllocator();
 
-		BufferMemoryAllocation Alloc(GraphicsContext::Impl& ctx, u64 size, u64 alignment);
-		void Reset(GraphicsContext::Impl& ctx);
+		BufferMemoryAllocation Alloc(GraphicsContextInternal& ctx, u64 size, u64 alignment);
+		void Reset(GraphicsContextInternal& ctx);
 
 	private:
-		GraphicsContext::Impl* ctx{};
+		GraphicsContextInternal* ctx{};
 
 		void* first_chunk_ptr = nullptr;
 		u64 chunk_size{};

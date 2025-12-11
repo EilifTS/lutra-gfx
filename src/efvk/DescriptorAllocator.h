@@ -1,6 +1,6 @@
 #pragma once
 #include <efvk/GraphicsContext.h>
-#include "GraphicsContextImpl.h"
+#include "internal/GraphicsContextInternal.h"
 
 namespace efvk
 {
@@ -8,7 +8,7 @@ namespace efvk
 	{
 	public:
 		DescriptorAllocator() {};
-		DescriptorAllocator(GraphicsContext::Impl& ctx);
+		DescriptorAllocator(GraphicsContextInternal& ctx);
 
 		DescriptorAllocator(const DescriptorAllocator&) = delete;
 		DescriptorAllocator(DescriptorAllocator&&) = default;

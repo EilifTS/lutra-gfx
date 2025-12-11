@@ -8,7 +8,7 @@ namespace efvk
 
 	Texture::Texture(GraphicsContext& ctx, const Image& image)
 	{
-		internal = std::make_unique<TextureInternal>(*ctx.pimpl, image);
+		internal = std::make_unique<TextureInternal>(*ctx.internal, image);
 	}
 
 	Texture::~Texture() {}

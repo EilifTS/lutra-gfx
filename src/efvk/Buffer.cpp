@@ -14,7 +14,7 @@ namespace efvk
 			usage_flags |= vk::BufferUsageFlagBits::eStorageBuffer;
 		}
 
-		internal = std::make_unique<BufferInternal>(*ctx.pimpl, size, usage_flags, 0);
+		internal = std::make_unique<BufferInternal>(*ctx.internal, size, usage_flags, 0);
 	}
 
 	Buffer::~Buffer() {}
@@ -23,6 +23,6 @@ namespace efvk
 	Buffer& Buffer::operator=(Buffer&&) = default;
 
 	u64 Buffer::Size() const { return internal->Size(); }
-	void* Buffer::Map(GraphicsContext& ctx) { return internal->Map(*ctx.pimpl->device); }
-	void Buffer::Unmap(GraphicsContext& ctx) { internal->Unmap(*ctx.pimpl->device); }
+	void* Buffer::Map(GraphicsContext& ctx) { return internal->Map(*ctx.internal->device); }
+	void Buffer::Unmap(GraphicsContext& ctx) { internal->Unmap(*ctx.internal->device); }
 }

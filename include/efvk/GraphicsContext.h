@@ -1,12 +1,10 @@
 #pragma once
 #include <memory>
 
-#include "Window.h"
-#include "Utils.h"
-
 namespace efvk
 {
-	class FrameManager;
+	class Window;
+	class GraphicsContextInternal;
 
 	class GraphicsContext
 	{
@@ -21,7 +19,6 @@ namespace efvk
 
 		void WaitIdle();
 
-		struct Impl;
-		std::unique_ptr<Impl> pimpl{};
+		std::unique_ptr<GraphicsContextInternal> internal{};
 	};
 }

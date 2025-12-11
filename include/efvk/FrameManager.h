@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <efvk/math/IntDefs.h>
 
 #include "GraphicsContext.h"
 

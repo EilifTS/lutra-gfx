@@ -13,7 +13,7 @@ namespace efvk
 		return ((value + (alignment - 1)) & ~(alignment - 1));
 	}
 
-	BufferMemoryAllocator::BufferMemoryAllocator(GraphicsContext::Impl& ctx, u64 chunk_size)
+	BufferMemoryAllocator::BufferMemoryAllocator(GraphicsContextInternal& ctx, u64 chunk_size)
 		: ctx(&ctx), chunk_size(chunk_size)
 	{
 		chunks.push_back(BufferInternal(ctx, chunk_size, buffer_usage, vma_flags));
@@ -31,7 +31,7 @@ namespace efvk
 		}
 	}
 
-	BufferMemoryAllocation BufferMemoryAllocator::Alloc(GraphicsContext::Impl& ctx, u64 size, u64 alignment)
+	BufferMemoryAllocation BufferMemoryAllocator::Alloc(GraphicsContextInternal& ctx, u64 size, u64 alignment)
 	{
 		/* Try to fit in current block */
 		current_chunk_offset = AlignUpPow2(current_chunk_offset, alignment);
@@ -56,7 +56,7 @@ namespace efvk
 		return allocation;
 	}
 
-	void BufferMemoryAllocator::Reset(GraphicsContext::Impl& ctx)
+	void BufferMemoryAllocator::Reset(GraphicsContextInternal& ctx)
 	{
 		/* Keep the first chunk around */
 		for (u32 i = 1; i < static_cast<u32>(chunks.size()); i++)

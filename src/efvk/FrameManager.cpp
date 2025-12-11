@@ -1,7 +1,7 @@
 #include <efvk/FrameManager.h>
 
-#include "GraphicsContextImpl.h"
 #include "FrameManagerImpl.h"
+#include "internal/GraphicsContextInternal.h"
 
 #include <iostream>
 
@@ -56,7 +56,7 @@ namespace efvk
 	FrameManager::FrameManager(GraphicsContext& public_ctx, u32 window_width, u32 window_height)
 	{
 		vk::Result result = vk::Result::eSuccess;
-		GraphicsContext::Impl& ctx = *public_ctx.pimpl;
+		GraphicsContextInternal& ctx = *public_ctx.internal;
 
 		pimpl = std::make_unique<Impl>();
 
@@ -159,7 +159,7 @@ namespace efvk
 	void FrameManager::StartFrame(GraphicsContext& public_ctx)
 	{
 		vk::Result result = vk::Result::eSuccess;
-		GraphicsContext::Impl& ctx = *public_ctx.pimpl;
+		GraphicsContextInternal& ctx = *public_ctx.internal;
 
 		/* Find an acquire semaphore */
 		vk::UniqueSemaphore acquire_semahore{};
@@ -226,7 +226,7 @@ namespace efvk
 
 	void FrameManager::EndFrame(GraphicsContext& public_ctx)
 	{
-		GraphicsContext::Impl& ctx = *public_ctx.pimpl;
+		GraphicsContextInternal& ctx = *public_ctx.internal;
 
 		PerFrameResources& frame_res = pimpl->per_frame_res[pimpl->current_frame_index];
 

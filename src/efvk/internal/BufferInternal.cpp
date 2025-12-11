@@ -2,7 +2,7 @@
 
 namespace efvk
 {
-	BufferInternal::BufferInternal(GraphicsContext::Impl& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags)
+	BufferInternal::BufferInternal(GraphicsContextInternal& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags)
 		: size(size)
 	{
 		const vk::BufferCreateInfo buffer_info{

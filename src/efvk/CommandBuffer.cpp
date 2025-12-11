@@ -29,7 +29,7 @@ namespace efvk
 		);
 	}
 
-	CommandBuffer::CommandBuffer(GraphicsContext::Impl& ctx)
+	CommandBuffer::CommandBuffer(GraphicsContextInternal& ctx)
 		: ctx(&ctx), buffer_memory_allocator(ctx, chunk_size), descriptor_allocator(ctx)
 	{
 		/* Create command buffer */
@@ -210,7 +210,7 @@ namespace efvk
 		cmd_buf->begin(begin_info);
 	}
 
-	void SubmitAndWait(GraphicsContext::Impl& ctx, CommandBuffer& cmd_buf)
+	void SubmitAndWait(GraphicsContextInternal& ctx, CommandBuffer& cmd_buf)
 	{
 		vk::UniqueFence fence = ctx.device->createFenceUnique({});
 

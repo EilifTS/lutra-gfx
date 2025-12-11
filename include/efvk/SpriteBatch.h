@@ -10,6 +10,7 @@
 #include "Buffer.h"
 
 #include <array>
+#include <unordered_map>
 
 namespace efvk
 {

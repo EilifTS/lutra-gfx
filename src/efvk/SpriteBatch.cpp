@@ -1,9 +1,9 @@
 #include <efvk/SpriteBatch.h>
 
 #include "FrameManagerImpl.h"
-#include "GraphicsContextImpl.h"
 #include "VulkanHPP.h"
 #include "GraphicsPipeline.h"
+#include "internal/GraphicsContextInternal.h"
 
 namespace efvk
 {
@@ -19,7 +19,7 @@ namespace efvk
 	{
 		pimpl = std::make_unique<Impl>();
 
-		pimpl->dev = *ctx.pimpl->device;
+		pimpl->dev = *ctx.internal->device;
 
 		sprite_buffer = Buffer(ctx, max_sprites_per_batch * sizeof(SpriteInternal), BufferType::StorageBuffer);
 
@@ -31,7 +31,7 @@ namespace efvk
 		pipeline_info.AddImmutableSampler(1, SamplerType::LinearClamp, GraphicsPipelineInfo::Binding::Stage::Fragment);
 		pipeline_info.AddTextures(2, max_texture_count, GraphicsPipelineInfo::Binding::Stage::Fragment);
 
-		pimpl->pipeline = GraphicsPipeline(*ctx.pimpl->device, pipeline_info);
+		pimpl->pipeline = GraphicsPipeline(*ctx.internal->device, pipeline_info);
 
 		Image placeholder_img(1, 1);
 		placeholder_img.SetData(0, 255);
