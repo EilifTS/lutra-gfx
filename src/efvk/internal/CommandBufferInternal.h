@@ -2,11 +2,11 @@
 #include <efvk/GraphicsContext.h>
 #include <efvk/Texture.h>
 #include <efvk/Buffer.h>
-#include "BufferMemoryAllocator.h"
-#include "DescriptorAllocator.h"
-#include "DescriptorWriteCache.h"
-#include "internal/GraphicsContextInternal.h"
-#include "internal/GraphicsPipelineInternal.h"
+#include "../BufferMemoryAllocator.h"
+#include "../DescriptorAllocator.h"
+#include "../DescriptorWriteCache.h"
+#include "GraphicsContextInternal.h"
+#include "GraphicsPipelineInternal.h"
 
 namespace efvk
 {
@@ -14,27 +14,26 @@ namespace efvk
 	/* TODO: remove this WA */
 	class TextureInternal;
 
-	class CommandBuffer
+	class CommandBufferInternal
 	{
 	public:
-		CommandBuffer() {};
-		CommandBuffer(GraphicsContextInternal& ctx);
+		CommandBufferInternal() {};
+		CommandBufferInternal(GraphicsContextInternal& ctx);
 
-		CommandBuffer(const CommandBuffer&) = delete;
-		CommandBuffer(CommandBuffer&&) = default;
-		CommandBuffer& operator=(const CommandBuffer&) = delete;
-		CommandBuffer& operator=(CommandBuffer&&) = default;
+		CommandBufferInternal(const CommandBufferInternal&) = delete;
+		CommandBufferInternal(CommandBufferInternal&&) = default;
+		CommandBufferInternal& operator=(const CommandBufferInternal&) = delete;
+		CommandBufferInternal& operator=(CommandBufferInternal&&) = default;
 
 		vk::UniqueCommandBuffer cmd_buf{};
 
 		void BeginRendering(vk::ImageView image_view, u32 width, u32 height);
 		void EndRendering();
 
-		vk::DescriptorSet AllocateDescriptorSet(vk::DescriptorSetLayout layout) { return descriptor_allocator.Alloc(layout); };
 		void BindPipeline(GraphicsPipelineInternal& pipeline);
-		void BindBuffer(Buffer& buffer, u32 binding);
-		void BindTexture(Texture& texture, u32 binding);
-		void BindTextures(std::span<Texture*> textures, u32 binding);
+		void BindBuffer(BufferInternal& buffer, u32 binding);
+		void BindTexture(vk::ImageView view, u32 binding);
+		void BindTextures(std::span<vk::ImageView> views, u32 binding);
 
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);
@@ -56,5 +55,5 @@ namespace efvk
 		GraphicsPipelineInternal* bound_pipeline{};
 	};
 
-	void SubmitAndWait(GraphicsContextInternal& ctx, CommandBuffer& cmd_buf);
+	void SubmitAndWaitInternal(GraphicsContextInternal& ctx, CommandBufferInternal& cmd_buf);
 }

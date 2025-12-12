@@ -118,7 +118,7 @@ namespace efvk
 		for (PerFrameResources& res : per_frame_res)
 		{
 			/* Create command buffer */
-			res.cmd_buf = CommandBuffer(ctx);
+			res.cmd_buf = CommandBufferInternal(ctx);
 
 			/* Create fence */
 			res.frame_complete_fence = ctx.device->createFenceUnique({});

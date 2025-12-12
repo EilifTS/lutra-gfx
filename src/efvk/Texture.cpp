@@ -23,6 +23,10 @@ namespace efvk
 		return internal->height;
 	}
 
+	TextureView Texture::DefaultView() const {
+		return *internal->view;
+	}
+
 #ifdef USE_IMGUI
 	void* Texture::GetImGuiID() const {
 		return static_cast<void*>(internal->imgui_set);

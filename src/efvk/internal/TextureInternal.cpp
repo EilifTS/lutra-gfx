@@ -1,6 +1,5 @@
 #include "TextureInternal.h"
-
-#include "../CommandBuffer.h"
+#include "CommandBufferInternal.h"
 
 #ifdef USE_IMGUI
 #include <backends/imgui_impl_vulkan.h>
@@ -65,10 +64,10 @@ namespace efvk
 #endif
 
 		/* Initialize content */
-		CommandBuffer cmd_buf(ctx);
+		CommandBufferInternal cmd_buf(ctx);
 		change_layout(cmd_buf.cmd_buf.get(), vma_image.GetImage(), vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 		cmd_buf.ScheduleUpload(image.GetDataPtr(), *this);
-		SubmitAndWait(ctx, cmd_buf);
+		SubmitAndWaitInternal(ctx, cmd_buf);
 	}
 
 	TextureInternal::~TextureInternal()

@@ -51,7 +51,7 @@ namespace efvk
 
 	void SpriteBatch::End(FrameManager& frame_manager)
 	{
-		CommandBuffer& cmd_buf = frame_manager.internal->GetCurrentCommandBuffer();
+		CommandBufferInternal& cmd_buf = frame_manager.internal->GetCurrentCommandBuffer();
 
 		if (sprite_list.size() > 0)
 		{
@@ -61,8 +61,8 @@ namespace efvk
 			cmd_buf.BeginRendering(frame_manager.internal->GetCurrentImageView(), frame_manager.internal->window_width, frame_manager.internal->window_height);
 
 			cmd_buf.BindPipeline(*pimpl->pipeline.internal);
-			cmd_buf.BindBuffer(sprite_buffer, 0);
-			cmd_buf.BindTextures(texture_array, 2);
+			cmd_buf.BindBuffer(*sprite_buffer.internal, 0);
+			cmd_buf.BindTextures(*reinterpret_cast<std::array<vk::ImageView, max_texture_count>*>(&texture_view_array), 2);
 
 			cmd_buf.Draw(6, static_cast<u32>(sprite_list.size()));
 			

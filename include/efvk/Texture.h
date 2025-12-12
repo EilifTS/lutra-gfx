@@ -8,6 +8,8 @@ namespace efvk
 {
 	class TextureInternal;
 
+	using TextureView = void*;
+
 	class Texture
 	{
 	public:
@@ -24,6 +26,8 @@ namespace efvk
 
 		u32 Width() const;
 		u32 Height() const;
+
+		TextureView DefaultView() const;
 
 #ifdef USE_IMGUI
 		void* GetImGuiID() const;

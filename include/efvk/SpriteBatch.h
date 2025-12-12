@@ -47,7 +47,7 @@ namespace efvk
 
 			for (u32 i = 0; i < max_texture_count; i++)
 			{
-				texture_array[i] = &placeholder_texture;
+				texture_view_array[i] = placeholder_texture.DefaultView();
 			}
 		}
 		void End(FrameManager& frame_manager);
@@ -71,7 +71,7 @@ namespace efvk
 				if (texture_index_lookup.count(sprite.texture) == 0)
 				{
 					texture_index_lookup[sprite.texture] = texture_count;
-					texture_array[texture_count] = sprite.texture;
+					texture_view_array[texture_count] = sprite.texture->DefaultView();
 					texture_count++;
 					assert(texture_count <= max_texture_count); /* If we go over this limit then I have to extend this */
 				}
@@ -111,7 +111,7 @@ namespace efvk
 
 		static constexpr u32 max_texture_count = 16;
 		std::unordered_map<Texture*, u32> texture_index_lookup{};
-		std::array<Texture*, max_texture_count> texture_array{};
+		std::array<TextureView, max_texture_count> texture_view_array{};
 		u32 texture_count{};
 		Texture placeholder_texture{};
 	};

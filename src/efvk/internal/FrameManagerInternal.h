@@ -2,13 +2,13 @@
 #include <efvk/math/IntDefs.h>
 
 #include "GraphicsContextInternal.h"
-#include "../CommandBuffer.h"
+#include "CommandBufferInternal.h"
 
 namespace efvk
 {
 	struct PerFrameResources
 	{
-		CommandBuffer cmd_buf{};
+		CommandBufferInternal cmd_buf{};
 		bool has_fence_signal{ false };
 		vk::UniqueFence frame_complete_fence{};
 		vk::UniqueSemaphore image_acquire_sem{};
@@ -26,7 +26,7 @@ namespace efvk
 		void StartFrame(GraphicsContextInternal& ctx);
 		void EndFrame(GraphicsContextInternal& ctx);
 
-		CommandBuffer& GetCurrentCommandBuffer()
+		CommandBufferInternal& GetCurrentCommandBuffer()
 		{
 			return per_frame_res[current_frame_index].cmd_buf;
 		}
