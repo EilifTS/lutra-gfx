@@ -1,8 +1,8 @@
 #pragma once
 #include <efvk/math/IntDefs.h>
 
-#include "internal/BufferInternal.h"
-#include "internal/GraphicsContextInternal.h"
+#include "BufferInternal.h"
+#include "GraphicsContextInternal.h"
 
 namespace efvk
 {

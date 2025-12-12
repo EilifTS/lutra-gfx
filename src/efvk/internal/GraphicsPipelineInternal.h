@@ -1,7 +1,7 @@
 #pragma once
-#include "../VulkanHPP.h"
 #include <efvk/math/IntDefs.h>
 #include <efvk/GraphicsPipeline.h>
+#include "VulkanHPP.h"
 
 namespace efvk
 {

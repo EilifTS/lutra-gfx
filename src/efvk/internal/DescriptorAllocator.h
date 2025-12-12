@@ -1,6 +1,6 @@
 #pragma once
 #include <efvk/GraphicsContext.h>
-#include "internal/GraphicsContextInternal.h"
+#include "GraphicsContextInternal.h"
 
 namespace efvk
 {

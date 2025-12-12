@@ -4,14 +4,15 @@
 #include <efvk/GraphicsContext.h>
 #include <efvk/FrameManager.h>
 #include <efvk/Window.h>
+#include <efvk/Texture.h>
 #include "internal/FrameManagerInternal.h"
 #include "internal/GraphicsContextInternal.h"
+#include "internal/VulkanHPP.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 
-#include "VulkanHPP.h"
 
 namespace efvk
 {

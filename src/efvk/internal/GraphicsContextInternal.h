@@ -1,6 +1,6 @@
 #pragma once
-#include "../VulkanHPP.h"
 #include <efvk/Window.h>
+#include "VulkanHPP.h"
 
 namespace efvk
 {

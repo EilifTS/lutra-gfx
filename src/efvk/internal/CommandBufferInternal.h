@@ -1,18 +1,16 @@
 #pragma once
 #include <efvk/GraphicsContext.h>
-#include <efvk/Texture.h>
-#include <efvk/Buffer.h>
-#include "../BufferMemoryAllocator.h"
-#include "../DescriptorAllocator.h"
-#include "../DescriptorWriteCache.h"
+#include "BufferMemoryAllocator.h"
+#include "DescriptorAllocator.h"
+#include "DescriptorWriteCache.h"
 #include "GraphicsContextInternal.h"
 #include "GraphicsPipelineInternal.h"
+#include "BufferInternal.h"
+#include "TextureInternal.h"
 
 namespace efvk
 {
 	class GraphicsPipeline;
-	/* TODO: remove this WA */
-	class TextureInternal;
 
 	class CommandBufferInternal
 	{
@@ -35,10 +33,7 @@ namespace efvk
 		void BindTexture(vk::ImageView view, u32 binding);
 		void BindTextures(std::span<vk::ImageView> views, u32 binding);
 
-		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
-		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);
-
-		/* TODO: remove this WA */
+		void ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, TextureInternal& dst_texture);
 
 		void Draw(u32 vertex_count, u32 instance_count);

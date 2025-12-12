@@ -1,7 +1,8 @@
 #include <efvk/CommandBuffer.h>
+#include <efvk/Buffer.h>
+#include <efvk/Texture.h>
 #include "internal/GraphicsContextInternal.h"
 #include "internal/CommandBufferInternal.h"
-
 #include <vector>
 
 namespace efvk
@@ -17,12 +18,12 @@ namespace efvk
 	CommandBuffer::CommandBuffer(CommandBuffer&&) = default;
 	CommandBuffer& CommandBuffer::operator=(CommandBuffer&&) = default;
 
-	void CommandBuffer::BeginRendering(vk::ImageView image_view, u32 width, u32 height) { internal->BeginRendering(image_view, width, height); }
+	void CommandBuffer::BeginRendering(TextureView view, u32 width, u32 height) { internal->BeginRendering(*reinterpret_cast<vk::ImageView*>(&view), width, height); }
 	void CommandBuffer::EndRendering() { internal->EndRendering(); }
 
 	void CommandBuffer::BindPipeline(GraphicsPipeline& pipeline) { internal->BindPipeline(*pipeline.internal); };
 	void CommandBuffer::BindBuffer(Buffer& buffer, u32 binding) { internal->BindBuffer(*buffer.internal, binding); };
-	void CommandBuffer::BindTexture(TextureView view, u32 binding) { internal->BindTexture(view, binding); };
+	void CommandBuffer::BindTexture(TextureView view, u32 binding) { internal->BindTexture(*reinterpret_cast<vk::ImageView*>(&view), binding); };
 	void CommandBuffer::BindTextures(std::span<TextureView> views, u32 binding)
 	{
 		std::span<vk::ImageView>* vk_views = reinterpret_cast<std::span<vk::ImageView>*>(&views);

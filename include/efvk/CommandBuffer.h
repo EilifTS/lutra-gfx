@@ -2,6 +2,7 @@
 #include <memory>
 #include <span>
 #include <efvk/math/IntDefs.h>
+#include "Texture.h"
 
 namespace efvk
 {
@@ -10,7 +11,6 @@ namespace efvk
 	class Buffer;
 	class GraphicsContext;
 	class GraphicsPipeline;
-	class Texture;
 
 	class CommandBuffer
 	{
@@ -24,7 +24,7 @@ namespace efvk
 		CommandBuffer& operator=(const CommandBuffer&) = delete;
 		CommandBuffer& operator=(CommandBuffer&&);
 
-		void BeginRendering(vk::ImageView image_view, u32 width, u32 height);
+		void BeginRendering(TextureView view, u32 width, u32 height);
 		void EndRendering();
 
 		void BindPipeline(GraphicsPipeline& pipeline);

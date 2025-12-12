@@ -2,7 +2,7 @@
 #include <efvk/GraphicsContext.h>
 #include <efvk/math/IntDefs.h>
 #include "GraphicsContextInternal.h"
-#include "../VulkanHPP.h"
+#include "VulkanHPP.h"
 
 namespace efvk
 {

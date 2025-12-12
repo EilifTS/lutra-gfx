@@ -112,7 +112,7 @@ namespace efvk
 		descriptor_write_cache.AddImageArrayWrite(binding, views);
 	}
 
-	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer)
+	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer)
 	{
 		/* Allocate */
 		BufferMemoryAllocation allocation = buffer_memory_allocator.Alloc(*ctx, size, 1);
@@ -134,12 +134,7 @@ namespace efvk
 			.size = size,
 		};
 
-		cmd_buf->copyBuffer(allocation.buffer, dst_buffer.internal->buffer.GetBuffer(), buffer_copy);
-	}
-
-	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, Texture& dst_image)
-	{
-		ScheduleUpload(src_ptr, *dst_image.internal);
+		cmd_buf->copyBuffer(allocation.buffer, dst_buffer.buffer.GetBuffer(), buffer_copy);
 	}
 
 	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, TextureInternal& dst_image)
