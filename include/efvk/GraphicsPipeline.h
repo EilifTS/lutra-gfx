@@ -1,9 +1,12 @@
 #pragma once
-#include "VulkanHPP.h"
+#include <vector>
 #include <efvk/math/IntDefs.h>
+#include "GraphicsContext.h"
 
 namespace efvk
 {
+	class GraphicsPipelineInternal;
+
 	enum class SamplerType
 	{
 		None,
@@ -65,20 +68,15 @@ namespace efvk
 	class GraphicsPipeline
 	{
 	public:
-		GraphicsPipeline() {};
-		GraphicsPipeline(vk::Device dev, const GraphicsPipelineInfo& info);
+		GraphicsPipeline();
+		GraphicsPipeline(GraphicsContext& ctx, const GraphicsPipelineInfo& info);
+		~GraphicsPipeline();
 
-		vk::DescriptorSetLayout GetDescriptorSetLayout() { return *desc_layout; }
-		vk::PipelineLayout GetPipelineLayout() { return *layout; }
-		vk::Pipeline GetPipeline() { return *pipeline; }
+		GraphicsPipeline(const GraphicsPipeline&) = delete;
+		GraphicsPipeline(GraphicsPipeline&&);
+		GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;
+		GraphicsPipeline& operator=(GraphicsPipeline&&);
 
-	private:
-		vk::UniqueShaderModule vs_module{};
-		vk::UniqueShaderModule ps_module{};
-		vk::UniqueDescriptorSetLayout desc_layout{};
-		vk::UniquePipelineLayout layout{};
-		vk::UniquePipeline pipeline{};
-		
-		std::vector<vk::UniqueSampler> samplers{};
+		std::unique_ptr<GraphicsPipelineInternal> internal{};
 	};
 }

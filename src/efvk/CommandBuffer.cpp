@@ -1,5 +1,5 @@
 #include "CommandBuffer.h"
-#include "GraphicsPipeline.h"
+#include "internal/GraphicsPipelineInternal.h"
 #include "internal/BufferInternal.h"
 #include "internal/TextureInternal.h"
 
@@ -90,7 +90,7 @@ namespace efvk
 		cmd_buf->endRendering();
 	}
 
-	void CommandBuffer::BindPipeline(GraphicsPipeline& pipeline)
+	void CommandBuffer::BindPipeline(GraphicsPipelineInternal& pipeline)
 	{
 		bound_pipeline = &pipeline;
 		descriptor_write_cache.Clear();

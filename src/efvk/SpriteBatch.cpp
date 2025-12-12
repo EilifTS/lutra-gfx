@@ -2,7 +2,7 @@
 
 #include "internal/FrameManagerInternal.h"
 #include "VulkanHPP.h"
-#include "GraphicsPipeline.h"
+#include <efvk/GraphicsPipeline.h>
 #include "internal/GraphicsContextInternal.h"
 
 namespace efvk
@@ -31,7 +31,7 @@ namespace efvk
 		pipeline_info.AddImmutableSampler(1, SamplerType::LinearClamp, GraphicsPipelineInfo::Binding::Stage::Fragment);
 		pipeline_info.AddTextures(2, max_texture_count, GraphicsPipelineInfo::Binding::Stage::Fragment);
 
-		pimpl->pipeline = GraphicsPipeline(*ctx.internal->device, pipeline_info);
+		pimpl->pipeline = GraphicsPipeline(ctx, pipeline_info);
 
 		Image placeholder_img(1, 1);
 		placeholder_img.SetData(0, 255);
@@ -60,7 +60,7 @@ namespace efvk
 
 			cmd_buf.BeginRendering(frame_manager.internal->GetCurrentImageView(), frame_manager.internal->window_width, frame_manager.internal->window_height);
 
-			cmd_buf.BindPipeline(pimpl->pipeline);
+			cmd_buf.BindPipeline(*pimpl->pipeline.internal);
 			cmd_buf.BindBuffer(sprite_buffer, 0);
 			cmd_buf.BindTextures(texture_array, 2);
 

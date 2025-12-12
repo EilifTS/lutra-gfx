@@ -6,6 +6,7 @@
 #include "DescriptorAllocator.h"
 #include "DescriptorWriteCache.h"
 #include "internal/GraphicsContextInternal.h"
+#include "internal/GraphicsPipelineInternal.h"
 
 namespace efvk
 {
@@ -30,7 +31,7 @@ namespace efvk
 		void EndRendering();
 
 		vk::DescriptorSet AllocateDescriptorSet(vk::DescriptorSetLayout layout) { return descriptor_allocator.Alloc(layout); };
-		void BindPipeline(GraphicsPipeline& pipeline);
+		void BindPipeline(GraphicsPipelineInternal& pipeline);
 		void BindBuffer(Buffer& buffer, u32 binding);
 		void BindTexture(Texture& texture, u32 binding);
 		void BindTextures(std::span<Texture*> textures, u32 binding);
@@ -52,7 +53,7 @@ namespace efvk
 		DescriptorAllocator descriptor_allocator{};
 		DescriptorWriteCache descriptor_write_cache{};
 
-		GraphicsPipeline* bound_pipeline{};
+		GraphicsPipelineInternal* bound_pipeline{};
 	};
 
 	void SubmitAndWait(GraphicsContextInternal& ctx, CommandBuffer& cmd_buf);
