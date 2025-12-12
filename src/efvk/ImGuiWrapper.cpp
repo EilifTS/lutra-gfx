@@ -97,7 +97,7 @@ namespace efvk
 		ImGui::Render();
 		ImDrawData* draw_data = ImGui::GetDrawData();
 
-		vk::CommandBuffer cmd_buf = *frame_manager.internal->GetCurrentCommandBuffer().cmd_buf;
+		vk::CommandBuffer cmd_buf = *frame_manager.internal->GetCurrentCommandBuffer().internal->cmd_buf;
 
 		const vk::RenderingAttachmentInfo render_attachment_info{
 			.imageView = frame_manager.internal->GetCurrentImageView(),

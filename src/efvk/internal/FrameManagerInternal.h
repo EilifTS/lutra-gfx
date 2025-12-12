@@ -1,5 +1,6 @@
 #pragma once
 #include <efvk/math/IntDefs.h>
+#include <efvk/CommandBuffer.h>
 
 #include "GraphicsContextInternal.h"
 #include "CommandBufferInternal.h"
@@ -8,7 +9,7 @@ namespace efvk
 {
 	struct PerFrameResources
 	{
-		CommandBufferInternal cmd_buf{};
+		CommandBuffer cmd_buf{};
 		bool has_fence_signal{ false };
 		vk::UniqueFence frame_complete_fence{};
 		vk::UniqueSemaphore image_acquire_sem{};
@@ -26,7 +27,7 @@ namespace efvk
 		void StartFrame(GraphicsContextInternal& ctx);
 		void EndFrame(GraphicsContextInternal& ctx);
 
-		CommandBufferInternal& GetCurrentCommandBuffer()
+		CommandBuffer& GetCurrentCommandBuffer()
 		{
 			return per_frame_res[current_frame_index].cmd_buf;
 		}

@@ -5,6 +5,7 @@
 #include "math/vec.h"
 
 #include "GraphicsContext.h"
+#include "GraphicsPipeline.h"
 #include "FrameManager.h"
 #include "Texture.h"
 #include "Buffer.h"
@@ -29,12 +30,11 @@ namespace efvk
 	{
 	public:
 		SpriteBatch(GraphicsContext& ctx);
-		~SpriteBatch();
 
 		SpriteBatch(const SpriteBatch&) = delete;
-		SpriteBatch(SpriteBatch&&);
+		SpriteBatch(SpriteBatch&&) = default;
 		SpriteBatch& operator=(const SpriteBatch&) = delete;
-		SpriteBatch& operator=(SpriteBatch&&);
+		SpriteBatch& operator=(SpriteBatch&&) = default;
 
 		void SetCamera(const ef::Camera2D& new_camera) { camera = &new_camera; }
 
@@ -89,8 +89,8 @@ namespace efvk
 		}
 
 	private:
-		struct Impl;
-		std::unique_ptr<Impl> pimpl{};
+		GraphicsContext* ctx{};
+		GraphicsPipeline pipeline{};
 
 		const ef::Camera2D* camera{};
 

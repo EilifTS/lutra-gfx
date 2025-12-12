@@ -23,4 +23,17 @@ namespace efvk
 	{
 		internal->EndFrame(*ctx.internal);
 	}
+
+	u32 FrameManager::FrameWidth() const { return internal->window_width; };
+	u32 FrameManager::FrameHeight() const { return internal->window_height; };
+
+	CommandBuffer& FrameManager::GetCurrentCommandBuffer()
+	{
+		return internal->GetCurrentCommandBuffer();
+	}
+
+	TextureView FrameManager::GetCurrentTetureView()
+	{
+		return internal->GetCurrentImageView();
+	}
 }
