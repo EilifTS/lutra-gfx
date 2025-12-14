@@ -36,7 +36,7 @@ namespace efvk
 			/* Upload sprite data */
 			cmd_buf.ScheduleUpload(sprite_list.data(), sprite_list.size() * sizeof(SpriteInternal), sprite_buffer);
 
-			cmd_buf.BeginRendering(frame_manager.GetCurrentTetureView(), frame_manager.FrameWidth(), frame_manager.FrameHeight());
+			cmd_buf.BeginRendering(frame_manager.GetCurrentTetureView(), nullptr, frame_manager.FrameWidth(), frame_manager.FrameHeight(), true);
 
 			cmd_buf.BindPipeline(pipeline);
 			cmd_buf.BindBuffer(sprite_buffer, 0);

@@ -24,7 +24,7 @@ namespace efvk
 		CommandBuffer& operator=(const CommandBuffer&) = delete;
 		CommandBuffer& operator=(CommandBuffer&&);
 
-		void BeginRendering(TextureView view, u32 width, u32 height);
+		void BeginRendering(TextureView color_view, TextureView ds_view, u32 width, u32 height, bool clear);
 		void EndRendering();
 
 		void BindPipeline(GraphicsPipeline& pipeline);

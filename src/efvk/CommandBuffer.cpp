@@ -18,7 +18,11 @@ namespace efvk
 	CommandBuffer::CommandBuffer(CommandBuffer&&) = default;
 	CommandBuffer& CommandBuffer::operator=(CommandBuffer&&) = default;
 
-	void CommandBuffer::BeginRendering(TextureView view, u32 width, u32 height) { internal->BeginRendering(*reinterpret_cast<vk::ImageView*>(&view), width, height); }
+	void CommandBuffer::BeginRendering(TextureView color_view, TextureView ds_view, u32 width, u32 height, bool clear)
+	{
+		internal->BeginRendering(*reinterpret_cast<vk::ImageView*>(&color_view), *reinterpret_cast<vk::ImageView*>(&ds_view), width, height, clear);
+	}
+
 	void CommandBuffer::EndRendering() { internal->EndRendering(); }
 
 	void CommandBuffer::BindPipeline(GraphicsPipeline& pipeline) { internal->BindPipeline(*pipeline.internal); };

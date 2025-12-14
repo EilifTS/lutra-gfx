@@ -25,7 +25,7 @@ namespace efvk
 
 		vk::UniqueCommandBuffer cmd_buf{};
 
-		void BeginRendering(vk::ImageView image_view, u32 width, u32 height);
+		void BeginRendering(vk::ImageView color_view, vk::ImageView ds_view, u32 width, u32 height, bool clear);
 		void EndRendering();
 
 		void BindPipeline(GraphicsPipelineInternal& pipeline);

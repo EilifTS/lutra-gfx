@@ -49,13 +49,33 @@ namespace efvk
 		cmd_buf->begin(begin_info);
 	}
 
-	void CommandBufferInternal::BeginRendering(vk::ImageView image_view, u32 width, u32 height)
+	void CommandBufferInternal::BeginRendering(vk::ImageView color_view, vk::ImageView ds_view, u32 width, u32 height, bool clear)
 	{
+		const std::array<float, 4> clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		const float clear_depth = 0.0f;
+
+		const vk::ClearValue vk_clear_color{
+			.color = clear_color,
+		};
+
+		const vk::ClearValue vk_clear_depth{
+			.depthStencil = { .depth = clear_depth }
+		};
+
 		const vk::RenderingAttachmentInfo color_attachment_info{
-				.imageView = image_view,
-				.imageLayout = vk::ImageLayout::eGeneral,
-				.loadOp = vk::AttachmentLoadOp::eLoad,
-				.storeOp = vk::AttachmentStoreOp::eStore,
+			.imageView = color_view,
+			.imageLayout = vk::ImageLayout::eGeneral,
+			.loadOp = clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad,
+			.storeOp = vk::AttachmentStoreOp::eStore,
+			.clearValue = vk_clear_color,
+		};
+
+		const vk::RenderingAttachmentInfo ds_attachment_info{
+			.imageView = ds_view,
+			.imageLayout = vk::ImageLayout::eGeneral,
+			.loadOp = clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad,
+			.storeOp = vk::AttachmentStoreOp::eStore,
+			.clearValue = vk_clear_depth,
 		};
 
 		const vk::RenderingInfo rendering_info{
@@ -63,6 +83,7 @@ namespace efvk
 			.layerCount = 1,
 			.colorAttachmentCount = 1,
 			.pColorAttachments = &color_attachment_info,
+			.pDepthAttachment = ds_view == VK_NULL_HANDLE ? nullptr : &ds_attachment_info,
 		};
 
 		cmd_buf->beginRendering(rendering_info);
