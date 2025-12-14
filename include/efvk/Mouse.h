@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-#include "Utils.h"
+#include "CommonStructs.h"
 #include "Event.h"
 
 namespace efvk

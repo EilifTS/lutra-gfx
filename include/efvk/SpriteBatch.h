@@ -9,6 +9,7 @@
 #include "FrameManager.h"
 #include "Texture.h"
 #include "Buffer.h"
+#include "DepthStencilBuffer.h"
 
 #include <array>
 #include <unordered_map>
@@ -91,6 +92,7 @@ namespace efvk
 	private:
 		GraphicsContext* ctx{};
 		GraphicsPipeline pipeline{};
+		DepthStencilBuffer ds_buffer{};
 
 		const ef::Camera2D* camera{};
 

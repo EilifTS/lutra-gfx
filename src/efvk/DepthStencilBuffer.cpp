@@ -1,20 +1,10 @@
 #include <efvk/DepthStencilBuffer.h>
 
 #include "internal/DepthStencilBufferInternal.h"
+#include "internal/CommonHelpers.h"
 
 namespace efvk
 {
-	static vk::Format convert_ds_format(DepthStencilFormat format)
-	{
-		switch (format)
-		{
-		case DepthStencilFormat::D32: return vk::Format::eD32Sfloat;
-		default: assert(false);
-		}
-		assert(false);
-		return vk::Format::eUndefined;
-	}
-
 	DepthStencilBuffer::DepthStencilBuffer(){}
 
 	DepthStencilBuffer::DepthStencilBuffer(GraphicsContext& ctx, u32 width, u32 height, DepthStencilFormat format)
@@ -32,5 +22,9 @@ namespace efvk
 
 	u32 DepthStencilBuffer::Height() const {
 		return internal->height;
+	}
+
+	TextureView DepthStencilBuffer::DefaultView() const {
+		return *internal->view;
 	}
 }

@@ -65,7 +65,7 @@ namespace efvk
 
 		/* Initialize content */
 		CommandBufferInternal cmd_buf(ctx);
-		change_layout(cmd_buf.cmd_buf.get(), vma_image.GetImage(), vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+		change_layout(cmd_buf.cmd_buf.get(), vma_image.GetImage(), vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, vk::ImageAspectFlagBits::eColor);
 		cmd_buf.ScheduleUpload(image.GetDataPtr(), *this);
 		SubmitAndWaitInternal(ctx, cmd_buf);
 	}

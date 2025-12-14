@@ -1,5 +1,5 @@
 #pragma once
-#include "Utils.h"
+#include "CommonStructs.h"
 
 namespace efvk
 {

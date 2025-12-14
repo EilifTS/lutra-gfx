@@ -10,10 +10,14 @@ namespace efvk
 
 		sprite_buffer = Buffer(ctx, max_sprites_per_batch * sizeof(SpriteInternal), BufferType::StorageBuffer);
 
+		ds_buffer = DepthStencilBuffer(ctx, 800, 600, DepthStencilFormat::D32);
+
 		/* Create graphics pipeline */
 		GraphicsPipelineInfo pipeline_info{};
 		pipeline_info.vs_name = "shaders/SpriteBatchShader.vert.spv";
 		pipeline_info.ps_name = "shaders/SpriteBatchShader.frag.spv";
+		pipeline_info.ds_info.depth_enabled = true;
+		pipeline_info.ds_info.ds_format = DepthStencilFormat::D32;
 		pipeline_info.AddStorageBuffer(0, GraphicsPipelineInfo::Binding::Stage::Vertex);
 		pipeline_info.AddImmutableSampler(1, SamplerType::LinearClamp, GraphicsPipelineInfo::Binding::Stage::Fragment);
 		pipeline_info.AddTextures(2, max_texture_count, GraphicsPipelineInfo::Binding::Stage::Fragment);
@@ -36,7 +40,7 @@ namespace efvk
 			/* Upload sprite data */
 			cmd_buf.ScheduleUpload(sprite_list.data(), sprite_list.size() * sizeof(SpriteInternal), sprite_buffer);
 
-			cmd_buf.BeginRendering(frame_manager.GetCurrentTetureView(), nullptr, frame_manager.FrameWidth(), frame_manager.FrameHeight(), true);
+			cmd_buf.BeginRendering(frame_manager.GetCurrentTetureView(), ds_buffer.DefaultView(), frame_manager.FrameWidth(), frame_manager.FrameHeight(), true);
 
 			cmd_buf.BindPipeline(pipeline);
 			cmd_buf.BindBuffer(sprite_buffer, 0);

@@ -12,10 +12,10 @@
 namespace efvk
 {
 	/* Helpers */
-	inline void change_layout(vk::CommandBuffer cmd_buf, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout)
+	inline void change_layout(vk::CommandBuffer cmd_buf, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::ImageAspectFlags aspect)
 	{
 		const vk::ImageSubresourceRange range{
-			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.aspectMask = aspect,
 			.baseMipLevel = 0,
 			.levelCount = 1,
 			.baseArrayLayer = 0,

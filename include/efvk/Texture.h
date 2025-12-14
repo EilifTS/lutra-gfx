@@ -3,12 +3,11 @@
 
 #include "GraphicsContext.h"
 #include "Image.h"
+#include "CommonStructs.h"
 
 namespace efvk
 {
 	class TextureInternal;
-
-	using TextureView = void*;
 
 	class Texture
 	{

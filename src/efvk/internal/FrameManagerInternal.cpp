@@ -194,7 +194,7 @@ namespace efvk
 		new_frame_res.cmd_buf.Reset();
 
 		/* Transition the image layout to allow rendering */
-		change_layout(*new_frame_res.cmd_buf.internal->cmd_buf, new_frame_res.image, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+		change_layout(*new_frame_res.cmd_buf.internal->cmd_buf, new_frame_res.image, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, vk::ImageAspectFlagBits::eColor);
 
 		/* Clear image */
 		vk::ClearColorValue clear_color_value{};
@@ -220,7 +220,7 @@ namespace efvk
 		PerFrameResources& frame_res = per_frame_res[current_frame_index];
 
 		/* Transition the image layout to prepare for present */
-		change_layout(*frame_res.cmd_buf.internal->cmd_buf, frame_res.image, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR);
+		change_layout(*frame_res.cmd_buf.internal->cmd_buf, frame_res.image, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR, vk::ImageAspectFlagBits::eColor);
 
 		/* Submit command buffer */
 		frame_res.cmd_buf.internal->cmd_buf->end();

@@ -1,16 +1,11 @@
 #pragma once
 #include <memory>
 #include "GraphicsContext.h"
-#include <efvk/math/IntDefs.h>
+#include "CommonStructs.h"
 
 namespace efvk
 {
 	class DepthStencilBufferInternal;
-
-	enum class DepthStencilFormat
-	{
-		D32,
-	};
 
 	class DepthStencilBuffer
 	{
@@ -28,5 +23,7 @@ namespace efvk
 
 		u32 Width() const;
 		u32 Height() const;
+
+		TextureView DefaultView() const;
 	};
 }

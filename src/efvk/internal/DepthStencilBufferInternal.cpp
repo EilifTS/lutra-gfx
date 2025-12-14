@@ -38,7 +38,7 @@ namespace efvk
 			.format = image_info.format,
 			.components = {},
 			.subresourceRange = {
-				.aspectMask = vk::ImageAspectFlagBits::eColor,
+				.aspectMask = vk::ImageAspectFlagBits::eDepth,
 				.baseMipLevel = 0,
 				.levelCount = 1,
 				.baseArrayLayer = 0,
@@ -50,7 +50,7 @@ namespace efvk
 
 		/* Change layout */
 		CommandBufferInternal cmd_buf(ctx);
-		change_layout(cmd_buf.cmd_buf.get(), vma_image.GetImage(), vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+		change_layout(cmd_buf.cmd_buf.get(), vma_image.GetImage(), vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, vk::ImageAspectFlagBits::eDepth);
 		SubmitAndWaitInternal(ctx, cmd_buf);
 	}
 }

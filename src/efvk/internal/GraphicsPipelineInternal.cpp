@@ -1,4 +1,5 @@
 #include "GraphicsPipelineInternal.h"
+#include "CommonHelpers.h"
 #include <vector>
 #include <fstream>
 
@@ -155,6 +156,7 @@ namespace efvk
 		const vk::PipelineRenderingCreateInfo rendering_info{
 			.colorAttachmentCount = 1,
 			.pColorAttachmentFormats = &color_attachment_format,
+			.depthAttachmentFormat = info.ds_info.depth_enabled ? convert_ds_format(info.ds_info.ds_format) : vk::Format::eUndefined
 		};
 
 		const vk::PipelineShaderStageCreateInfo stage_infos[] = {
