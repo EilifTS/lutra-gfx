@@ -2,12 +2,16 @@
 
 #include "GraphicsContextInternal.h"
 #include <GLFW/glfw3.h>
+#include <iostream>
 
 /* Vulkan HPP boiler plate for setting up a dispatcher */
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 
+#if ENABLE_PORTABILITY
+#include <vulkan/vulkan_beta.h>
+#endif
+
 #if _DEBUG /* VL */
-#include <iostream>
 
 VKAPI_ATTR vk::Bool32 VKAPI_CALL debug_utils_messenger_callback(
 	vk::DebugUtilsMessageSeverityFlagBitsEXT		message_severity,
@@ -108,6 +112,9 @@ namespace efvk
 #if _DEBUG /* VL */
 			.pNext = &messenger_info,
 #endif
+#if ENABLE_PORTABILITY
+			.flags = vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR,
+#endif
 			.pApplicationInfo = &app_info,
 			.enabledLayerCount = static_cast<u32>(layers.size()),
 			.ppEnabledLayerNames = layers.data(),
@@ -129,6 +136,7 @@ namespace efvk
 
 	std::pair<vk::PhysicalDevice, u32> select_physical_device_and_queue_family(vk::Instance instance, vk::SurfaceKHR surface)
 	{
+		// TODO: Select physical device with portability support
 		std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
 
 		vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
@@ -171,7 +179,7 @@ namespace efvk
 		required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
 #if ENABLE_PORTABILITY
-		instance_extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
+		required_device_extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
 #endif
 
 		for (const char* ex_name : required_device_extensions)
@@ -184,6 +192,10 @@ namespace efvk
 					extension_supported = true;
 					break;
 				}
+			}
+			if (!extension_supported)
+			{
+				std::cout << ex_name << std::endl;
 			}
 			assert(extension_supported);
 		}

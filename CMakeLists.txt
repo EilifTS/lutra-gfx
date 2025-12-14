@@ -116,7 +116,7 @@ target_compile_features(main PRIVATE cxx_std_20)
 
 # Detect MACOS and enable Vulkan portability
 if(APPLE)
-target_compile_definitions(main PRIVATE ENABLE_PORTABILITY="1")
+target_compile_definitions(main PRIVATE ENABLE_PORTABILITY=1)
 endif()
 
 # Copy shaders
