@@ -104,6 +104,7 @@ if (ENABLE_IMGUI)
         ${imgui_SOURCE_DIR}/backends
     )
     target_link_libraries(imgui PUBLIC glfw Vulkan::Vulkan)
+    target_compile_features(imgui PRIVATE cxx_std_20)
 
     add_compile_definitions(USE_IMGUI)
     target_link_libraries(main PRIVATE imgui)
