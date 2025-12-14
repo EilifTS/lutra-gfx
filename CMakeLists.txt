@@ -23,8 +23,20 @@ add_executable(main src/main.cpp ${EFVK_INCLUDES} ${EFVK_SOURCES})
 find_package(Vulkan REQUIRED)
 target_link_libraries(main PRIVATE Vulkan::Vulkan)
 
-# GLFW3
 include(FetchContent)
+
+#
+FetchContent_Declare(
+    vma
+    GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+    GIT_TAG v3.3.0
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(vma)
+target_link_libraries(main PRIVATE GPUOpen::VulkanMemoryAllocator)
+
+# GLFW3
 FetchContent_Declare(
     glfw3
     GIT_REPOSITORY https://github.com/glfw/glfw.git
