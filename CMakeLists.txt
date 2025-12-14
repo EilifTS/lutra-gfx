@@ -97,10 +97,14 @@ if (ENABLE_IMGUI)
     target_link_libraries(main PRIVATE imgui)
 endif()
 
-
-
+# Define target
 target_include_directories(main PRIVATE "include")
 target_compile_features(main PRIVATE cxx_std_20)
+
+# Detect MACOS and enable Vulkan portability
+if(APPLE)
+target_compile_definitions(main PRIVATE ENABLE_PORTABILITY="1")
+endif()
 
 # Copy shaders
 add_custom_target(copy_shaders)

@@ -76,6 +76,9 @@ namespace efvk
 #if _DEBUG /* VL */
 		instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
+#if ENABLE_PORTABILITY
+		instance_extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+#endif
 
 		/* Get extensions needed by GLFW */
 		{
@@ -100,8 +103,6 @@ namespace efvk
 			.engineVersion = 0,
 			.apiVersion = vk::ApiVersion13,
 		};
-
-
 
 		vk::InstanceCreateInfo instance_create_info{
 #if _DEBUG /* VL */
@@ -168,6 +169,10 @@ namespace efvk
 		std::vector<const char*> required_device_extensions{};
 		required_device_extensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
 		required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
+#if ENABLE_PORTABILITY
+		instance_extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
+#endif
 
 		for (const char* ex_name : required_device_extensions)
 		{
