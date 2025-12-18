@@ -100,7 +100,7 @@ namespace efvk
 #endif
 
 		/* Create instance */
-		vk::ApplicationInfo app_info{
+		const vk::ApplicationInfo app_info{
 			.pApplicationName = app_name,
 			.applicationVersion = 0,
 			.pEngineName = "EFVK",
@@ -108,7 +108,7 @@ namespace efvk
 			.apiVersion = vk::ApiVersion13,
 		};
 
-		vk::InstanceCreateInfo instance_create_info{
+		const vk::InstanceCreateInfo instance_create_info{
 #if _DEBUG /* VL */
 			.pNext = &messenger_info,
 #endif
@@ -134,28 +134,61 @@ namespace efvk
 		return vk::UniqueSurfaceKHR(temp_surface, instance);
 	}
 
+	static bool physicalDeviceCompatible(vk::PhysicalDevice pd)
+	{
+#if ENABLE_PORTABILITY
+		const auto supported_device_extensions = pd.enumerateDeviceExtensionProperties();
+		const bool supports_portability = std::end(supported_device_extensions) != std::find_if(
+			std::begin(supported_device_extensions),
+			std::end(supported_device_extensions),
+			[](vk::ExtensionProperties props)
+			{
+				return strcmp(props.extensionName, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME) == 1;
+			}
+		);
+		return supports_portability;
+#else
+		(void)pd;
+		return true;
+#endif
+	}
+
+	static bool queueFamilyCompatible(vk::PhysicalDevice pd, vk::SurfaceKHR surface, const vk::QueueFamilyProperties props, u32 family_index)
+	{
+		if (!!(props.queueFlags & vk::QueueFlagBits::eGraphics))
+		{
+			auto has_surface_support = pd.getSurfaceSupportKHR(family_index, surface);
+
+			if (has_surface_support)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	std::pair<vk::PhysicalDevice, u32> select_physical_device_and_queue_family(vk::Instance instance, vk::SurfaceKHR surface)
 	{
-		// TODO: Select physical device with portability support
 		std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
 
 		vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
 		u32 queue_family_index = 0;
 		for (vk::PhysicalDevice& pd : physical_devices)
 		{
+			if (!physicalDeviceCompatible(pd))
+			{
+				continue;
+			}
+
 			std::vector<vk::QueueFamilyProperties> queue_family_props = pd.getQueueFamilyProperties();
 
 			for (u32 i = 0; i < queue_family_props.size(); i++)
 			{
-				if (!!(queue_family_props[i].queueFlags & vk::QueueFlagBits::eGraphics))
+				if (queueFamilyCompatible(pd, surface, queue_family_props[i], i))
 				{
-					auto has_surface_support = pd.getSurfaceSupportKHR(i, surface);
-
-					if (has_surface_support)
-					{
-						queue_family_index = i;
-						physical_device = pd;
-					}
+					queue_family_index = i;
+					physical_device = pd;
+					break;
 				}
 			}
 		}
