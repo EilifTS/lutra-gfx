@@ -16,16 +16,16 @@ file(GLOB EFVK_SOURCES
     src/efvk/internal/*.cpp
 )
 
-# Create target
-add_executable(main src/main.cpp ${EFVK_INCLUDES} ${EFVK_SOURCES})
+# Create library
+add_library(efvk STATIC ${EFVK_INCLUDES} ${EFVK_SOURCES})
 
 # Find Vulkan SDK
 find_package(Vulkan REQUIRED)
-target_link_libraries(main PRIVATE Vulkan::Vulkan)
+target_link_libraries(efvk PRIVATE Vulkan::Vulkan)
 
 include(FetchContent)
 
-#
+# VMA
 FetchContent_Declare(
     vma
     GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
@@ -34,7 +34,7 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(vma)
-target_link_libraries(main PRIVATE GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(efvk PRIVATE GPUOpen::VulkanMemoryAllocator)
 
 # GLFW3
 FetchContent_Declare(
@@ -45,7 +45,7 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(glfw3)
-target_link_libraries(main PRIVATE glfw)
+target_link_libraries(efvk PRIVATE glfw)
 
 # ZLIB-NG
 FetchContent_Declare(
@@ -61,7 +61,7 @@ FetchContent_MakeAvailable(zlib-ng)
 set(ZLIB_INCLUDE_DIR "${CMAKE_BINARY_DIR}/zlib-ng" CACHE BOOL "Path to zlib include directory")
 set(ZLIB_LIBRARY ZLIB::ZLIB CACHE STRING "Path to zlib library")
 add_library(ZLIB::ZLIB ALIAS zlib)
-target_link_libraries(main PRIVATE ZLIB::ZLIB)
+target_link_libraries(efvk PRIVATE ZLIB::ZLIB)
 
 # SPNG
 FetchContent_Declare(
@@ -75,7 +75,7 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SPNG_STATIC ON CACHE BOOL "" FORCE)
 set(SPNG_SHARED OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spng)
-target_link_libraries(main PRIVATE spng_static)
+target_link_libraries(efvk PRIVATE spng_static)
 
 # ImGUI
 if (ENABLE_IMGUI)
@@ -107,16 +107,22 @@ if (ENABLE_IMGUI)
     target_compile_features(imgui PRIVATE cxx_std_20)
 
     add_compile_definitions(USE_IMGUI)
-    target_link_libraries(main PRIVATE imgui)
+    target_link_libraries(efvk PUBLIC imgui)
 endif()
 
-# Define target
+# Finish up library
+target_include_directories(efvk PRIVATE "include")
+target_compile_features(efvk PRIVATE cxx_std_20)
+
+# TODO: Remove this target
+add_executable(main src/main.cpp)
 target_include_directories(main PRIVATE "include")
 target_compile_features(main PRIVATE cxx_std_20)
+target_link_libraries(main PRIVATE efvk)
 
 # Detect MACOS and enable Vulkan portability
 if(APPLE)
-target_compile_definitions(main PRIVATE ENABLE_PORTABILITY=1)
+target_compile_definitions(efvk PRIVATE ENABLE_PORTABILITY=1)
 endif()
 
 # Copy shaders
@@ -143,7 +149,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SPV_FILE_NAME}
 )
 endforeach()
-add_dependencies(main copy_shaders)
+add_dependencies(efvk copy_shaders)
 
 # Copy textures
 add_custom_target(copy_textures)
@@ -169,4 +175,10 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/textures/${TEXTURE_FILE_NAME}
 )
 endforeach()
-add_dependencies(main copy_textures)
+add_dependencies(efvk copy_textures)
+
+# Tests
+option(BUILD_TESTS "Build tests" on)
+if (BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
