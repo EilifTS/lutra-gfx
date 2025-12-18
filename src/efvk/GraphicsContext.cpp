@@ -4,9 +4,14 @@
 
 namespace efvk
 {
-	GraphicsContext::GraphicsContext(const Window& window, const char* app_name)
+	GraphicsContext::GraphicsContext(const char* app_name)
 	{
-		internal = std::make_unique<GraphicsContextInternal>(window, app_name);
+		internal = std::make_unique<GraphicsContextInternal>(app_name);
+	}
+
+	GraphicsContext::GraphicsContext(const char* app_name, const Window& window)
+	{
+		internal = std::make_unique<GraphicsContextInternal>(app_name, window);
 	}
 
 	GraphicsContext::~GraphicsContext() {}

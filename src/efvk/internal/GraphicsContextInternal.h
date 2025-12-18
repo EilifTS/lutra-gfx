@@ -7,7 +7,8 @@ namespace efvk
 	class GraphicsContextInternal
 	{
 	public:
-		GraphicsContextInternal(const Window& window, const char* app_name);
+		GraphicsContextInternal(const char* app_name);
+		GraphicsContextInternal(const char* app_name, const Window& window);
 		~GraphicsContextInternal();
 
 		void WaitIdle();
@@ -26,5 +27,8 @@ namespace efvk
 		VmaAllocator vma_allocator{};
 
 		vk::UniqueCommandPool cmd_pool{};
+
+	private:
+		void init(const char* app_name, const Window* window);
 	};
 }

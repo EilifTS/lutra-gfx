@@ -11,7 +11,7 @@ int main()
 {
 	efvk::Window window(800, 600, "EFVK");
 
-	efvk::GraphicsContext graphics_context(window, "EFVK");
+	efvk::GraphicsContext graphics_context("EFVK", window);
 	efvk::FrameManager frame_manager(graphics_context, 800, 600);
 
 #ifdef USE_IMGUI

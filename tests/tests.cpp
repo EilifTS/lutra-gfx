@@ -1,4 +1,11 @@
 #include <gtest/gtest.h>
+#include <efvk/GraphicsContext.h>
+
+TEST(Graphics, CreateContext)
+{
+	efvk::GraphicsContext ctx("Test context");
+	(void)ctx;
+}
 
 int main(int argc, char** argv)
 {

@@ -9,7 +9,8 @@ namespace efvk
 	class GraphicsContext
 	{
 	public:
-		GraphicsContext(const Window& window, const char* app_name);
+		GraphicsContext(const char* app_name);
+		GraphicsContext(const char* app_name, const Window& window);
 		~GraphicsContext();
 
 		GraphicsContext(const GraphicsContext&) = delete;

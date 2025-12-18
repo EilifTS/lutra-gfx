@@ -43,7 +43,7 @@ static vk::DebugUtilsMessengerCreateInfoEXT create_messenger_info()
 
 namespace efvk
 {
-	vk::UniqueInstance create_instance(const char* app_name)
+	vk::UniqueInstance create_instance(const char* app_name, bool has_window)
 	{
 		/* Define layers */
 		std::vector<const char*> requested_layers{};
@@ -85,6 +85,7 @@ namespace efvk
 #endif
 
 		/* Get extensions needed by GLFW */
+		if (has_window)
 		{
 			u32 glwf_instance_extension_count = 0;
 			const char** glwf_instance_extension = glfwGetRequiredInstanceExtensions(&glwf_instance_extension_count);
@@ -155,16 +156,17 @@ namespace efvk
 
 	static bool queueFamilyCompatible(vk::PhysicalDevice pd, vk::SurfaceKHR surface, const vk::QueueFamilyProperties props, u32 family_index)
 	{
-		if (!!(props.queueFlags & vk::QueueFlagBits::eGraphics))
-		{
-			auto has_surface_support = pd.getSurfaceSupportKHR(family_index, surface);
+		/* The queue family have to support graphics operations */
+		if (!(props.queueFlags & vk::QueueFlagBits::eGraphics)) return false;
 
-			if (has_surface_support)
-			{
-				return true;
-			}
-		}
-		return false;
+		/* If we are not using a window, then no more requirements are needed */
+		if (surface == VK_NULL_HANDLE) return true;
+
+		/* Otherwise check for surface support */
+		auto has_surface_support = pd.getSurfaceSupportKHR(family_index, surface);
+		if (!has_surface_support) return false;
+
+		return true;
 	}
 
 	std::pair<vk::PhysicalDevice, u32> select_physical_device_and_queue_family(vk::Instance instance, vk::SurfaceKHR surface)
@@ -251,13 +253,43 @@ namespace efvk
 		return physical_device.createDeviceUnique(device_info);
 	}
 
-	GraphicsContextInternal::GraphicsContextInternal(const Window& window, const char* app_name)
+	GraphicsContextInternal::GraphicsContextInternal(const char* app_name)
+	{
+		init(app_name, nullptr);
+	}
+
+	GraphicsContextInternal::GraphicsContextInternal(const char* app_name, const Window& window)
+	{
+		init(app_name, &window);
+	}
+
+	GraphicsContextInternal::~GraphicsContextInternal()
+	{
+		if (device.get() != nullptr)
+		{
+			device->waitIdle();
+		}
+
+		if (vma_allocator != VK_NULL_HANDLE)
+		{
+			vmaDestroyAllocator(vma_allocator);
+		}
+	}
+
+	void GraphicsContextInternal::WaitIdle()
+	{
+		device->waitIdle();
+	}
+
+	void GraphicsContextInternal::init(const char* app_name, const Window* window)
 	{
 		/* First initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init();
 
+		const bool has_window = window != nullptr;
+
 		/* Create instance */
-		instance = create_instance(app_name);
+		instance = create_instance(app_name, has_window);
 
 		/* Second initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*instance);
@@ -267,7 +299,10 @@ namespace efvk
 #endif
 
 		/* Create surface */
-		surface = create_surface(*instance, window);
+		if (has_window)
+		{
+			surface = create_surface(*instance, *window);
+		}
 
 		/* Get physical device */
 		std::tie(physical_device, queue_family_index) = select_physical_device_and_queue_family(instance.get(), *surface);
@@ -301,23 +336,5 @@ namespace efvk
 			.queueFamilyIndex = queue_family_index,
 		};
 		cmd_pool = device->createCommandPoolUnique(pool_info);
-	}
-
-	GraphicsContextInternal::~GraphicsContextInternal()
-	{
-		if (device.get() != nullptr)
-		{
-			device->waitIdle();
-		}
-
-		if (vma_allocator != VK_NULL_HANDLE)
-		{
-			vmaDestroyAllocator(vma_allocator);
-		}
-	}
-
-	void GraphicsContextInternal::WaitIdle()
-	{
-		device->waitIdle();
 	}
 }
