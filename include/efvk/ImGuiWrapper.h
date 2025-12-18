@@ -2,7 +2,6 @@
 #ifdef USE_IMGUI
 
 #include <imgui.h>
-#include <efvk/math/Rectangle.h>
 
 namespace efvk
 {
@@ -18,9 +17,9 @@ namespace efvk
 		void EndFrame(FrameManager& frame_manager);
 		void ShutDown();
 
-		void Image(const efvk::Texture& texture, const ef::vec2& size);
-		void Image(const efvk::Texture& texture, const ef::Rectanglef& src_rect, const ef::vec2& size);
-		bool ImageButton(const char* id, const efvk::Texture& texture, const ef::Rectanglef& src_rect, const ef::vec2& size);
+		void Image(const efvk::Texture& texture, float width, float height);
+		void Image(const efvk::Texture& texture, float src_x, float src_y, float src_w, float src_h, float width, float height);
+		bool ImageButton(const char* id, const efvk::Texture& texture, float src_x, float src_y, float src_w, float src_h, float width, float height);
 	}
 
 	class ImGuiWrapperScope

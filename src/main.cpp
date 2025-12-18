@@ -42,7 +42,7 @@ int main()
 #ifdef USE_IMGUI
 		efvk::ImGuiWrapper::StartFrame();
 		ImGui::Begin("Hello ImGui!");
-		efvk::ImGuiWrapper::Image(texture2, { 128.0f, 128.0f });
+		efvk::ImGuiWrapper::Image(texture2, 128.0f, 128.0f);
 		ImGui::End();
 #endif
 

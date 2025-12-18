@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-#include <efvk/math/IntDefs.h>
 #include "GraphicsContext.h"
 #include "CommonStructs.h"
 

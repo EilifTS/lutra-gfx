@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <span>
-#include <efvk/math/IntDefs.h>
+#include "CommonStructs.h"
 #include "Texture.h"
 
 namespace efvk

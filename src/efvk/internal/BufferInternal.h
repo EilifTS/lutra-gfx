@@ -1,6 +1,6 @@
 #pragma once
+#include <efvk/CommonStructs.h>
 #include <efvk/GraphicsContext.h>
-#include <efvk/math/IntDefs.h>
 #include "GraphicsContextInternal.h"
 #include "VulkanHPP.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <efvk/math/IntDefs.h>
+#include "CommonStructs.h"
 
 namespace efvk
 {

@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <efvk/math/IntDefs.h>
+#include <efvk/CommonStructs.h>
 #include "VulkanHPP.h"
 
 namespace efvk

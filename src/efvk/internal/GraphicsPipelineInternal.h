@@ -1,5 +1,5 @@
 #pragma once
-#include <efvk/math/IntDefs.h>
+#include <efvk/CommonStructs.h>
 #include <efvk/GraphicsPipeline.h>
 #include "VulkanHPP.h"
 

@@ -127,21 +127,17 @@ namespace efvk
 	}
 
 
-	void ImGuiWrapper::Image(const efvk::Texture& texture, const ef::vec2& size)
+	void ImGuiWrapper::Image(const efvk::Texture& texture, float width, float height)
 	{
-		ImGui::Image(texture.GetImGuiID(), ImVec2(size.x, size.y));
+		ImGui::Image(texture.GetImGuiID(), ImVec2(width, height));
 	}
-	void ImGuiWrapper::Image(const efvk::Texture& texture, const ef::Rectanglef& src_rect, const ef::vec2& size)
+	void ImGuiWrapper::Image(const efvk::Texture& texture, float src_x, float src_y, float src_w, float src_h, float width, float height)
 	{
-		const ef::vec2 uv0 = src_rect.Position();
-		const ef::vec2 uv1 = src_rect.Position() + src_rect.Size();
-		ImGui::Image(texture.GetImGuiID(), ImVec2(size.x, size.y), ImVec2(uv0.x, uv0.y), ImVec2(uv1.x, uv1.y));
+		ImGui::Image(texture.GetImGuiID(), ImVec2(width, height), ImVec2(src_x, src_y), ImVec2(src_x + src_w, src_y + src_h));
 	}
-	bool ImGuiWrapper::ImageButton(const char* id, const efvk::Texture& texture, const ef::Rectanglef& src_rect, const ef::vec2& size)
+	bool ImGuiWrapper::ImageButton(const char* id, const efvk::Texture& texture, float src_x, float src_y, float src_w, float src_h, float width, float height)
 	{
-		const ef::vec2 uv0 = src_rect.Position();
-		const ef::vec2 uv1 = src_rect.Position() + src_rect.Size();
-		return ImGui::ImageButton(id, texture.GetImGuiID(), ImVec2(size.x, size.y), ImVec2(uv0.x, uv0.y), ImVec2(uv1.x, uv1.y));
+		return ImGui::ImageButton(id, texture.GetImGuiID(), ImVec2(width, height), ImVec2(src_x, src_y), ImVec2(src_x + src_w, src_y + src_h));
 	}
 }
 
