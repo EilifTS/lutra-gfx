@@ -114,68 +114,16 @@ endif()
 target_include_directories(efvk PRIVATE "include")
 target_compile_features(efvk PRIVATE cxx_std_20)
 
-# TODO: Remove this target
-add_executable(main src/main.cpp)
-target_include_directories(main PRIVATE "include")
-target_compile_features(main PRIVATE cxx_std_20)
-target_link_libraries(main PRIVATE efvk)
-
 # Detect MACOS and enable Vulkan portability
 if(APPLE)
 target_compile_definitions(efvk PRIVATE ENABLE_PORTABILITY=1)
 endif()
 
-# Copy shaders
-add_custom_target(copy_shaders)
-
-add_custom_command(
-    TARGET copy_shaders PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-            ${CMAKE_CURRENT_BINARY_DIR}/shaders
-)
-
-set(SHADER_SRC_DIR "${CMAKE_SOURCE_DIR}/src/efvk/shaders")
-
-file(GLOB SPIRV_SHADERS
-   ${SHADER_SRC_DIR}/*.spv
-)
-
-foreach(SPV_FILE_PATH IN LISTS SPIRV_SHADERS)
-file(RELATIVE_PATH SPV_FILE_NAME ${SHADER_SRC_DIR} ${SPV_FILE_PATH})
-add_custom_command(
-    TARGET copy_shaders PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${SPV_FILE_PATH}
-            ${CMAKE_CURRENT_BINARY_DIR}/shaders/${SPV_FILE_NAME}
-)
-endforeach()
-add_dependencies(efvk copy_shaders)
-
-# Copy textures
-add_custom_target(copy_textures)
-
-add_custom_command(
-    TARGET copy_textures PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-            ${CMAKE_CURRENT_BINARY_DIR}/textures
-)
-
-set(TEXTURE_SRC_DIR "${CMAKE_SOURCE_DIR}/src/efvk/textures")
-
-file(GLOB TEXTURES
-   ${TEXTURE_SRC_DIR}/*.png
-)
-
-foreach(TEXTURE_FILE_PATH IN LISTS TEXTURES)
-file(RELATIVE_PATH TEXTURE_FILE_NAME ${TEXTURE_SRC_DIR} ${TEXTURE_FILE_PATH})
-add_custom_command(
-    TARGET copy_textures POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${TEXTURE_FILE_PATH}
-            ${CMAKE_CURRENT_BINARY_DIR}/textures/${TEXTURE_FILE_NAME}
-)
-endforeach()
-add_dependencies(efvk copy_textures)
+# Samples
+option(BUILD_SAMPLES "Build samples" on)
+if (BUILD_SAMPLES)
+    add_subdirectory(samples)
+endif()
 
 # Tests
 option(BUILD_TESTS "Build tests" on)

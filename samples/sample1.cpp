@@ -1,11 +1,12 @@
-﻿#include <iostream>
+#include <iostream>
 #include <efvk/Window.h>
 #include <efvk/GraphicsContext.h>
 #include <efvk/FrameManager.h>
-#include <efvk/SpriteBatch.h>
 #include <efvk/Image.h>
 #include <efvk/Texture.h>
 #include <efvk/ImGuiWrapper.h>
+
+#include "SpriteBatch.h"
 
 int main()
 {
@@ -33,11 +34,10 @@ int main()
 	ef::Camera2D cam(ef::vec2(window.Width(), window.Height()));
 	cam.GetPosition() = cam.GetCameraSize() * 0.5f;
 
-	while (window.IsOpen()) 
+	while (window.IsOpen())
 	{
 		window.RetrieveEvents();
 		frame_manager.StartFrame(graphics_context);
-
 
 #ifdef USE_IMGUI
 		efvk::ImGuiWrapper::StartFrame();

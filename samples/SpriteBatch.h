@@ -1,15 +1,15 @@
 #pragma once
-#include "math/Camera2D.h"
-#include "math/Color.h"
-#include "math/Rectangle.h"
-#include "math/vec.h"
+#include <efvk/math/Camera2D.h>
+#include <efvk/math/Color.h>
+#include <efvk/math/Rectangle.h>
+#include <efvk/math/vec.h>
 
-#include "GraphicsContext.h"
-#include "GraphicsPipeline.h"
-#include "FrameManager.h"
-#include "Texture.h"
-#include "Buffer.h"
-#include "DepthStencilBuffer.h"
+#include <efvk/GraphicsContext.h>
+#include <efvk/GraphicsPipeline.h>
+#include <efvk/FrameManager.h>
+#include <efvk/Texture.h>
+#include <efvk/Buffer.h>
+#include <efvk/DepthStencilBuffer.h>
 
 #include <array>
 #include <unordered_map>
