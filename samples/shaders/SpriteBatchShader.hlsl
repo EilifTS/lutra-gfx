@@ -3,9 +3,9 @@ struct SpriteInfo
     float2 position;
     float2 size;
     float4 src_rect;
-    uint texture_id;
     float depth;
     uint color;
+    uint texture_id;
     uint padding;
 };
 [[vk::binding(0, 0)]]

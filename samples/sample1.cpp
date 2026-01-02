@@ -30,10 +30,6 @@ int main()
 	test_img2.Load("textures/test2.png");
 	efvk::Texture texture2(graphics_context, test_img2);
 
-	/* Create camera */
-	ef::Camera2D cam(ef::vec2(window.Width(), window.Height()));
-	cam.GetPosition() = cam.GetCameraSize() * 0.5f;
-
 	while (window.IsOpen())
 	{
 		window.RetrieveEvents();
@@ -46,22 +42,22 @@ int main()
 		ImGui::End();
 #endif
 
-		sb.Begin(cam);
+		sb.Begin();
 
 		const efvk::Sprite s1{
-			.position = ef::vec2(5.0f, 5.0f),
-			.size = ef::vec2(10.0f, 10.0f),
+			.x = 5.0f, .y = 5.0f,
+			.w = 10.0f, .h = 10.0f,
+			.color = 0xFF0000FF,
 			.texture = &texture1,
-			.color = ef::Color::Red(),
 		};
 		const efvk::Sprite s2{
-			.position = ef::vec2(400.0f, 150.0f),
-			.size = ef::vec2(10.0f, 300.0f),
-			.color = ef::Color::Red(),
+			.x = 400.0f, .y = 150.0f,
+			.w = 10.0f, .h = 300.0f,
+			.color = 0xFF0000FF,
 		};
 		const efvk::Sprite s3{
-			.position = ef::vec2(500.0f, 150.0f),
-			.size = ef::vec2(16.0f, 16.0f),
+			.x = 500.0f, .y = 150.0f,
+			.w = 16.0f, .h = 16.0f,
 			.texture = &texture2,
 		};
 		sb.Draw(s1);

@@ -1,5 +1,4 @@
 #pragma once
-#include <efvk/math/Camera2D.h>
 #include <efvk/math/Color.h>
 #include <efvk/math/Rectangle.h>
 #include <efvk/math/vec.h>
@@ -18,13 +17,19 @@ namespace efvk
 {
 	struct Sprite
 	{
-		ef::vec2 position;
-		ef::vec2 size;
+		float x{};
+		float y{};
+		float w{};
+		float h{};
 
-		ef::Rectanglef src_rect{ ef::vec2(0.0f, 0.0f), ef::vec2(1.0f, 1.0f) };
+		float src_x{};
+		float src_y{};
+		float src_w{ 1.0f };
+		float src_h{ 1.0f };
+
+		float depth{};
+		u32 color{};
 		Texture* texture = nullptr;
-		float depth;
-		ef::Color color{ 255, 255, 255, 255 };
 	};
 
 	class SpriteBatch
@@ -37,11 +42,8 @@ namespace efvk
 		SpriteBatch& operator=(const SpriteBatch&) = delete;
 		SpriteBatch& operator=(SpriteBatch&&) = default;
 
-		void SetCamera(const ef::Camera2D& new_camera) { camera = &new_camera; }
-
-		void Begin(const ef::Camera2D& camera)
+		void Begin()
 		{
-			this->camera = &camera;
 			sprite_list.clear();
 			texture_index_lookup.clear();
 			texture_count = 0;
@@ -54,17 +56,18 @@ namespace efvk
 		void End(FrameManager& frame_manager);
 		void Draw(const Sprite& sprite)
 		{
-			assert(camera != nullptr);
-
 			SpriteInternal new_sprite{
-				.src_rect = sprite.src_rect,
+				.x = sprite.x,
+				.y = sprite.y,
+				.w = sprite.w,
+				.h = sprite.h,
+				.src_x = sprite.src_x,
+				.src_y = sprite.src_y,
+				.src_w = sprite.src_w,
+				.src_h = sprite.src_h,
 				.depth = sprite.depth,
 				.color = sprite.color,
 			};
-
-			/* Do camera transform */
-			new_sprite.position = camera->WorldToScreenPosition(sprite.position);
-			new_sprite.size = camera->WorldToScreenSize(sprite.size);
 
 			/* Do texture lookup */
 			if (sprite.texture != nullptr)
@@ -78,15 +81,7 @@ namespace efvk
 				}
 				new_sprite.texture_id = texture_index_lookup[sprite.texture];
 			}
-
-			/* Cull anything outside the window rect */
-			const ef::Rectanglef window_rect = ef::Rectanglef(ef::vec2(), camera->GetCameraSize());
-			const ef::Rectanglef sprite_rect = ef::Rectanglef(new_sprite.position, new_sprite.size);
-
-			if (window_rect.Intersects(sprite_rect))
-			{
-				sprite_list.push_back(new_sprite);
-			}
+			sprite_list.push_back(new_sprite);
 		}
 
 	private:
@@ -94,17 +89,21 @@ namespace efvk
 		GraphicsPipeline pipeline{};
 		DepthStencilBuffer ds_buffer{};
 
-		const ef::Camera2D* camera{};
-
 		struct SpriteInternal
 		{
-			ef::vec2 position{};
-			ef::vec2 size{};
+			float x{};
+			float y{};
+			float w{};
+			float h{};
 
-			ef::Rectanglef src_rect{ ef::vec2(0.0f, 0.0f), ef::vec2(1.0f, 1.0f) };
-			u32 texture_id{0xFFFFFFFF};
+			float src_x{};
+			float src_y{};
+			float src_w{};
+			float src_h{};
+
 			float depth{};
-			ef::Color color{};
+			u32 color{};
+			u32 texture_id{ 0xFFFFFFFF };
 			u32 padding{};
 		};
 
