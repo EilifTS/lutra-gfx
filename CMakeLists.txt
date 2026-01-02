@@ -107,7 +107,7 @@ if (EFVK_ENABLE_IMGUI)
     target_link_libraries(imgui PUBLIC glfw Vulkan::Vulkan)
     target_compile_features(imgui PRIVATE cxx_std_20)
 
-    add_compile_definitions(USE_IMGUI)
+    target_compile_definitions(efvk PUBLIC USE_IMGUI)
     target_link_libraries(efvk PUBLIC imgui)
 endif()
 
