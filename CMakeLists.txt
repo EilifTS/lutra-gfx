@@ -112,7 +112,7 @@ if (EFVK_ENABLE_IMGUI)
 endif()
 
 # Finish up library
-target_include_directories(efvk PRIVATE "include")
+target_include_directories(efvk PUBLIC "include")
 target_compile_features(efvk PRIVATE cxx_std_20)
 
 # Detect MACOS and enable Vulkan portability
