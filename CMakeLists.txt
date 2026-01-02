@@ -112,7 +112,7 @@ if (EFVK_ENABLE_IMGUI)
 endif()
 
 # Finish up library
-target_include_directories(efvk PUBLIC "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(efvk PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(efvk PRIVATE cxx_std_20)
 
 # Detect MACOS and enable Vulkan portability
