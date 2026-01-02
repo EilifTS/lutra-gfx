@@ -1,9 +1,9 @@
 ﻿cmake_minimum_required (VERSION 3.28)
 project(efvk LANGUAGES CXX)
 
-set(EFVK_ENABLE_IMGUI ON CACHE BOOL "Enable ImGui" FORCE)
-set(EFVK_BUILD_SAMPLES ON CACHE BOOL "Build samples" FORCE)
-set(EFVK_BUILD_TESTS ON CACHE BOOL "Build tests" FORCE)
+option(EFVK_ENABLE_IMGUI "Enable ImGui" ON)
+option(EFVK_BUILD_SAMPLES "Build samples" ON)
+option(EFVK_BUILD_TESTS "Build tests" ON)
 
 # Define library files
 file(GLOB EFVK_INCLUDES
