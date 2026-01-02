@@ -1,8 +1,4 @@
 #pragma once
-#include <efvk/math/Color.h>
-#include <efvk/math/Rectangle.h>
-#include <efvk/math/vec.h>
-
 #include <efvk/GraphicsContext.h>
 #include <efvk/GraphicsPipeline.h>
 #include <efvk/FrameManager.h>
@@ -11,6 +7,7 @@
 #include <efvk/DepthStencilBuffer.h>
 
 #include <array>
+#include <assert.h>
 #include <unordered_map>
 
 namespace efvk

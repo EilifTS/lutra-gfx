@@ -6,7 +6,6 @@ set(ENABLE_IMGUI ON CACHE BOOL "" FORCE)
 # Define library files
 file(GLOB EFVK_INCLUDES
     include/efvk/*.h
-    include/efvk/math/*.h
 )
 
 file(GLOB EFVK_SOURCES
