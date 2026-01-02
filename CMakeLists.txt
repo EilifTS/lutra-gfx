@@ -1,7 +1,9 @@
 ﻿cmake_minimum_required (VERSION 3.28)
 project(efvk LANGUAGES CXX)
 
-set(ENABLE_IMGUI ON CACHE BOOL "" FORCE)
+set(EFVK_ENABLE_IMGUI ON CACHE BOOL "Enable ImGui" FORCE)
+set(EFVK_BUILD_SAMPLES ON CACHE BOOL "Build samples" FORCE)
+set(EFVK_BUILD_TESTS ON CACHE BOOL "Build tests" FORCE)
 
 # Define library files
 file(GLOB EFVK_INCLUDES
@@ -77,7 +79,7 @@ FetchContent_MakeAvailable(spng)
 target_link_libraries(efvk PRIVATE spng_static)
 
 # ImGUI
-if (ENABLE_IMGUI)
+if (EFVK_ENABLE_IMGUI)
     FetchContent_Declare(
         imgui
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -119,13 +121,11 @@ target_compile_definitions(efvk PRIVATE ENABLE_PORTABILITY=1)
 endif()
 
 # Samples
-option(BUILD_SAMPLES "Build samples" on)
-if (BUILD_SAMPLES)
+if (EFVK_BUILD_SAMPLES)
     add_subdirectory(samples)
 endif()
 
 # Tests
-option(BUILD_TESTS "Build tests" on)
-if (BUILD_TESTS)
+if (EFVK_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
