@@ -83,7 +83,7 @@ if (EFVK_ENABLE_IMGUI)
     FetchContent_Declare(
         imgui
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG v1.91.0
+        GIT_TAG v1.91.1
         GIT_SHALLOW ON
         EXCLUDE_FROM_ALL
         SYSTEM)
