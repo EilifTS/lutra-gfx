@@ -173,6 +173,11 @@ namespace efvk
 			std::cerr << "Failed to create window" << std::endl;
 		}
 
+		glfwSetKeyCallback(glfw_window, GLFWKeyCallback);
+		glfwSetCursorPosCallback(glfw_window, GLFWMouseMoveCallback);
+		glfwSetMouseButtonCallback(glfw_window, GLFWMouseButtionCallback);
+		glfwSetScrollCallback(glfw_window, GLFWMouseScrollCallback);
+
 		//sf_window.setFramerateLimit(144);
 		glfwSetWindowUserPointer(glfw_window, static_cast<void*>(this));
 		is_open = true;
