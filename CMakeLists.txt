@@ -1,28 +1,28 @@
 ﻿cmake_minimum_required (VERSION 3.28)
-project(efvk LANGUAGES CXX)
+project(lutra-gfx LANGUAGES CXX)
 
-option(EFVK_ENABLE_IMGUI "Enable ImGui" ON)
-option(EFVK_BUILD_SAMPLES "Build samples" ON)
-option(EFVK_BUILD_TESTS "Build tests" ON)
+option(LUTRA_GFX_ENABLE_IMGUI "Enable ImGui" ON)
+option(LUTRA_GFX_BUILD_SAMPLES "Build samples" ON)
+option(LUTRA_GFX_BUILD_TESTS "Build tests" ON)
 
 # Define library files
-file(GLOB EFVK_INCLUDES
-    include/efvk/*.h
+file(GLOB LUTRA_GFX_INCLUDES
+    include/lutra-vk/*.h
 )
 
-file(GLOB EFVK_SOURCES
-    src/efvk/*.h
-    src/efvk/*.cpp
-    src/efvk/internal/*.h
-    src/efvk/internal/*.cpp
+file(GLOB LUTRA_GFX_SOURCES
+    src/lutra-gfx/*.h
+    src/lutra-gfx/*.cpp
+    src/lutra-gfx/internal/*.h
+    src/lutra-gfx/internal/*.cpp
 )
 
 # Create library
-add_library(efvk STATIC ${EFVK_INCLUDES} ${EFVK_SOURCES})
+add_library(lutra-gfx STATIC ${LUTRA_GFX_INCLUDES} ${LUTRA_GFX_SOURCES})
 
 # Find Vulkan SDK
 find_package(Vulkan REQUIRED)
-target_link_libraries(efvk PRIVATE Vulkan::Vulkan)
+target_link_libraries(lutra-gfx PRIVATE Vulkan::Vulkan)
 
 include(FetchContent)
 
@@ -35,7 +35,7 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(vma)
-target_link_libraries(efvk PRIVATE GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(lutra-gfx PRIVATE GPUOpen::VulkanMemoryAllocator)
 
 # GLFW3
 FetchContent_Declare(
@@ -46,7 +46,7 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(glfw3)
-target_link_libraries(efvk PRIVATE glfw)
+target_link_libraries(lutra-gfx PRIVATE glfw)
 
 # ZLIB-NG
 FetchContent_Declare(
@@ -62,7 +62,7 @@ FetchContent_MakeAvailable(zlib-ng)
 set(ZLIB_INCLUDE_DIR "${CMAKE_BINARY_DIR}/zlib-ng" CACHE BOOL "Path to zlib include directory")
 set(ZLIB_LIBRARY ZLIB::ZLIB CACHE STRING "Path to zlib library")
 add_library(ZLIB::ZLIB ALIAS zlib)
-target_link_libraries(efvk PRIVATE ZLIB::ZLIB)
+target_link_libraries(lutra-gfx PRIVATE ZLIB::ZLIB)
 
 # SPNG
 FetchContent_Declare(
@@ -76,10 +76,10 @@ set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SPNG_STATIC ON CACHE BOOL "" FORCE)
 set(SPNG_SHARED OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spng)
-target_link_libraries(efvk PRIVATE spng_static)
+target_link_libraries(lutra-gfx PRIVATE spng_static)
 
 # ImGUI
-if (EFVK_ENABLE_IMGUI)
+if (LUTRA_GFX_ENABLE_IMGUI)
     FetchContent_Declare(
         imgui
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -107,25 +107,25 @@ if (EFVK_ENABLE_IMGUI)
     target_link_libraries(imgui PUBLIC glfw Vulkan::Vulkan)
     target_compile_features(imgui PRIVATE cxx_std_20)
 
-    target_compile_definitions(efvk PUBLIC USE_IMGUI)
-    target_link_libraries(efvk PUBLIC imgui)
+    target_compile_definitions(lutra-gfx PUBLIC USE_IMGUI)
+    target_link_libraries(lutra-gfx PUBLIC imgui)
 endif()
 
 # Finish up library
-target_include_directories(efvk PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_compile_features(efvk PRIVATE cxx_std_20)
+target_include_directories(lutra-gfx PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_compile_features(lutra-gfx PRIVATE cxx_std_20)
 
 # Detect MACOS and enable Vulkan portability
 if(APPLE)
-target_compile_definitions(efvk PRIVATE ENABLE_PORTABILITY=1)
+target_compile_definitions(lutra-gfx PRIVATE ENABLE_PORTABILITY=1)
 endif()
 
 # Samples
-if (EFVK_BUILD_SAMPLES)
+if (LUTRA_GFX_BUILD_SAMPLES)
     add_subdirectory(samples)
 endif()
 
 # Tests
-if (EFVK_BUILD_TESTS)
+if (LUTRA_GFX_BUILD_TESTS)
     add_subdirectory(tests)
 endif()

@@ -7,7 +7,7 @@ file(GLOB SAMPLE1_SOURCES
 add_executable(sample1 ${SAMPLE1_SOURCES})
 target_compile_features(sample1 PRIVATE cxx_std_20)
 target_include_directories(sample1 PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(sample1 efvk)
+target_link_libraries(sample1 lutra-gfx)
 
 # Copy shaders
 add_custom_target(copy_shaders)
