@@ -1,6 +1,6 @@
 #include "DescriptorWriteCache.h"
 
-namespace efvk
+namespace lgx
 {
 	static constexpr u32 max_writes = 16;
 

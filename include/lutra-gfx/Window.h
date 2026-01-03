@@ -6,7 +6,7 @@
 #include "Event.h"
 
 struct GLFWwindow;
-namespace efvk
+namespace lgx
 {
 	class Window;
 	using WindowHandle = void*;

@@ -1,6 +1,6 @@
 #include "DescriptorAllocator.h"
 
-namespace efvk
+namespace lgx
 {
 	static constexpr u32 max_sets = 100;
 	static constexpr u32 max_descriptors = 1024;

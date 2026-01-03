@@ -1,7 +1,7 @@
 #pragma once
 #include "CommonStructs.h"
 
-namespace efvk
+namespace lgx
 {
 	enum class EventType
 	{

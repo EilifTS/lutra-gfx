@@ -1,8 +1,8 @@
-#include <efvk/CommonStructs.h>
+#include <lutra-gfx/CommonStructs.h>
 #include <assert.h>
 #include "VulkanHPP.h"
 
-namespace efvk
+namespace lgx
 {
 	inline vk::Format convert_ds_format(DepthStencilFormat format)
 	{

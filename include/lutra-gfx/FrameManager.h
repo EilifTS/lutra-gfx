@@ -6,7 +6,7 @@
 #include "CommandBuffer.h"
 #include "Texture.h"
 
-namespace efvk
+namespace lgx
 {
 	class FrameManagerInternal;
 

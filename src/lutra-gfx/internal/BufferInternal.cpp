@@ -1,6 +1,6 @@
 #include "BufferInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	BufferInternal::BufferInternal(GraphicsContextInternal& ctx, u64 size, vk::BufferUsageFlags usage, VmaAllocationCreateFlags vma_flags)
 		: size(size)

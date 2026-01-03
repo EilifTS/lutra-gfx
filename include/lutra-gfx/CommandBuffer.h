@@ -4,7 +4,7 @@
 #include "CommonStructs.h"
 #include "Texture.h"
 
-namespace efvk
+namespace lgx
 {
 	class CommandBufferInternal;
 

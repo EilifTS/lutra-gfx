@@ -4,7 +4,7 @@
 #include "Event.h"
 #include <span>
 
-namespace efvk
+namespace lgx
 {
 	class InputManager
 	{

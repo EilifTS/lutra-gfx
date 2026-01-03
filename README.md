@@ -1,2 +1,2 @@
-# efvk
-Renderer using Vulkan
+# LutraGFX
+Graphics framework using Vulkan and GLFW

@@ -1,11 +1,11 @@
-#include <efvk/CommandBuffer.h>
-#include <efvk/Buffer.h>
-#include <efvk/Texture.h>
+#include <lutra-gfx/CommandBuffer.h>
+#include <lutra-gfx/Buffer.h>
+#include <lutra-gfx/Texture.h>
 #include "internal/GraphicsContextInternal.h"
 #include "internal/CommandBufferInternal.h"
 #include <vector>
 
-namespace efvk
+namespace lgx
 {
 	CommandBuffer::CommandBuffer() {}
 	CommandBuffer::CommandBuffer(GraphicsContext& ctx)

@@ -1,6 +1,6 @@
-#include <efvk/InputManager.h>
+#include <lutra-gfx/InputManager.h>
 
-namespace efvk
+namespace lgx
 {
 	void InputManager::ResolveEvents(std::span<Event> events)
 	{

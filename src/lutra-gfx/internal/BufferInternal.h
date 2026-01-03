@@ -1,10 +1,10 @@
 #pragma once
-#include <efvk/CommonStructs.h>
-#include <efvk/GraphicsContext.h>
+#include <lutra-gfx/CommonStructs.h>
+#include <lutra-gfx/GraphicsContext.h>
 #include "GraphicsContextInternal.h"
 #include "VulkanHPP.h"
 
-namespace efvk
+namespace lgx
 {
 	class BufferInternal
 	{

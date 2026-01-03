@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 
-namespace efvk
+namespace lgx
 {
 	class Window;
 	class GraphicsContextInternal;

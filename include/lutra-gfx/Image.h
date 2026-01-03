@@ -2,7 +2,7 @@
 #include <vector>
 #include "CommonStructs.h"
 
-namespace efvk
+namespace lgx
 {
 	class Image
 	{

@@ -1,9 +1,9 @@
-#include <efvk/Image.h>
+#include <lutra-gfx/Image.h>
 #include <spng.h>
 #include <assert.h>
 #include <fstream>
 
-namespace efvk
+namespace lgx
 {
 	static std::vector<char> load_png_data(const char* path)
 	{

@@ -5,61 +5,61 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <efvk/Window.h>
+#include <lutra-gfx/Window.h>
 
 static int global_window_count = 0;
 
 namespace
 {
-	inline efvk::KeyboardKey translateKey(int glfw_key)
+	inline lgx::KeyboardKey translateKey(int glfw_key)
 	{
 		switch (glfw_key)
 		{
-		case GLFW_KEY_A: return efvk::KeyboardKey::A;
-		case GLFW_KEY_B: return efvk::KeyboardKey::B;
-		case GLFW_KEY_C: return efvk::KeyboardKey::C;
-		case GLFW_KEY_D: return efvk::KeyboardKey::D;
-		case GLFW_KEY_E: return efvk::KeyboardKey::E;
-		case GLFW_KEY_F: return efvk::KeyboardKey::F;
-		case GLFW_KEY_G: return efvk::KeyboardKey::G;
-		case GLFW_KEY_H: return efvk::KeyboardKey::H;
-		case GLFW_KEY_I: return efvk::KeyboardKey::I;
-		case GLFW_KEY_J: return efvk::KeyboardKey::J;
-		case GLFW_KEY_K: return efvk::KeyboardKey::K;
-		case GLFW_KEY_L: return efvk::KeyboardKey::L;
-		case GLFW_KEY_M: return efvk::KeyboardKey::M;
-		case GLFW_KEY_N: return efvk::KeyboardKey::N;
-		case GLFW_KEY_O: return efvk::KeyboardKey::O;
-		case GLFW_KEY_P: return efvk::KeyboardKey::P;
-		case GLFW_KEY_Q: return efvk::KeyboardKey::Q;
-		case GLFW_KEY_R: return efvk::KeyboardKey::R;
-		case GLFW_KEY_S: return efvk::KeyboardKey::S;
-		case GLFW_KEY_T: return efvk::KeyboardKey::T;
-		case GLFW_KEY_U: return efvk::KeyboardKey::U;
-		case GLFW_KEY_V: return efvk::KeyboardKey::V;
-		case GLFW_KEY_W: return efvk::KeyboardKey::W;
-		case GLFW_KEY_X: return efvk::KeyboardKey::X;
-		case GLFW_KEY_Y: return efvk::KeyboardKey::Y;
-		case GLFW_KEY_Z: return efvk::KeyboardKey::Z;
-		case GLFW_KEY_LEFT: return efvk::KeyboardKey::LEFT;
-		case GLFW_KEY_UP: return efvk::KeyboardKey::UP;
-		case GLFW_KEY_RIGHT: return efvk::KeyboardKey::RIGHT;
-		case GLFW_KEY_DOWN: return efvk::KeyboardKey::DOWN;
-		case GLFW_KEY_SPACE: return efvk::KeyboardKey::SPACE;
-		case GLFW_KEY_ESCAPE: return efvk::KeyboardKey::ESCAPE;
-		case GLFW_KEY_LEFT_SHIFT: return efvk::KeyboardKey::SHIFT;
-		case GLFW_KEY_LEFT_CONTROL: return efvk::KeyboardKey::CONTROL;
-		default: return (efvk::KeyboardKey)-1;
+		case GLFW_KEY_A: return lgx::KeyboardKey::A;
+		case GLFW_KEY_B: return lgx::KeyboardKey::B;
+		case GLFW_KEY_C: return lgx::KeyboardKey::C;
+		case GLFW_KEY_D: return lgx::KeyboardKey::D;
+		case GLFW_KEY_E: return lgx::KeyboardKey::E;
+		case GLFW_KEY_F: return lgx::KeyboardKey::F;
+		case GLFW_KEY_G: return lgx::KeyboardKey::G;
+		case GLFW_KEY_H: return lgx::KeyboardKey::H;
+		case GLFW_KEY_I: return lgx::KeyboardKey::I;
+		case GLFW_KEY_J: return lgx::KeyboardKey::J;
+		case GLFW_KEY_K: return lgx::KeyboardKey::K;
+		case GLFW_KEY_L: return lgx::KeyboardKey::L;
+		case GLFW_KEY_M: return lgx::KeyboardKey::M;
+		case GLFW_KEY_N: return lgx::KeyboardKey::N;
+		case GLFW_KEY_O: return lgx::KeyboardKey::O;
+		case GLFW_KEY_P: return lgx::KeyboardKey::P;
+		case GLFW_KEY_Q: return lgx::KeyboardKey::Q;
+		case GLFW_KEY_R: return lgx::KeyboardKey::R;
+		case GLFW_KEY_S: return lgx::KeyboardKey::S;
+		case GLFW_KEY_T: return lgx::KeyboardKey::T;
+		case GLFW_KEY_U: return lgx::KeyboardKey::U;
+		case GLFW_KEY_V: return lgx::KeyboardKey::V;
+		case GLFW_KEY_W: return lgx::KeyboardKey::W;
+		case GLFW_KEY_X: return lgx::KeyboardKey::X;
+		case GLFW_KEY_Y: return lgx::KeyboardKey::Y;
+		case GLFW_KEY_Z: return lgx::KeyboardKey::Z;
+		case GLFW_KEY_LEFT: return lgx::KeyboardKey::LEFT;
+		case GLFW_KEY_UP: return lgx::KeyboardKey::UP;
+		case GLFW_KEY_RIGHT: return lgx::KeyboardKey::RIGHT;
+		case GLFW_KEY_DOWN: return lgx::KeyboardKey::DOWN;
+		case GLFW_KEY_SPACE: return lgx::KeyboardKey::SPACE;
+		case GLFW_KEY_ESCAPE: return lgx::KeyboardKey::ESCAPE;
+		case GLFW_KEY_LEFT_SHIFT: return lgx::KeyboardKey::SHIFT;
+		case GLFW_KEY_LEFT_CONTROL: return lgx::KeyboardKey::CONTROL;
+		default: return (lgx::KeyboardKey)-1;
 		}
 	}
 
-	inline bool isValidKey(efvk::KeyboardKey key)
+	inline bool isValidKey(lgx::KeyboardKey key)
 	{
 		return (int)key != -1;
 	}
 }
 
-namespace efvk
+namespace lgx
 {
 	void GLFWKeyCallback(GLFWwindow* glfw_window, int key, int scancode, int action, int mods)
 	{

@@ -1,8 +1,8 @@
 #pragma once
-#include <efvk/Window.h>
+#include <lutra-gfx/Window.h>
 #include "VulkanHPP.h"
 
-namespace efvk
+namespace lgx
 {
 	class GraphicsContextInternal
 	{

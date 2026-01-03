@@ -1,8 +1,8 @@
-#include <efvk/FrameManager.h>
+#include <lutra-gfx/FrameManager.h>
 
 #include "internal/FrameManagerInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	FrameManager::FrameManager(GraphicsContext& ctx, u32 window_width, u32 window_height)
 	{

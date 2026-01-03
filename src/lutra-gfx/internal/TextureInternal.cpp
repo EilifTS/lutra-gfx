@@ -5,7 +5,7 @@
 #include <backends/imgui_impl_vulkan.h>
 #endif
 
-namespace efvk
+namespace lgx
 {
 	TextureInternal::TextureInternal(GraphicsContextInternal& ctx, const Image& image)
 	{

@@ -1,6 +1,6 @@
-#include <efvk/Mouse.h>
+#include <lutra-gfx/Mouse.h>
 
-namespace efvk
+namespace lgx
 {
 	void MouseState::startFrame()
 	{

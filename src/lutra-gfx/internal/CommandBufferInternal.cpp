@@ -3,7 +3,7 @@
 #include "BufferInternal.h"
 #include "TextureInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	static constexpr u64 chunk_size = 10 * 1024 * 1024; /* 10MB */
 

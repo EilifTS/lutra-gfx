@@ -3,7 +3,7 @@
 #include "CommonStructs.h"
 #include "Event.h"
 
-namespace efvk
+namespace lgx
 {
 	class MouseState
 	{

@@ -1,10 +1,10 @@
 #ifdef USE_IMGUI
 
-#include <efvk/ImGuiWrapper.h>
-#include <efvk/GraphicsContext.h>
-#include <efvk/FrameManager.h>
-#include <efvk/Window.h>
-#include <efvk/Texture.h>
+#include <lutra-gfx/ImGuiWrapper.h>
+#include <lutra-gfx/GraphicsContext.h>
+#include <lutra-gfx/FrameManager.h>
+#include <lutra-gfx/Window.h>
+#include <lutra-gfx/Texture.h>
 #include "internal/FrameManagerInternal.h"
 #include "internal/GraphicsContextInternal.h"
 #include "internal/VulkanHPP.h"
@@ -14,7 +14,7 @@
 #include <backends/imgui_impl_vulkan.h>
 
 
-namespace efvk
+namespace lgx
 {
 	static constexpr u32 max_extra_textures = 256;
 	static vk::UniqueDescriptorPool descriptor_pool{};
@@ -127,15 +127,15 @@ namespace efvk
 	}
 
 
-	void ImGuiWrapper::Image(const efvk::Texture& texture, float width, float height)
+	void ImGuiWrapper::Image(const lgx::Texture& texture, float width, float height)
 	{
 		ImGui::Image(texture.GetImGuiID(), ImVec2(width, height));
 	}
-	void ImGuiWrapper::Image(const efvk::Texture& texture, float src_x, float src_y, float src_w, float src_h, float width, float height)
+	void ImGuiWrapper::Image(const lgx::Texture& texture, float src_x, float src_y, float src_w, float src_h, float width, float height)
 	{
 		ImGui::Image(texture.GetImGuiID(), ImVec2(width, height), ImVec2(src_x, src_y), ImVec2(src_x + src_w, src_y + src_h));
 	}
-	bool ImGuiWrapper::ImageButton(const char* id, const efvk::Texture& texture, float src_x, float src_y, float src_w, float src_h, float width, float height)
+	bool ImGuiWrapper::ImageButton(const char* id, const lgx::Texture& texture, float src_x, float src_y, float src_w, float src_h, float width, float height)
 	{
 		return ImGui::ImageButton(id, texture.GetImGuiID(), ImVec2(width, height), ImVec2(src_x, src_y), ImVec2(src_x + src_w, src_y + src_h));
 	}

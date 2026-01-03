@@ -1,10 +1,10 @@
 #pragma once
-#include <efvk/CommonStructs.h>
+#include <lutra-gfx/CommonStructs.h>
 
 #include "BufferInternal.h"
 #include "GraphicsContextInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	struct BufferMemoryAllocation
 	{

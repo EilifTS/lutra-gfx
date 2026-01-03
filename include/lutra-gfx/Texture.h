@@ -5,7 +5,7 @@
 #include "Image.h"
 #include "CommonStructs.h"
 
-namespace efvk
+namespace lgx
 {
 	class TextureInternal;
 

@@ -1,8 +1,8 @@
 #pragma once
-#include <efvk/GraphicsContext.h>
+#include <lutra-gfx/GraphicsContext.h>
 #include "GraphicsContextInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	class DescriptorAllocator
 	{

@@ -1,9 +1,9 @@
-#include <efvk/DepthStencilBuffer.h>
+#include <lutra-gfx/DepthStencilBuffer.h>
 
 #include "internal/DepthStencilBufferInternal.h"
 #include "internal/CommonHelpers.h"
 
-namespace efvk
+namespace lgx
 {
 	DepthStencilBuffer::DepthStencilBuffer(){}
 

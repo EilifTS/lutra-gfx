@@ -1,6 +1,6 @@
-#include <efvk/Keyboard.h>
+#include <lutra-gfx/Keyboard.h>
 
-namespace efvk
+namespace lgx
 {
 	void KeyboardState::startFrame()
 	{

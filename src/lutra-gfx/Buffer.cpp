@@ -1,7 +1,7 @@
-#include <efvk/Buffer.h>
+#include <lutra-gfx/Buffer.h>
 #include "internal/BufferInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	Buffer::Buffer() {}
 

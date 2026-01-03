@@ -1,16 +1,16 @@
 #pragma once
-#include <efvk/GraphicsContext.h>
-#include <efvk/GraphicsPipeline.h>
-#include <efvk/FrameManager.h>
-#include <efvk/Texture.h>
-#include <efvk/Buffer.h>
-#include <efvk/DepthStencilBuffer.h>
+#include <lutra-gfx/GraphicsContext.h>
+#include <lutra-gfx/GraphicsPipeline.h>
+#include <lutra-gfx/FrameManager.h>
+#include <lutra-gfx/Texture.h>
+#include <lutra-gfx/Buffer.h>
+#include <lutra-gfx/DepthStencilBuffer.h>
 
 #include <array>
 #include <assert.h>
 #include <unordered_map>
 
-namespace efvk
+namespace lgx
 {
 	struct Sprite
 	{

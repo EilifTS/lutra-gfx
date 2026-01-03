@@ -1,9 +1,9 @@
 #pragma once
-#include <efvk/CommonStructs.h>
-#include <efvk/GraphicsPipeline.h>
+#include <lutra-gfx/CommonStructs.h>
+#include <lutra-gfx/GraphicsPipeline.h>
 #include "VulkanHPP.h"
 
-namespace efvk
+namespace lgx
 {
 	class GraphicsPipelineInternal
 	{

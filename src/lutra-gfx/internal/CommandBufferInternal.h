@@ -1,5 +1,5 @@
 #pragma once
-#include <efvk/GraphicsContext.h>
+#include <lutra-gfx/GraphicsContext.h>
 #include "BufferMemoryAllocator.h"
 #include "DescriptorAllocator.h"
 #include "DescriptorWriteCache.h"
@@ -8,7 +8,7 @@
 #include "BufferInternal.h"
 #include "TextureInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	class GraphicsPipeline;
 

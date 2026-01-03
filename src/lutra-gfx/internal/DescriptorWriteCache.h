@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
-#include <efvk/CommonStructs.h>
+#include <lutra-gfx/CommonStructs.h>
 #include "VulkanHPP.h"
 
-namespace efvk
+namespace lgx
 {
 	/* TODO: Remove allocations from this class */
 	class DescriptorWriteCache

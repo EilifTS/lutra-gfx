@@ -1,4 +1,4 @@
-#include <efvk/GraphicsContext.h>
+#include <lutra-gfx/GraphicsContext.h>
 
 #include "GraphicsContextInternal.h"
 #include <GLFW/glfw3.h>
@@ -41,7 +41,7 @@ static vk::DebugUtilsMessengerCreateInfoEXT create_messenger_info()
 
 #endif
 
-namespace efvk
+namespace lgx
 {
 	vk::UniqueInstance create_instance(const char* app_name, bool has_window)
 	{
@@ -104,7 +104,7 @@ namespace efvk
 		const vk::ApplicationInfo app_info{
 			.pApplicationName = app_name,
 			.applicationVersion = 0,
-			.pEngineName = "EFVK",
+			.pEngineName = "LutraGFX",
 			.engineVersion = 0,
 			.apiVersion = vk::ApiVersion13,
 		};

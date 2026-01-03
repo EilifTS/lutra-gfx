@@ -1,11 +1,11 @@
 #pragma once
-#include <efvk/CommonStructs.h>
-#include <efvk/CommandBuffer.h>
+#include <lutra-gfx/CommonStructs.h>
+#include <lutra-gfx/CommandBuffer.h>
 
 #include "GraphicsContextInternal.h"
 #include "CommandBufferInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	struct PerFrameResources
 	{

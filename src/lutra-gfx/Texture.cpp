@@ -1,8 +1,8 @@
-#include <efvk/Texture.h>
+#include <lutra-gfx/Texture.h>
 
 #include "internal/TextureInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	Texture::Texture(){}
 

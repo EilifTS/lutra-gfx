@@ -1,8 +1,8 @@
-#include <efvk/GraphicsPipeline.h>
+#include <lutra-gfx/GraphicsPipeline.h>
 #include "internal/GraphicsContextInternal.h"
 #include "internal/GraphicsPipelineInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	GraphicsPipeline::GraphicsPipeline() {}
 	GraphicsPipeline::GraphicsPipeline(GraphicsContext& ctx, const GraphicsPipelineInfo& info)

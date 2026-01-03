@@ -3,7 +3,7 @@
 #include "GraphicsContext.h"
 #include "CommonStructs.h"
 
-namespace efvk
+namespace lgx
 {
 	class GraphicsPipelineInternal;
 

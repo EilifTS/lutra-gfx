@@ -1,6 +1,6 @@
 #include "BufferMemoryAllocator.h"
 
-namespace efvk
+namespace lgx
 {
 	static constexpr vk::BufferUsageFlagBits buffer_usage = vk::BufferUsageFlagBits::eTransferSrc;
 	static constexpr VmaAllocationCreateFlagBits vma_flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;

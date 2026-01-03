@@ -3,7 +3,7 @@
 #include <vector>
 #include <fstream>
 
-namespace efvk
+namespace lgx
 {
 	static vk::DescriptorType convertDescriptorType(GraphicsPipelineInfo::Binding::Type type)
 	{

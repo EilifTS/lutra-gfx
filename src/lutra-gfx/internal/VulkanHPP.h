@@ -9,7 +9,7 @@
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
 #include <vk_mem_alloc.h>
 
-namespace efvk
+namespace lgx
 {
 	/* Helpers */
 	inline void change_layout(vk::CommandBuffer cmd_buf, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::ImageAspectFlags aspect)

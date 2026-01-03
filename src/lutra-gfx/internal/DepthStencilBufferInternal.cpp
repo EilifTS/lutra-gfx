@@ -5,7 +5,7 @@
 #include <backends/imgui_impl_vulkan.h>
 #endif
 
-namespace efvk
+namespace lgx
 {
 	DepthStencilBufferInternal::DepthStencilBufferInternal(GraphicsContextInternal& ctx, u32 width, u32 height, vk::Format format)
 	{

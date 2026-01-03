@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include <efvk/GraphicsContext.h>
+#include <lutra-gfx/GraphicsContext.h>
 
 TEST(Graphics, CreateContext)
 {
-	efvk::GraphicsContext ctx("Test context");
+	lgx::GraphicsContext ctx("Test context");
 	(void)ctx;
 }
 

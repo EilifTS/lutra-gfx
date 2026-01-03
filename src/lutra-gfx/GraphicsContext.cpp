@@ -1,8 +1,8 @@
-#include <efvk/GraphicsContext.h>
+#include <lutra-gfx/GraphicsContext.h>
 
 #include "internal/GraphicsContextInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	GraphicsContext::GraphicsContext(const char* app_name)
 	{

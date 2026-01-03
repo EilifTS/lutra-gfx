@@ -1,6 +1,6 @@
 #include "SpriteBatch.h"
 
-namespace efvk
+namespace lgx
 {
 	static constexpr u32 max_sprites_per_batch = 10000;
 

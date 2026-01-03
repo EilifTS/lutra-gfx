@@ -4,7 +4,7 @@
 #include "CommonStructs.h"
 #include "GraphicsContext.h"
 
-namespace efvk
+namespace lgx
 {
 	class BufferInternal;
 

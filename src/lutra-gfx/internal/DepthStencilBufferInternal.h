@@ -2,7 +2,7 @@
 #include "VulkanHPP.h"
 #include "GraphicsContextInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	class DepthStencilBufferInternal
 	{

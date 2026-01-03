@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-namespace efvk
+namespace lgx
 {
 	static vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
 	{

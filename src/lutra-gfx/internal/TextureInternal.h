@@ -1,9 +1,9 @@
 #pragma once
-#include <efvk/Image.h>
+#include <lutra-gfx/Image.h>
 #include "VulkanHPP.h"
 #include "GraphicsContextInternal.h"
 
-namespace efvk
+namespace lgx
 {
 	class TextureInternal
 	{
