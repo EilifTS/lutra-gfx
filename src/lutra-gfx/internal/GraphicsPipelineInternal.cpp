@@ -193,7 +193,9 @@ namespace lgx
 		};
 
 		const vk::PipelineDepthStencilStateCreateInfo depth_stencil_info{
-			.depthTestEnable = false,
+			.depthTestEnable = info.ds_info.depth_enabled,
+			.depthWriteEnable = info.ds_info.depth_enabled,
+			.depthCompareOp = vk::CompareOp::eGreaterOrEqual,
 			.stencilTestEnable = false,
 		};
 
