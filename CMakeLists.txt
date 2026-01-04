@@ -42,7 +42,7 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(volk)
-target_link_libraries(lutra-gfx PRIVATE volk)
+target_link_libraries(lutra-gfx PRIVATE volk_headers)
 
 # VMA
 FetchContent_Declare(
@@ -125,7 +125,7 @@ if (LUTRA_GFX_ENABLE_IMGUI)
     )
     target_compile_features(imgui PRIVATE cxx_std_20)
     target_compile_definitions(imgui PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
-    target_link_libraries(imgui PRIVATE Vulkan-Headers volk glfw)
+    target_link_libraries(imgui PRIVATE Vulkan-Headers volk_headers glfw)
 
     target_compile_definitions(lutra-gfx PUBLIC USE_IMGUI)
     target_link_libraries(lutra-gfx PUBLIC imgui)
