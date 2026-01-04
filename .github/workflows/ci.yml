@@ -26,13 +26,6 @@ jobs:
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install libxrandr-dev libxcursor-dev libxi-dev libudev-dev libflac-dev libvorbis-dev libgl1-mesa-dev libegl1-mesa-dev libfreetype-dev
 
-    - name: Prepare Vulkan SDK
-      uses: humbletim/install-vulkan-sdk@033219e2d69dd4d3e873e217eb385fdd4b4438f4
-      with:
-       vulkan-query-version: 1.4.304.1
-       vulkan-components: Vulkan-Headers, Vulkan-Loader
-       vulkan-use-cache: true
-
     - name: Checkout
       uses: actions/checkout@v4
 
