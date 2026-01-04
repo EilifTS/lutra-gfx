@@ -10,6 +10,8 @@
 #include "internal/VulkanHPP.h"
 
 #include <imgui.h>
+
+#define IMGUI_IMPL_VULKAN_USE_VOLK
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
 

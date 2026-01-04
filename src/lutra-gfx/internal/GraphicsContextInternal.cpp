@@ -294,6 +294,13 @@ namespace lgx
 		/* Second initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*instance);
 
+		/* Initialize volk */
+		if (volkInitialize())
+		{
+			assert(false);
+		}
+		volkLoadInstance(*instance);
+
 #if _DEBUG /* VL */
 		messenger = instance->createDebugUtilsMessengerEXTUnique(create_messenger_info());
 #endif
@@ -317,16 +324,16 @@ namespace lgx
 		queue = device->getQueue(queue_family_index, 0);
 
 		/* Create the Vulkan Memory Allocator */
-		VmaVulkanFunctions vma_vk_functions{};
-		vma_vk_functions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
-		vma_vk_functions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
-
 		VmaAllocatorCreateInfo vma_info{};
 		vma_info.instance = *instance;
 		vma_info.physicalDevice = physical_device;
 		vma_info.device = *device;
 		vma_info.vulkanApiVersion = vk::ApiVersion13;
+
+		VmaVulkanFunctions vma_vk_functions{};
+		vmaImportVulkanFunctionsFromVolk(&vma_info, &vma_vk_functions);
 		vma_info.pVulkanFunctions = &vma_vk_functions;
+		
 		VkResult result = vmaCreateAllocator(&vma_info, &vma_allocator);
 		assert(result == VK_SUCCESS);
 
