@@ -20,11 +20,29 @@ file(GLOB LUTRA_GFX_SOURCES
 # Create library
 add_library(lutra-gfx STATIC ${LUTRA_GFX_INCLUDES} ${LUTRA_GFX_SOURCES})
 
-# Find Vulkan SDK
-find_package(Vulkan REQUIRED)
-target_link_libraries(lutra-gfx PRIVATE Vulkan::Vulkan)
-
 include(FetchContent)
+
+# Vulkan Headers
+FetchContent_Declare(
+    Vulkan-Headers
+    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+    GIT_TAG vulkan-sdk-1.4.335.0
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(Vulkan-Headers)
+target_link_libraries(lutra-gfx PRIVATE Vulkan-Headers)
+
+# Volk
+FetchContent_Declare(
+    volk
+    GIT_REPOSITORY https://github.com/zeux/volk.git
+    GIT_TAG vulkan-sdk-1.4.335.0
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(volk)
+target_link_libraries(lutra-gfx PRIVATE volk)
 
 # VMA
 FetchContent_Declare(
@@ -96,6 +114,7 @@ if (LUTRA_GFX_ENABLE_IMGUI)
         ${imgui_SOURCE_DIR}/imgui_widgets.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
+        src/lutra-gfx/internal/VolkUsage.cpp
     )
 
     add_library(imgui STATIC ${IMGUI_SRC})
@@ -104,8 +123,9 @@ if (LUTRA_GFX_ENABLE_IMGUI)
         ${imgui_SOURCE_DIR}
         ${imgui_SOURCE_DIR}/backends
     )
-    target_link_libraries(imgui PUBLIC glfw Vulkan::Vulkan)
     target_compile_features(imgui PRIVATE cxx_std_20)
+    target_compile_definitions(imgui PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
+    target_link_libraries(imgui PRIVATE Vulkan-Headers volk glfw)
 
     target_compile_definitions(lutra-gfx PUBLIC USE_IMGUI)
     target_link_libraries(lutra-gfx PUBLIC imgui)
