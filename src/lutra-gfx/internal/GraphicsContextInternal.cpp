@@ -144,7 +144,7 @@ namespace lgx
 			std::end(supported_device_extensions),
 			[](vk::ExtensionProperties props)
 			{
-				return strcmp(props.extensionName, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME) == 1;
+				return strcmp(props.extensionName, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME) == 0;
 			}
 		);
 		return supports_portability;
