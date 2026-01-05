@@ -185,12 +185,13 @@ namespace lgx
 
 	Window::~Window()
 	{
+		glfwDestroyWindow(glfw_window);
+
 		if (global_window_count == 1)
 		{
 			glfwTerminate();
 		}
 		global_window_count--;
-		//sf_window.close();
 	}
 
 	std::vector<Event> Window::RetrieveEvents()

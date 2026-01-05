@@ -312,7 +312,7 @@ namespace lgx
 		}
 
 		/* Get physical device */
-		std::tie(physical_device, queue_family_index) = select_physical_device_and_queue_family(instance.get(), *surface);
+		std::tie(physical_device, queue_family_index) = select_physical_device_and_queue_family(instance.get(), *surface /* Surface is null handle when there is no window */);
 
 		/* Create the logical device */
 		device = create_device(physical_device, queue_family_index);

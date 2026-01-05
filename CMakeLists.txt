@@ -7,7 +7,7 @@ option(LUTRA_GFX_BUILD_TESTS "Build tests" ON)
 
 # Define library files
 file(GLOB LUTRA_GFX_INCLUDES
-    include/lutra-vk/*.h
+    include/lutra-gfx/*.h
 )
 
 file(GLOB LUTRA_GFX_SOURCES

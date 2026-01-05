@@ -109,10 +109,18 @@ namespace lgx
 		per_frame_res.resize(surface_count);
 
 		/* Transfer swapchain images */
-		for (u32 i = 0; i < surface_count; i++)
 		{
-			per_frame_res[i].image = swapchain_images[i];
+			CommandBufferInternal cmd_buf(ctx);
+
+			for (u32 i = 0; i < surface_count; i++)
+			{
+				per_frame_res[i].image = swapchain_images[i];
+				change_layout(*cmd_buf.cmd_buf, swapchain_images[i], vk::ImageLayout::eUndefined, vk::ImageLayout::ePresentSrcKHR, vk::ImageAspectFlagBits::eColor);
+			}
+
+			SubmitAndWaitInternal(ctx, cmd_buf);
 		}
+		
 
 		/* Initialize per frame resources */
 		for (PerFrameResources& res : per_frame_res)
@@ -194,7 +202,7 @@ namespace lgx
 		new_frame_res.cmd_buf.Reset();
 
 		/* Transition the image layout to allow rendering */
-		change_layout(*new_frame_res.cmd_buf.internal->cmd_buf, new_frame_res.image, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, vk::ImageAspectFlagBits::eColor);
+		change_layout(*new_frame_res.cmd_buf.internal->cmd_buf, new_frame_res.image, vk::ImageLayout::ePresentSrcKHR, vk::ImageLayout::eGeneral, vk::ImageAspectFlagBits::eColor);
 
 		/* Clear image */
 		vk::ClearColorValue clear_color_value{};
@@ -227,6 +235,7 @@ namespace lgx
 
 		const vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
+		/* Using address of .get() is fine here, since it returns a reference*/
 		const vk::SubmitInfo submit_info{
 			.waitSemaphoreCount = 1,
 			.pWaitSemaphores = &(frame_res.image_acquire_sem.get()),
