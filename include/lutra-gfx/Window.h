@@ -51,7 +51,7 @@ namespace lgx
 
 		friend void GLFWKeyCallback(GLFWwindow* glfw_window, int key, int scancode, int action, int mods);
 		friend void GLFWMouseMoveCallback(GLFWwindow* glfw_window, double mouse_x, double mouse_y);
-		friend void GLFWMouseButtionCallback(GLFWwindow* glfw_window, int button, int action, int mods);
+		friend void GLFWMouseButtonCallback(GLFWwindow* glfw_window, int button, int action, int mods);
 		friend void GLFWMouseScrollCallback(GLFWwindow* glfw_window, double x_delta, double y_delta);
 	};
 }

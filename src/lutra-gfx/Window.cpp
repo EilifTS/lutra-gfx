@@ -175,7 +175,7 @@ namespace lgx
 
 		glfwSetKeyCallback(glfw_window, GLFWKeyCallback);
 		glfwSetCursorPosCallback(glfw_window, GLFWMouseMoveCallback);
-		glfwSetMouseButtonCallback(glfw_window, GLFWMouseButtionCallback);
+		glfwSetMouseButtonCallback(glfw_window, GLFWMouseButtonCallback);
 		glfwSetScrollCallback(glfw_window, GLFWMouseScrollCallback);
 
 		//sf_window.setFramerateLimit(144);
