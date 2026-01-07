@@ -106,7 +106,7 @@ namespace lgx
 		events.push_back({ type, payload });
 	}
 
-	void GLFWMouseButtionCallback(GLFWwindow* glfw_window, int button, int action, int mods)
+	void GLFWMouseButtonCallback(GLFWwindow* glfw_window, int button, int action, int mods)
 	{
 		Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfw_window));
 		assert(window);
@@ -114,7 +114,7 @@ namespace lgx
 
 		if (action == GLFW_PRESS)
 		{
-			const EventType type = EventType::KeyboardPress;
+			const EventType type = EventType::MouseButtonPress;
 			EventPayload payload{};
 			if (button == GLFW_MOUSE_BUTTON_LEFT) payload.mouse_button = MouseButton::Left;
 			else if (button == GLFW_MOUSE_BUTTON_MIDDLE) payload.mouse_button = MouseButton::Middle;
@@ -124,7 +124,7 @@ namespace lgx
 		}
 		else if (action == GLFW_RELEASE)
 		{
-			const EventType type = EventType::KeyboardRelease;
+			const EventType type = EventType::MouseButtonRelease;
 			EventPayload payload{};
 			if (button == GLFW_MOUSE_BUTTON_LEFT) payload.mouse_button = MouseButton::Left;
 			else if (button == GLFW_MOUSE_BUTTON_MIDDLE) payload.mouse_button = MouseButton::Middle;
