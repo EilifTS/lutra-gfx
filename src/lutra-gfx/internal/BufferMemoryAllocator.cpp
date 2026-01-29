@@ -52,6 +52,7 @@ namespace lgx
 			.offset = current_chunk_offset,
 			.size = size,
 		};
+		current_chunk_offset += size;
 
 		return allocation;
 	}
