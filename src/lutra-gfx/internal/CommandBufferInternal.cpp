@@ -120,7 +120,7 @@ namespace lgx
 
 	void CommandBufferInternal::BindBuffer(BufferInternal& buffer, u32 binding)
 	{
-		descriptor_write_cache.AddBufferWrite(binding, buffer.buffer.GetBuffer(), buffer.Size());
+		descriptor_write_cache.AddBufferWrite(binding, buffer.buffer.GetBuffer(), buffer.Size(), buffer.IsUniform());
 	}
 
 	void CommandBufferInternal::BindTexture(vk::ImageView view, u32 binding)

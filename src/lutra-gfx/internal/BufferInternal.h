@@ -17,6 +17,7 @@ namespace lgx
 		BufferInternal& operator=(const BufferInternal&) = delete;
 		BufferInternal& operator=(BufferInternal&& rhs) noexcept = default;
 
+		bool IsUniform() const { return is_uniform_buffer; }
 		u64 Size() const { return size; }
 		void* Map(vk::Device device);
 		void Unmap(vk::Device device);
@@ -25,5 +26,6 @@ namespace lgx
 
 	private:
 		u64 size{};
+		bool is_uniform_buffer{};
 	};
 }

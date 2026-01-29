@@ -11,6 +11,7 @@ namespace lgx
 	enum class BufferType
 	{
 		StorageBuffer,
+		UniformBuffer,
 	};
 
 	class Buffer

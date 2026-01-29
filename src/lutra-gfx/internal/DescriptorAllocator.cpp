@@ -10,6 +10,7 @@ namespace lgx
 	{
 		/* For now, just use some large enough values and avoid any complexity */
 		const vk::DescriptorPoolSize sizes[] = {
+			{ .type = vk::DescriptorType::eUniformBuffer, .descriptorCount = max_descriptors },
 			{ .type = vk::DescriptorType::eStorageBuffer, .descriptorCount = max_descriptors },
 			{ .type = vk::DescriptorType::eSampledImage, .descriptorCount = max_descriptors },
 			{ .type = vk::DescriptorType::eSampler, .descriptorCount = max_descriptors },

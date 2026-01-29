@@ -15,7 +15,7 @@ namespace lgx
 		{
 			const vk::DescriptorBufferInfo* buffer_info_ptr = nullptr;
 			const vk::DescriptorImageInfo* image_info_ptr = nullptr;
-			if (write_info.write_type == vk::DescriptorType::eStorageBuffer)
+			if (write_info.write_type == vk::DescriptorType::eStorageBuffer || write_info.write_type == vk::DescriptorType::eUniformBuffer)
 			{
 				buffer_info_ptr = &buffer_write_infos[write_info.additional_info_index];
 			}

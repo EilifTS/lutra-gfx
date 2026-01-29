@@ -81,6 +81,10 @@ namespace lgx
 		{
 			bindings.push_back({ binding, Binding::Type::StorageBuffer, 1, stage, SamplerType::None });
 		}
+		void AddUniformBuffer(u32 binding, Binding::Stage stage)
+		{
+			bindings.push_back({ binding, Binding::Type::UniformBuffer, 1, stage, SamplerType::None });
+		}
 
 		std::vector<Binding> bindings{};
 	};

@@ -9,13 +9,13 @@ namespace lgx
 	class DescriptorWriteCache
 	{
 	public:
-		void AddBufferWrite(u32 binding, vk::Buffer buffer, u64 buffer_size)
+		void AddBufferWrite(u32 binding, vk::Buffer buffer, u64 buffer_size, bool is_uniform)
 		{
 			write_infos.push_back({
 				.binding = binding,
 				.additional_info_index = static_cast<u32>(buffer_write_infos.size()),
 				.descriptor_count = 1,
-				.write_type = vk::DescriptorType::eStorageBuffer,
+				.write_type = is_uniform ? vk::DescriptorType::eUniformBuffer : vk::DescriptorType::eStorageBuffer,
 			});
 
 			buffer_write_infos.push_back({

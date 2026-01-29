@@ -13,6 +13,10 @@ namespace lgx
 		{
 			usage_flags |= vk::BufferUsageFlagBits::eStorageBuffer;
 		}
+		else if (type == BufferType::UniformBuffer)
+		{
+			usage_flags |= vk::BufferUsageFlagBits::eUniformBuffer;
+		}
 
 		internal = std::make_unique<BufferInternal>(*ctx.internal, size, usage_flags, 0);
 	}

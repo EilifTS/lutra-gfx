@@ -10,6 +10,12 @@ namespace lgx
 			.usage = usage,
 		};
 
+		is_uniform_buffer = false;
+		if ((usage & vk::BufferUsageFlagBits::eUniformBuffer) == vk::BufferUsageFlagBits::eUniformBuffer)
+		{
+			is_uniform_buffer = true;
+		}
+
 		VmaAllocationCreateInfo vma_info{};
 		vma_info.usage = VMA_MEMORY_USAGE_AUTO;
 		vma_info.flags = vma_flags;
