@@ -175,7 +175,7 @@ namespace lgx
 		const vk::PipelineVertexInputStateCreateInfo vertex_input_info{};
 
 		const vk::PipelineInputAssemblyStateCreateInfo input_assembly_info{
-			.topology = vk::PrimitiveTopology::eTriangleList,
+			.topology = info.topology == PrimitiveTopology::TriangleList ? vk::PrimitiveTopology::eTriangleList : vk::PrimitiveTopology::eLineList,
 			.primitiveRestartEnable = false
 		};
 

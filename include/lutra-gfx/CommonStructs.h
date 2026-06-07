@@ -15,6 +15,12 @@ namespace lgx
 
 	using TextureView = void*;
 
+	enum class PrimitiveTopology
+	{
+		LineList,
+		TriangleList,
+	};
+
 	enum class DepthStencilFormat
 	{
 		D32,
@@ -40,6 +46,8 @@ namespace lgx
 			DepthStencilFormat ds_format{};
 		};
 		DSInfo ds_info{};
+
+		PrimitiveTopology topology{ PrimitiveTopology::TriangleList };
 
 		struct Binding
 		{
