@@ -244,4 +244,83 @@ namespace lgx
 		const vk::Result result = ctx.device->waitForFences(fence.get(), true, UINT64_MAX);
 		assert(result == vk::Result::eSuccess);
 	}
+
+	void DownloadInternal(GraphicsContextInternal& ctx, BufferInternal& src_buffer, void* dst_ptr, u64 size)
+	{
+		/* Temporary, host-readable staging buffer to copy the GPU data into */
+		BufferInternal staging_buffer(ctx, size, vk::BufferUsageFlagBits::eTransferDst, VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
+
+		CommandBufferInternal cmd_buf(ctx);
+
+		/* Make sure any prior writes to src_buffer are visible to the copy below */
+		buffer_barrier(*cmd_buf.cmd_buf, src_buffer.buffer.GetBuffer(), 0, size, vk::PipelineStageFlagBits::eAllCommands, vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eMemoryWrite, vk::AccessFlagBits::eTransferRead);
+
+		const vk::BufferCopy buffer_copy{
+			.srcOffset = 0,
+			.dstOffset = 0,
+			.size = size,
+		};
+		cmd_buf.cmd_buf->copyBuffer(src_buffer.buffer.GetBuffer(), staging_buffer.buffer.GetBuffer(), buffer_copy);
+
+		SubmitAndWaitInternal(ctx, cmd_buf);
+
+		/* CPU read: invalidate first in case the staging memory ended up non-coherent */
+		void* mapped_ptr = staging_buffer.Map(*ctx.device);
+		VkResult result = vmaInvalidateAllocation(ctx.vma_allocator, staging_buffer.buffer.GetAllocation(), 0, size);
+		assert(result == VK_SUCCESS);
+		std::memcpy(dst_ptr, mapped_ptr, size);
+		staging_buffer.Unmap(*ctx.device);
+	}
+
+	void DownloadInternal(GraphicsContextInternal& ctx, TextureInternal& src_texture, void* dst_ptr)
+	{
+		const u64 bytes_per_pixel = 4; /* Matches the format Image/Texture always use today */
+		const u64 size = static_cast<u64>(src_texture.width) * src_texture.height * bytes_per_pixel;
+
+		/* Temporary, host-readable staging buffer to copy the GPU data into */
+		BufferInternal staging_buffer(ctx, size, vk::BufferUsageFlagBits::eTransferDst, VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
+
+		CommandBufferInternal cmd_buf(ctx);
+
+		/* Make sure any prior writes to the texture are visible to the copy below. Textures in
+		   this library always sit in eGeneral, so this is purely an access-mask barrier. */
+		const vk::ImageSubresourceRange range{
+			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		};
+		const vk::ImageMemoryBarrier pre_copy_barrier{
+			.srcAccessMask = vk::AccessFlagBits::eMemoryWrite,
+			.dstAccessMask = vk::AccessFlagBits::eTransferRead,
+			.oldLayout = vk::ImageLayout::eGeneral,
+			.newLayout = vk::ImageLayout::eGeneral,
+			.srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+			.dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+			.image = src_texture.vma_image.GetImage(),
+			.subresourceRange = range,
+		};
+		cmd_buf.cmd_buf->pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlagBits::eByRegion, {}, {}, pre_copy_barrier);
+
+		const vk::BufferImageCopy buffer_image_copy{
+			.bufferOffset = 0,
+			.imageSubresource = {
+				.aspectMask = vk::ImageAspectFlagBits::eColor,
+				.mipLevel = 0,
+				.baseArrayLayer = 0,
+				.layerCount = 1
+			},
+			.imageExtent = { src_texture.width, src_texture.height, 1 },
+		};
+		cmd_buf.cmd_buf->copyImageToBuffer(src_texture.vma_image.GetImage(), vk::ImageLayout::eGeneral, staging_buffer.buffer.GetBuffer(), buffer_image_copy);
+
+		SubmitAndWaitInternal(ctx, cmd_buf);
+
+		void* mapped_ptr = staging_buffer.Map(*ctx.device);
+		VkResult result = vmaInvalidateAllocation(ctx.vma_allocator, staging_buffer.buffer.GetAllocation(), 0, size);
+		assert(result == VK_SUCCESS);
+		std::memcpy(dst_ptr, mapped_ptr, size);
+		staging_buffer.Unmap(*ctx.device);
+	}
 }

@@ -43,4 +43,12 @@ namespace lgx
 	};
 
 	void SubmitAndWait(GraphicsContext& ctx, CommandBuffer& cmd_buf);
+
+	/* Blocking GPU -> CPU readback, handy for tests/tools: submits its own one-off command
+	   buffer and waits for it, then copies the result into dst_ptr. Not meant for per-frame
+	   use - for that, schedule your own copy through a persistent CommandBuffer instead.
+	   dst_ptr must point at a buffer at least `size` bytes for the Buffer overload, or at
+	   least Width() * Height() * 4 bytes for the Texture overload. */
+	void Download(GraphicsContext& ctx, Buffer& src_buffer, void* dst_ptr, u64 size);
+	void Download(GraphicsContext& ctx, Texture& src_texture, void* dst_ptr);
 }

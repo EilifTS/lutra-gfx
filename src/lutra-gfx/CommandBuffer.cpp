@@ -45,4 +45,14 @@ namespace lgx
 	{
 		SubmitAndWaitInternal(*ctx.internal, *cmd_buf.internal);
 	}
+
+	void Download(GraphicsContext& ctx, Buffer& src_buffer, void* dst_ptr, u64 size)
+	{
+		DownloadInternal(*ctx.internal, *src_buffer.internal, dst_ptr, size);
+	}
+
+	void Download(GraphicsContext& ctx, Texture& src_texture, void* dst_ptr)
+	{
+		DownloadInternal(*ctx.internal, *src_texture.internal, dst_ptr);
+	}
 }

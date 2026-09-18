@@ -57,4 +57,10 @@ namespace lgx
 	};
 
 	void SubmitAndWaitInternal(GraphicsContextInternal& ctx, CommandBufferInternal& cmd_buf);
+
+	/* Blocking GPU -> CPU readback: submits its own one-off command buffer, waits for it to
+	   complete, then copies the result into dst_ptr. Meant for tests/tools, not a hot path -
+	   for per-frame work, schedule your own copy via a persistent CommandBuffer instead. */
+	void DownloadInternal(GraphicsContextInternal& ctx, BufferInternal& src_buffer, void* dst_ptr, u64 size);
+	void DownloadInternal(GraphicsContextInternal& ctx, TextureInternal& src_texture, void* dst_ptr);
 }
