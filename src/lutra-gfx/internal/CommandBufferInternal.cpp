@@ -38,15 +38,14 @@ namespace lgx
 			.level = vk::CommandBufferLevel::ePrimary,
 			.commandBufferCount = 1,
 		};
-		std::vector<vk::CommandBuffer> cmd_buffers;
-		cmd_buf = std::move(ctx.device->allocateCommandBuffersUnique(allocate_info)[0]);
+		cmd_buf = std::move(VkCheck(ctx.device->allocateCommandBuffersUnique(allocate_info))[0]);
 
 		/* Begin command buffer */
 		const vk::CommandBufferBeginInfo begin_info{
 			.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
 		};
 
-		cmd_buf->begin(begin_info);
+		VkCheck(cmd_buf->begin(begin_info));
 	}
 
 	void CommandBufferInternal::BeginRendering(vk::ImageView color_view, vk::ImageView ds_view, u32 width, u32 height, bool clear)
@@ -216,22 +215,22 @@ namespace lgx
 		buffer_memory_allocator.Reset(*ctx);
 		descriptor_allocator.Reset();
 		needs_descriptor_set_bind = true;
-		cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+		VkCheck(cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources));
 
 		/* Begin command buffer */
 		const vk::CommandBufferBeginInfo begin_info{
 			.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit,
 		};
 
-		cmd_buf->begin(begin_info);
+		VkCheck(cmd_buf->begin(begin_info));
 	}
 
 	void SubmitAndWaitInternal(GraphicsContextInternal& ctx, CommandBufferInternal& cmd_buf)
 	{
-		vk::UniqueFence fence = ctx.device->createFenceUnique({});
+		vk::UniqueFence fence = VkCheck(ctx.device->createFenceUnique({}));
 
 		/* Submit command buffer */
-		cmd_buf.cmd_buf->end();
+		VkCheck(cmd_buf.cmd_buf->end());
 
 		const vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eNone;
 
@@ -240,7 +239,7 @@ namespace lgx
 			.commandBufferCount = 1,
 			.pCommandBuffers = &cmd_buf.cmd_buf.get(),
 		};
-		ctx.queue.submit(submit_info, *fence);
+		VkCheck(ctx.queue.submit(submit_info, *fence));
 
 		const vk::Result result = ctx.device->waitForFences(fence.get(), true, UINT64_MAX);
 		assert(result == vk::Result::eSuccess);

@@ -21,7 +21,7 @@ namespace lgx
 			.poolSizeCount = sizeof(sizes) / sizeof(vk::DescriptorPoolSize),
 			.pPoolSizes = sizes,
 		};
-		pool = ctx.device->createDescriptorPoolUnique(pool_info);
+		pool = VkCheck(ctx.device->createDescriptorPoolUnique(pool_info));
 	}
 
 	vk::DescriptorSet DescriptorAllocator::Alloc(vk::DescriptorSetLayout layout)
@@ -31,13 +31,13 @@ namespace lgx
 			.descriptorSetCount = 1,
 			.pSetLayouts = &layout,
 		};
-		std::vector<vk::DescriptorSet> sets = dev.allocateDescriptorSets(alloc_info);
+		std::vector<vk::DescriptorSet> sets = VkCheck(dev.allocateDescriptorSets(alloc_info));
 
 		return sets[0];
 	}
 
 	void DescriptorAllocator::Reset()
 	{
-		dev.resetDescriptorPool(*pool);
+		VkCheck(dev.resetDescriptorPool(*pool));
 	}
 }

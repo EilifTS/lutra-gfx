@@ -34,7 +34,7 @@ namespace lgx
 			.poolSizeCount = 1,
 			.pPoolSizes = pool_sizes,
 		};
-		descriptor_pool = ctx.device->createDescriptorPoolUnique(desc_pool_info);
+		descriptor_pool = VkCheck(ctx.device->createDescriptorPoolUnique(desc_pool_info));
 	}
 
 	static void CleanupVulkanResources()

@@ -52,7 +52,7 @@ namespace lgx
 			.codeSize = data.size() * 4,
 			.pCode = data.data(),
 		};
-		return dev.createShaderModuleUnique(vs_module_info);
+		return VkCheck(dev.createShaderModuleUnique(vs_module_info));
 	}
 
 	static vk::Filter getFilter(SamplerType type)
@@ -101,7 +101,7 @@ namespace lgx
 			.maxLod = vk::LodClampNone,
 		};
 
-		return dev.createSamplerUnique(info);
+		return VkCheck(dev.createSamplerUnique(info));
 	}
 
 	GraphicsPipelineInternal::GraphicsPipelineInternal(vk::Device dev, const GraphicsPipelineInfo& info)
@@ -148,14 +148,14 @@ namespace lgx
 			.pBindings = desc_layout_bindings.data(),
 		};
 
-		desc_layout = dev.createDescriptorSetLayoutUnique(desc_layout_info);
+		desc_layout = VkCheck(dev.createDescriptorSetLayoutUnique(desc_layout_info));
 
 		/* Create pipeline layout */
 		const vk::PipelineLayoutCreateInfo layout_info{
 			.setLayoutCount = 1,
 			.pSetLayouts = &desc_layout.get(),
 		};
-		layout = dev.createPipelineLayoutUnique(layout_info);
+		layout = VkCheck(dev.createPipelineLayoutUnique(layout_info));
 
 		const vk::Format color_attachment_format = vk::Format::eR8G8B8A8Unorm;
 		const vk::PipelineRenderingCreateInfo rendering_info{

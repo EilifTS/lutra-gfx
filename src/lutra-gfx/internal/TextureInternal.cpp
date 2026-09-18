@@ -46,7 +46,7 @@ namespace lgx
 			}
 		};
 
-		view = ctx.device->createImageViewUnique(view_info);
+		view = VkCheck(ctx.device->createImageViewUnique(view_info));
 
 		/* Initialize ImGui resources */
 #ifdef USE_IMGUI
@@ -58,7 +58,7 @@ namespace lgx
 			.addressModeW = vk::SamplerAddressMode::eClampToEdge,
 			.maxLod = vk::LodClampNone,
 		};
-		imgui_sampler = ctx.device->createSamplerUnique(sampler_info);
+		imgui_sampler = VkCheck(ctx.device->createSamplerUnique(sampler_info));
 
 		imgui_set = ImGui_ImplVulkan_AddTexture(*imgui_sampler, *view, VK_IMAGE_LAYOUT_GENERAL);
 #endif

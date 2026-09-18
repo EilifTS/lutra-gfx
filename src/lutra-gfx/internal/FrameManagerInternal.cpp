@@ -9,7 +9,7 @@ namespace lgx
 	static vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
 	{
 		/* No special logic for now, just choose the first available */
-		std::vector<vk::SurfaceFormatKHR> supported_surface_formats = phys_dev.getSurfaceFormatsKHR(surface);
+		std::vector<vk::SurfaceFormatKHR> supported_surface_formats = VkCheck(phys_dev.getSurfaceFormatsKHR(surface));
 		assert(supported_surface_formats.size() > 0);
 		for (auto f : supported_surface_formats)
 		{
@@ -63,7 +63,7 @@ namespace lgx
 		/* Select a surface format. */
 		const vk::SurfaceFormatKHR surface_format = select_surface_format(ctx.physical_device, *ctx.surface);
 
-		auto surface_caps = ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface);
+		auto surface_caps = VkCheck(ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface));
 
 		/* Clamp the requested extent to what the surface actually supports right now
 		   (relevant after a resize). */
@@ -105,12 +105,12 @@ namespace lgx
 			   swapchain on any later recreation. */
 			.oldSwapchain = *swapchain,
 		};
-		swapchain = ctx.device->createSwapchainKHRUnique(swapchain_info);
+		swapchain = VkCheck(ctx.device->createSwapchainKHRUnique(swapchain_info));
 
 		window_width = surface_extent.width;
 		window_height = surface_extent.height;
 
-		std::vector<vk::Image> swapchain_images = ctx.device->getSwapchainImagesKHR(*swapchain);
+		std::vector<vk::Image> swapchain_images = VkCheck(ctx.device->getSwapchainImagesKHR(*swapchain));
 		assert(swapchain_images.size() >= surface_count);
 
 		per_frame_res.resize(surface_count);
@@ -136,8 +136,8 @@ namespace lgx
 			if (res.cmd_buf.internal == nullptr)
 			{
 				res.cmd_buf.internal = std::make_unique<CommandBufferInternal>(ctx);
-				res.frame_complete_fence = ctx.device->createFenceUnique({});
-				res.image_release_sem = ctx.device->createSemaphoreUnique({});
+				res.frame_complete_fence = VkCheck(ctx.device->createFenceUnique({}));
+				res.image_release_sem = VkCheck(ctx.device->createSemaphoreUnique({}));
 			}
 
 			/* (Re)create the image view, since it's tied to a specific swapchain image */
@@ -153,13 +153,13 @@ namespace lgx
 					.layerCount = 1,
 				},
 			};
-			res.image_view = ctx.device->createImageViewUnique(image_view_info);
+			res.image_view = VkCheck(ctx.device->createImageViewUnique(image_view_info));
 		}
 	}
 
 	bool FrameManagerInternal::RecreateSwapchain(GraphicsContextInternal& ctx)
 	{
-		const auto surface_caps = ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface);
+		const auto surface_caps = VkCheck(ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface));
 
 		/* Window is minimized (zero-sized framebuffer): nothing sensible to render yet. */
 		if (surface_caps.currentExtent.width == 0 || surface_caps.currentExtent.height == 0)
@@ -169,7 +169,7 @@ namespace lgx
 
 		/* Make sure no in-flight work still references the old swapchain's images/views
 		   before we replace them. */
-		ctx.device->waitIdle();
+		VkCheck(ctx.device->waitIdle());
 
 		CreateSwapchain(ctx, surface_caps.currentExtent.width, surface_caps.currentExtent.height);
 		return true;
@@ -177,7 +177,7 @@ namespace lgx
 
 	FrameManagerInternal::~FrameManagerInternal()
 	{
-		dev.waitIdle();
+		VkCheck(dev.waitIdle());
 	}
 
 	bool FrameManagerInternal::StartFrame(GraphicsContextInternal& ctx)
@@ -196,7 +196,7 @@ namespace lgx
 		vk::UniqueSemaphore acquire_semahore{};
 		if (free_semaphore_queue.size() == 0)
 		{
-			acquire_semahore = ctx.device->createSemaphoreUnique({});
+			acquire_semahore = VkCheck(ctx.device->createSemaphoreUnique({}));
 		}
 		else
 		{
@@ -225,7 +225,7 @@ namespace lgx
 			assert(wait_result == vk::Result::eSuccess);
 			new_frame_res.has_fence_signal = false;
 
-			ctx.device->resetFences(*new_frame_res.frame_complete_fence);
+			VkCheck(ctx.device->resetFences(*new_frame_res.frame_complete_fence));
 
 			/* This semaphore must have been signalled so we can free it. */
 			free_semaphore_queue.push_back(std::move(new_frame_res.image_acquire_sem));
@@ -273,7 +273,7 @@ namespace lgx
 		change_layout(*frame_res.cmd_buf.internal->cmd_buf, frame_res.image, vk::ImageLayout::eGeneral, vk::ImageLayout::ePresentSrcKHR, vk::ImageAspectFlagBits::eColor);
 
 		/* Submit command buffer */
-		frame_res.cmd_buf.internal->cmd_buf->end();
+		VkCheck(frame_res.cmd_buf.internal->cmd_buf->end());
 
 		const vk::PipelineStageFlags wait_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 
@@ -287,7 +287,7 @@ namespace lgx
 			.signalSemaphoreCount = 1,
 			.pSignalSemaphores = &(frame_res.image_release_sem.get()),
 		};
-		ctx.queue.submit(submit_info, *frame_res.frame_complete_fence);
+		VkCheck(ctx.queue.submit(submit_info, *frame_res.frame_complete_fence));
 		frame_res.has_fence_signal = true;
 
 		/* Present the image */

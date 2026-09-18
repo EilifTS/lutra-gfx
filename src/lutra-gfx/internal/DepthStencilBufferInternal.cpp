@@ -46,7 +46,7 @@ namespace lgx
 			}
 		};
 
-		view = ctx.device->createImageViewUnique(view_info);
+		view = VkCheck(ctx.device->createImageViewUnique(view_info));
 
 		/* Change layout */
 		CommandBufferInternal cmd_buf(ctx);

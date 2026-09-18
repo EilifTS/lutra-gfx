@@ -50,7 +50,7 @@ namespace lgx
 #if _DEBUG /* VL */
 		requested_layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
-		std::vector<vk::LayerProperties> supported_layers = vk::enumerateInstanceLayerProperties();
+		std::vector<vk::LayerProperties> supported_layers = VkCheck(vk::enumerateInstanceLayerProperties());
 		std::vector<const char*> layers{};
 		for (const char* requested_layer : requested_layers)
 		{
@@ -123,7 +123,7 @@ namespace lgx
 			.ppEnabledExtensionNames = instance_extensions.data(),
 		};
 
-		return vk::createInstanceUnique(instance_create_info);
+		return VkCheck(vk::createInstanceUnique(instance_create_info));
 	}
 
 	vk::UniqueSurfaceKHR create_surface(vk::Instance instance, const Window& window)
@@ -138,7 +138,7 @@ namespace lgx
 	static bool physicalDeviceCompatible(vk::PhysicalDevice pd)
 	{
 #if ENABLE_PORTABILITY
-		const auto supported_device_extensions = pd.enumerateDeviceExtensionProperties();
+		const auto supported_device_extensions = VkCheck(pd.enumerateDeviceExtensionProperties());
 		const bool supports_portability = std::end(supported_device_extensions) != std::find_if(
 			std::begin(supported_device_extensions),
 			std::end(supported_device_extensions),
@@ -163,7 +163,7 @@ namespace lgx
 		if (surface == VK_NULL_HANDLE) return true;
 
 		/* Otherwise check for surface support */
-		auto has_surface_support = pd.getSurfaceSupportKHR(family_index, surface);
+		const vk::Bool32 has_surface_support = VkCheck(pd.getSurfaceSupportKHR(family_index, surface));
 		if (!has_surface_support) return false;
 
 		return true;
@@ -171,7 +171,7 @@ namespace lgx
 
 	std::pair<vk::PhysicalDevice, u32> select_physical_device_and_queue_family(vk::Instance instance, vk::SurfaceKHR surface)
 	{
-		std::vector<vk::PhysicalDevice> physical_devices = instance.enumeratePhysicalDevices();
+		std::vector<vk::PhysicalDevice> physical_devices = VkCheck(instance.enumeratePhysicalDevices());
 
 		vk::PhysicalDevice physical_device = VK_NULL_HANDLE;
 		u32 queue_family_index = 0;
@@ -216,7 +216,7 @@ namespace lgx
 			.queueCount = 1,
 			.pQueuePriorities = &queue_priority,
 		};
-		auto supported_device_extensions = physical_device.enumerateDeviceExtensionProperties();
+		auto supported_device_extensions = VkCheck(physical_device.enumerateDeviceExtensionProperties());
 
 		std::vector<const char*> required_device_extensions{};
 		required_device_extensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
@@ -259,7 +259,7 @@ namespace lgx
 			.enabledExtensionCount = static_cast<u32>(required_device_extensions.size()),
 			.ppEnabledExtensionNames = required_device_extensions.data(),
 		};
-		return physical_device.createDeviceUnique(device_info);
+		return VkCheck(physical_device.createDeviceUnique(device_info));
 	}
 
 	GraphicsContextInternal::GraphicsContextInternal(const char* app_name)
@@ -276,7 +276,7 @@ namespace lgx
 	{
 		if (device.get() != nullptr)
 		{
-			device->waitIdle();
+			VkCheck(device->waitIdle());
 		}
 
 		if (vma_allocator != VK_NULL_HANDLE)
@@ -287,7 +287,7 @@ namespace lgx
 
 	void GraphicsContextInternal::WaitIdle()
 	{
-		device->waitIdle();
+		VkCheck(device->waitIdle());
 	}
 
 	void GraphicsContextInternal::init(const char* app_name, const Window* window)
@@ -311,7 +311,7 @@ namespace lgx
 		volkLoadInstance(*instance);
 
 #if _DEBUG /* VL */
-		messenger = instance->createDebugUtilsMessengerEXTUnique(create_messenger_info());
+		messenger = VkCheck(instance->createDebugUtilsMessengerEXTUnique(create_messenger_info()));
 #endif
 
 		/* Create surface */
@@ -351,6 +351,6 @@ namespace lgx
 			.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
 			.queueFamilyIndex = queue_family_index,
 		};
-		cmd_pool = device->createCommandPoolUnique(pool_info);
+		cmd_pool = VkCheck(device->createCommandPoolUnique(pool_info));
 	}
 }

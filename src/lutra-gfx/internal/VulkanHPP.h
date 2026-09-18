@@ -1,9 +1,10 @@
 #pragma once
 
-#define VK_NO_PROTOTYPES 
+#define VK_NO_PROTOTYPES
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #define VULKAN_HPP_TYPESAFE_CONVERSION 1
+#define VULKAN_HPP_NO_EXCEPTIONS
 #include <vulkan/vulkan.hpp>
 
 #include <volk.h>
@@ -14,6 +15,23 @@
 
 namespace lgx
 {
+	/* Unwraps a vulkan.hpp enhanced-mode result, asserting on failure instead of throwing
+	   (VULKAN_HPP_NO_EXCEPTIONS makes every such call return its result instead of throwing).
+	   Only for calls where a non-success result is a programmer-error/fatal condition - calls
+	   with an expected alternate outcome (e.g. eErrorOutOfDateKHR) should check vk::Result
+	   themselves instead of going through this. */
+	template <typename T>
+	T VkCheck(vk::ResultValue<T> result_value)
+	{
+		assert(result_value.result == vk::Result::eSuccess);
+		return std::move(result_value.value);
+	}
+
+	inline void VkCheck(vk::Result result)
+	{
+		assert(result == vk::Result::eSuccess);
+	}
+
 	/* Helpers */
 	inline void change_layout(vk::CommandBuffer cmd_buf, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::ImageAspectFlags aspect)
 	{
