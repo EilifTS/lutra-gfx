@@ -184,14 +184,23 @@ namespace lgx
 
 			std::vector<vk::QueueFamilyProperties> queue_family_props = pd.getQueueFamilyProperties();
 
+			bool found_queue_family = false;
 			for (u32 i = 0; i < queue_family_props.size(); i++)
 			{
 				if (queueFamilyCompatible(pd, surface, queue_family_props[i], i))
 				{
 					queue_family_index = i;
 					physical_device = pd;
+					found_queue_family = true;
 					break;
 				}
+			}
+
+			/* Stop at the first compatible device, otherwise a later device in the
+			   enumeration would silently override this one. */
+			if (found_queue_family)
+			{
+				break;
 			}
 		}
 		assert(physical_device != VK_NULL_HANDLE);
