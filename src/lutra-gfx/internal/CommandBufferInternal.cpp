@@ -7,7 +7,7 @@ namespace lgx
 {
 	static constexpr u64 chunk_size = 10 * 1024 * 1024; /* 10MB */
 
-	static void buffer_barrier(vk::CommandBuffer cmd_buf, vk::Buffer buffer, u64 offset, u64 size, vk::PipelineStageFlags src_stage, vk::PipelineStageFlags dst_stage, vk::AccessFlags src_access, vk::AccessFlagBits dst_access)
+	static void buffer_barrier(vk::CommandBuffer cmd_buf, vk::Buffer buffer, u64 offset, u64 size, vk::PipelineStageFlags src_stage, vk::PipelineStageFlags dst_stage, vk::AccessFlags src_access, vk::AccessFlags dst_access)
 	{
 		const vk::BufferMemoryBarrier buffer_barrier{
 			.srcAccessMask = src_access,
@@ -44,7 +44,9 @@ namespace lgx
 		case ResourceUsage::DepthAttachment:
 			return { vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests, vk::AccessFlagBits::eDepthStencilAttachmentWrite };
 		case ResourceUsage::ShaderRead:
-			return { vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader, vk::AccessFlagBits::eShaderRead };
+			return { vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, vk::AccessFlagBits::eShaderRead };
+		case ResourceUsage::ComputeWrite:
+			return { vk::PipelineStageFlagBits::eComputeShader, vk::AccessFlagBits::eShaderWrite };
 		case ResourceUsage::TransferSrc:
 			return { vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eTransferRead };
 		case ResourceUsage::TransferDst:
@@ -138,9 +140,19 @@ namespace lgx
 	void CommandBufferInternal::BindPipeline(GraphicsPipelineInternal& pipeline)
 	{
 		bound_pipeline = &pipeline;
+		bound_compute_pipeline = nullptr;
 		descriptor_write_cache.Clear();
 		needs_descriptor_set_bind = true;
 		cmd_buf->bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.GetPipeline());
+	}
+
+	void CommandBufferInternal::BindComputePipeline(ComputePipelineInternal& pipeline)
+	{
+		bound_compute_pipeline = &pipeline;
+		bound_pipeline = nullptr;
+		descriptor_write_cache.Clear();
+		needs_descriptor_set_bind = true;
+		cmd_buf->bindPipeline(vk::PipelineBindPoint::eCompute, pipeline.GetPipeline());
 	}
 
 	void CommandBufferInternal::BindBuffer(BufferInternal& buffer, u32 binding)
@@ -156,6 +168,11 @@ namespace lgx
 	void CommandBufferInternal::BindTextures(std::span<vk::ImageView> views, u32 binding)
 	{
 		descriptor_write_cache.AddImageArrayWrite(binding, views);
+	}
+
+	void CommandBufferInternal::BindStorageImage(vk::ImageView view, u32 binding)
+	{
+		descriptor_write_cache.AddStorageImageWrite(binding, view);
 	}
 
 	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer)
@@ -246,6 +263,14 @@ namespace lgx
 		cmd_buf->pipelineBarrier(prev_info.stage, next_info.stage, vk::DependencyFlagBits::eByRegion, {}, {}, barrier);
 	}
 
+	void CommandBufferInternal::Barrier(vk::Buffer buffer, ResourceUsage prev_usage, ResourceUsage next_usage)
+	{
+		const ResourceUsageInfo prev_info = GetResourceUsageInfo(prev_usage);
+		const ResourceUsageInfo next_info = GetResourceUsageInfo(next_usage);
+
+		buffer_barrier(*cmd_buf, buffer, 0, VK_WHOLE_SIZE, prev_info.stage, next_info.stage, prev_info.access, next_info.access);
+	}
+
 	void CommandBufferInternal::Draw(u32 vertex_count, u32 instance_count)
 	{
 		assert(bound_pipeline != nullptr);
@@ -262,6 +287,24 @@ namespace lgx
 		}
 
 		cmd_buf->draw(vertex_count, instance_count, 0, 0);
+	}
+
+	void CommandBufferInternal::Dispatch(u32 x, u32 y, u32 z)
+	{
+		assert(bound_compute_pipeline != nullptr);
+
+		if (needs_descriptor_set_bind || descriptor_write_cache.IsDirty())
+		{
+			vk::DescriptorSet descriptor_set = descriptor_allocator.Alloc(bound_compute_pipeline->GetDescriptorSetLayout());
+			if (descriptor_write_cache.IsDirty())
+			{
+				descriptor_write_cache.Flush(*ctx->device, descriptor_set);
+			}
+			cmd_buf->bindDescriptorSets(vk::PipelineBindPoint::eCompute, bound_compute_pipeline->GetPipelineLayout(), 0, descriptor_set, {});
+			needs_descriptor_set_bind = false;
+		}
+
+		cmd_buf->dispatch(x, y, z);
 	}
 
 	void CommandBufferInternal::Reset()

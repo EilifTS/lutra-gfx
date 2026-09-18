@@ -3,10 +3,12 @@
 #include <lutra-gfx/Texture.h>
 #include <lutra-gfx/DepthStencilBuffer.h>
 #include <lutra-gfx/RenderTarget.h>
+#include <lutra-gfx/ComputePipeline.h>
 #include "internal/GraphicsContextInternal.h"
 #include "internal/CommandBufferInternal.h"
 #include "internal/DepthStencilBufferInternal.h"
 #include "internal/RenderTargetInternal.h"
+#include "internal/ComputePipelineInternal.h"
 #include <vector>
 
 namespace lgx
@@ -30,6 +32,7 @@ namespace lgx
 	void CommandBuffer::EndRendering() { internal->EndRendering(); }
 
 	void CommandBuffer::BindPipeline(GraphicsPipeline& pipeline) { internal->BindPipeline(*pipeline.internal); };
+	void CommandBuffer::BindPipeline(ComputePipeline& pipeline) { internal->BindComputePipeline(*pipeline.internal); };
 	void CommandBuffer::BindBuffer(Buffer& buffer, u32 binding) { internal->BindBuffer(*buffer.internal, binding); };
 	void CommandBuffer::BindTexture(TextureView view, u32 binding) { internal->BindTexture(*reinterpret_cast<vk::ImageView*>(&view), binding); };
 	void CommandBuffer::BindTextures(std::span<TextureView> views, u32 binding)
@@ -37,6 +40,7 @@ namespace lgx
 		std::span<vk::ImageView>* vk_views = reinterpret_cast<std::span<vk::ImageView>*>(&views);
 		internal->BindTextures(*vk_views, binding);
 	};
+	void CommandBuffer::BindStorageImage(TextureView texture, u32 binding) { internal->BindStorageImage(*reinterpret_cast<vk::ImageView*>(&texture), binding); };
 
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer) { internal->ScheduleUpload(src_ptr, size, *dst_buffer.internal); };
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture& dst_texture) { internal->ScheduleUpload(src_ptr, *dst_texture.internal); };
@@ -53,8 +57,13 @@ namespace lgx
 	{
 		internal->Barrier(render_target.internal->vma_image.GetImage(), vk::ImageAspectFlagBits::eColor, prev_usage, next_usage);
 	}
+	void CommandBuffer::Barrier(Buffer& buffer, ResourceUsage prev_usage, ResourceUsage next_usage)
+	{
+		internal->Barrier(buffer.internal->buffer.GetBuffer(), prev_usage, next_usage);
+	}
 
 	void CommandBuffer::Draw(u32 vertex_count, u32 instance_count) { internal->Draw(vertex_count, instance_count); };
+	void CommandBuffer::Dispatch(u32 x, u32 y, u32 z) { internal->Dispatch(x, y, z); };
 
 	void CommandBuffer::Reset() { internal->Reset(); };
 

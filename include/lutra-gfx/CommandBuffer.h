@@ -11,6 +11,7 @@ namespace lgx
 	class Buffer;
 	class GraphicsContext;
 	class GraphicsPipeline;
+	class ComputePipeline;
 	class DepthStencilBuffer;
 	class RenderTarget;
 
@@ -30,9 +31,15 @@ namespace lgx
 		void EndRendering();
 
 		void BindPipeline(GraphicsPipeline& pipeline);
+		void BindPipeline(ComputePipeline& pipeline);
 		void BindBuffer(Buffer& buffer, u32 binding);
 		void BindTexture(TextureView texture, u32 binding);
 		void BindTextures(std::span<TextureView> textures, u32 binding);
+
+		/* Binds a texture/render target for a compute shader to write via imageStore. The
+		   resource must have been created with storage-image support (RenderTarget already
+		   is; Texture is not, since it's meant to hold data uploaded from the CPU). */
+		void BindStorageImage(TextureView texture, u32 binding);
 
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);
@@ -43,8 +50,10 @@ namespace lgx
 		void Barrier(Texture& texture, ResourceUsage prev_usage, ResourceUsage next_usage);
 		void Barrier(DepthStencilBuffer& depth_stencil_buffer, ResourceUsage prev_usage, ResourceUsage next_usage);
 		void Barrier(RenderTarget& render_target, ResourceUsage prev_usage, ResourceUsage next_usage);
+		void Barrier(Buffer& buffer, ResourceUsage prev_usage, ResourceUsage next_usage);
 
 		void Draw(u32 vertex_count, u32 instance_count);
+		void Dispatch(u32 x, u32 y, u32 z);
 
 		void Reset();
 

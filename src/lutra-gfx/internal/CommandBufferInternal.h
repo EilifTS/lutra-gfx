@@ -5,6 +5,7 @@
 #include "DescriptorWriteCache.h"
 #include "GraphicsContextInternal.h"
 #include "GraphicsPipelineInternal.h"
+#include "ComputePipelineInternal.h"
 #include "BufferInternal.h"
 #include "TextureInternal.h"
 #include "RenderTargetInternal.h"
@@ -30,16 +31,20 @@ namespace lgx
 		void EndRendering();
 
 		void BindPipeline(GraphicsPipelineInternal& pipeline);
+		void BindComputePipeline(ComputePipelineInternal& pipeline);
 		void BindBuffer(BufferInternal& buffer, u32 binding);
 		void BindTexture(vk::ImageView view, u32 binding);
 		void BindTextures(std::span<vk::ImageView> views, u32 binding);
+		void BindStorageImage(vk::ImageView view, u32 binding);
 
 		void ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, TextureInternal& dst_texture);
 
 		void Barrier(vk::Image image, vk::ImageAspectFlags aspect, ResourceUsage prev_usage, ResourceUsage next_usage);
+		void Barrier(vk::Buffer buffer, ResourceUsage prev_usage, ResourceUsage next_usage);
 
 		void Draw(u32 vertex_count, u32 instance_count);
+		void Dispatch(u32 x, u32 y, u32 z);
 
 		void Reset();
 
@@ -51,11 +56,14 @@ namespace lgx
 		DescriptorWriteCache descriptor_write_cache{};
 
 		GraphicsPipelineInternal* bound_pipeline{};
+		ComputePipelineInternal* bound_compute_pipeline{};
 
-		/* Forces Draw() to allocate and bind a fresh descriptor set even when no new
-		   resources were bound, since the previous descriptor set may belong to a
-		   different pipeline layout (after BindPipeline) or have been invalidated
-		   (after Reset). */
+		/* Forces Draw()/Dispatch() to allocate and bind a fresh descriptor set even when no
+		   new resources were bound, since the previous descriptor set may belong to a
+		   different pipeline layout (after BindPipeline/BindComputePipeline) or have been
+		   invalidated (after Reset). Graphics and compute binds are mutually exclusive within
+		   a command buffer here - binding one clears the other, and they share this one flag
+		   and the one DescriptorWriteCache rather than tracking each bind point separately. */
 		bool needs_descriptor_set_bind{ true };
 	};
 

@@ -40,6 +40,21 @@ namespace lgx
 			is_dirty = true;
 		};
 
+		void AddStorageImageWrite(u32 binding, vk::ImageView view)
+		{
+			write_infos.push_back({
+				.binding = binding,
+				.additional_info_index = static_cast<u32>(image_write_infos.size()),
+				.descriptor_count = 1,
+				.write_type = vk::DescriptorType::eStorageImage,
+			});
+			image_write_infos.push_back({
+				.imageView = view,
+				.imageLayout = vk::ImageLayout::eGeneral,
+			});
+			is_dirty = true;
+		};
+
 		void AddImageArrayWrite(u32 binding, std::span<vk::ImageView> views)
 		{
 			write_infos.push_back({

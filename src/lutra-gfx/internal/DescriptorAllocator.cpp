@@ -13,6 +13,7 @@ namespace lgx
 			{ .type = vk::DescriptorType::eUniformBuffer, .descriptorCount = max_descriptors },
 			{ .type = vk::DescriptorType::eStorageBuffer, .descriptorCount = max_descriptors },
 			{ .type = vk::DescriptorType::eSampledImage, .descriptorCount = max_descriptors },
+			{ .type = vk::DescriptorType::eStorageImage, .descriptorCount = max_descriptors },
 			{ .type = vk::DescriptorType::eSampler, .descriptorCount = max_descriptors },
 		};
 
