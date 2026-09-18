@@ -35,7 +35,7 @@ namespace lgx
 		spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &png_decoded_size);
 
 		data.resize(png_decoded_size);
-		spng_decode_image(ctx, data.data(), png_decoded_size, SPNG_FMT_RGBA8, 0);
+		spng_decode_image(ctx, data.data(), png_decoded_size, SPNG_FMT_RGBA8, SPNG_DECODE_TRNS);
 
 		spng_ctx_free(ctx);
 	}
