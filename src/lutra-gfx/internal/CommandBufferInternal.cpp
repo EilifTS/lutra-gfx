@@ -326,18 +326,20 @@ namespace lgx
 		staging_buffer.Unmap(*ctx.device);
 	}
 
-	void DownloadInternal(GraphicsContextInternal& ctx, TextureInternal& src_texture, void* dst_ptr)
+	/* Shared by the Texture/RenderTarget download overloads below - both are plain
+	   eR8G8B8A8Unorm, eGeneral-layout color images, so the copy is identical either way. */
+	static void DownloadColorImageInternal(GraphicsContextInternal& ctx, vk::Image image, u32 width, u32 height, void* dst_ptr)
 	{
-		const u64 bytes_per_pixel = 4; /* Matches the format Image/Texture always use today */
-		const u64 size = static_cast<u64>(src_texture.width) * src_texture.height * bytes_per_pixel;
+		const u64 bytes_per_pixel = 4; /* Matches the format these images always use today */
+		const u64 size = static_cast<u64>(width) * height * bytes_per_pixel;
 
 		/* Temporary, host-readable staging buffer to copy the GPU data into */
 		BufferInternal staging_buffer(ctx, size, vk::BufferUsageFlagBits::eTransferDst, VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
 
 		CommandBufferInternal cmd_buf(ctx);
 
-		/* Make sure any prior writes to the texture are visible to the copy below. Textures in
-		   this library always sit in eGeneral, so this is purely an access-mask barrier. */
+		/* Make sure any prior writes to the image are visible to the copy below. These images
+		   always sit in eGeneral, so this is purely an access-mask barrier. */
 		const vk::ImageSubresourceRange range{
 			.aspectMask = vk::ImageAspectFlagBits::eColor,
 			.baseMipLevel = 0,
@@ -352,7 +354,7 @@ namespace lgx
 			.newLayout = vk::ImageLayout::eGeneral,
 			.srcQueueFamilyIndex = vk::QueueFamilyIgnored,
 			.dstQueueFamilyIndex = vk::QueueFamilyIgnored,
-			.image = src_texture.vma_image.GetImage(),
+			.image = image,
 			.subresourceRange = range,
 		};
 		cmd_buf.cmd_buf->pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlagBits::eByRegion, {}, {}, pre_copy_barrier);
@@ -365,9 +367,9 @@ namespace lgx
 				.baseArrayLayer = 0,
 				.layerCount = 1
 			},
-			.imageExtent = { src_texture.width, src_texture.height, 1 },
+			.imageExtent = { width, height, 1 },
 		};
-		cmd_buf.cmd_buf->copyImageToBuffer(src_texture.vma_image.GetImage(), vk::ImageLayout::eGeneral, staging_buffer.buffer.GetBuffer(), buffer_image_copy);
+		cmd_buf.cmd_buf->copyImageToBuffer(image, vk::ImageLayout::eGeneral, staging_buffer.buffer.GetBuffer(), buffer_image_copy);
 
 		SubmitAndWaitInternal(ctx, cmd_buf);
 
@@ -376,5 +378,15 @@ namespace lgx
 		assert(result == VK_SUCCESS);
 		std::memcpy(dst_ptr, mapped_ptr, size);
 		staging_buffer.Unmap(*ctx.device);
+	}
+
+	void DownloadInternal(GraphicsContextInternal& ctx, TextureInternal& src_texture, void* dst_ptr)
+	{
+		DownloadColorImageInternal(ctx, src_texture.vma_image.GetImage(), src_texture.width, src_texture.height, dst_ptr);
+	}
+
+	void DownloadInternal(GraphicsContextInternal& ctx, RenderTargetInternal& src_render_target, void* dst_ptr)
+	{
+		DownloadColorImageInternal(ctx, src_render_target.vma_image.GetImage(), src_render_target.width, src_render_target.height, dst_ptr);
 	}
 }

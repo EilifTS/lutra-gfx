@@ -1,4 +1,4 @@
-#include "TextureInternal.h"
+#include "RenderTargetInternal.h"
 #include "CommandBufferInternal.h"
 
 #ifdef USE_IMGUI
@@ -8,7 +8,7 @@
 
 namespace lgx
 {
-	TextureInternal::TextureInternal(GraphicsContextInternal& ctx, const Image& image)
+	RenderTargetInternal::RenderTargetInternal(GraphicsContextInternal& ctx, u32 width, u32 height)
 	{
 		VmaAllocationCreateInfo vma_info{};
 		vma_info.usage = VMA_MEMORY_USAGE_AUTO;
@@ -16,18 +16,18 @@ namespace lgx
 		const vk::ImageCreateInfo image_info{
 			.imageType = vk::ImageType::e2D,
 			.format = vk::Format::eR8G8B8A8Unorm,
-			.extent = { image.Width(), image.Height(), 1 },
+			.extent = { width, height, 1 },
 			.mipLevels = 1,
 			.arrayLayers = 1,
 			.samples = vk::SampleCountFlagBits::e1,
 			.tiling = vk::ImageTiling::eOptimal,
-			.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+			.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst,
 			.sharingMode = vk::SharingMode::eExclusive,
 			.initialLayout = vk::ImageLayout::eUndefined,
 		};
 
-		width = image.Width();
-		height = image.Height();
+		this->width = width;
+		this->height = height;
 		format = vk::Format::eR8G8B8A8Unorm;
 		dev = *ctx.device;
 		vma_image = VMACreateImage(ctx.vma_allocator, &image_info, &vma_info, nullptr);
@@ -49,8 +49,9 @@ namespace lgx
 
 		view = VkCheck(ctx.device->createImageViewUnique(view_info));
 
-		/* Initialize ImGui resources, but only if ImGuiWrapper::Initialize() has actually run -
-		   otherwise ImGui's Vulkan backend isn't set up and this would crash. */
+		/* Initialize ImGui resources (so a render target can be previewed like any texture),
+		   but only if ImGuiWrapper::Initialize() has actually run - otherwise ImGui's Vulkan
+		   backend isn't set up and this would crash. */
 #ifdef USE_IMGUI
 		if (ImGui::GetCurrentContext() != nullptr)
 		{
@@ -68,14 +69,13 @@ namespace lgx
 		}
 #endif
 
-		/* Initialize content */
+		/* Transition to General up front; the caller will render into it before ever sampling it */
 		CommandBufferInternal cmd_buf(ctx);
 		change_layout(cmd_buf.cmd_buf.get(), vma_image.GetImage(), vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral, vk::ImageAspectFlagBits::eColor);
-		cmd_buf.ScheduleUpload(image.GetDataPtr(), *this);
 		SubmitAndWaitInternal(ctx, cmd_buf);
 	}
 
-	TextureInternal::~TextureInternal()
+	RenderTargetInternal::~RenderTargetInternal()
 	{
 #ifdef USE_IMGUI
 		if (imgui_set != VK_NULL_HANDLE)

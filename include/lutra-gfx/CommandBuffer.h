@@ -12,6 +12,7 @@ namespace lgx
 	class GraphicsContext;
 	class GraphicsPipeline;
 	class DepthStencilBuffer;
+	class RenderTarget;
 
 	class CommandBuffer
 	{
@@ -41,6 +42,7 @@ namespace lgx
 		   ResourceUsage::ShaderRead) after rendering into a texture and before sampling it. */
 		void Barrier(Texture& texture, ResourceUsage prev_usage, ResourceUsage next_usage);
 		void Barrier(DepthStencilBuffer& depth_stencil_buffer, ResourceUsage prev_usage, ResourceUsage next_usage);
+		void Barrier(RenderTarget& render_target, ResourceUsage prev_usage, ResourceUsage next_usage);
 
 		void Draw(u32 vertex_count, u32 instance_count);
 
@@ -58,4 +60,5 @@ namespace lgx
 	   least Width() * Height() * 4 bytes for the Texture overload. */
 	void Download(GraphicsContext& ctx, Buffer& src_buffer, void* dst_ptr, u64 size);
 	void Download(GraphicsContext& ctx, Texture& src_texture, void* dst_ptr);
+	void Download(GraphicsContext& ctx, RenderTarget& src_render_target, void* dst_ptr);
 }

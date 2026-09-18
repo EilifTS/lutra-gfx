@@ -2,9 +2,11 @@
 #include <lutra-gfx/Buffer.h>
 #include <lutra-gfx/Texture.h>
 #include <lutra-gfx/DepthStencilBuffer.h>
+#include <lutra-gfx/RenderTarget.h>
 #include "internal/GraphicsContextInternal.h"
 #include "internal/CommandBufferInternal.h"
 #include "internal/DepthStencilBufferInternal.h"
+#include "internal/RenderTargetInternal.h"
 #include <vector>
 
 namespace lgx
@@ -47,6 +49,10 @@ namespace lgx
 	{
 		internal->Barrier(depth_stencil_buffer.internal->vma_image.GetImage(), vk::ImageAspectFlagBits::eDepth, prev_usage, next_usage);
 	}
+	void CommandBuffer::Barrier(RenderTarget& render_target, ResourceUsage prev_usage, ResourceUsage next_usage)
+	{
+		internal->Barrier(render_target.internal->vma_image.GetImage(), vk::ImageAspectFlagBits::eColor, prev_usage, next_usage);
+	}
 
 	void CommandBuffer::Draw(u32 vertex_count, u32 instance_count) { internal->Draw(vertex_count, instance_count); };
 
@@ -65,5 +71,10 @@ namespace lgx
 	void Download(GraphicsContext& ctx, Texture& src_texture, void* dst_ptr)
 	{
 		DownloadInternal(*ctx.internal, *src_texture.internal, dst_ptr);
+	}
+
+	void Download(GraphicsContext& ctx, RenderTarget& src_render_target, void* dst_ptr)
+	{
+		DownloadInternal(*ctx.internal, *src_render_target.internal, dst_ptr);
 	}
 }
