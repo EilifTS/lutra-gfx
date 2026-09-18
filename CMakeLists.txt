@@ -6,11 +6,11 @@ option(LUTRA_GFX_BUILD_SAMPLES "Build samples" ON)
 option(LUTRA_GFX_BUILD_TESTS "Build tests" ON)
 
 # Define library files
-file(GLOB LUTRA_GFX_INCLUDES
+file(GLOB LUTRA_GFX_INCLUDES CONFIGURE_DEPENDS
     include/lutra-gfx/*.h
 )
 
-file(GLOB LUTRA_GFX_SOURCES
+file(GLOB LUTRA_GFX_SOURCES CONFIGURE_DEPENDS
     src/lutra-gfx/*.h
     src/lutra-gfx/*.cpp
     src/lutra-gfx/internal/*.h
@@ -74,10 +74,14 @@ FetchContent_Declare(
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL
     SYSTEM)
-set(ZLIB_COMPAT ON CACHE BOOL "" FORCE)
-set(ZLIB_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+if(NOT DEFINED CACHE{ZLIB_COMPAT})
+    set(ZLIB_COMPAT ON CACHE BOOL "")
+endif()
+if(NOT DEFINED CACHE{ZLIB_ENABLE_TESTS})
+    set(ZLIB_ENABLE_TESTS OFF CACHE BOOL "")
+endif()
 FetchContent_MakeAvailable(zlib-ng)
-set(ZLIB_INCLUDE_DIR "${CMAKE_BINARY_DIR}/zlib-ng" CACHE BOOL "Path to zlib include directory")
+set(ZLIB_INCLUDE_DIR "${CMAKE_BINARY_DIR}/zlib-ng" CACHE PATH "Path to zlib include directory")
 set(ZLIB_LIBRARY ZLIB::ZLIB CACHE STRING "Path to zlib library")
 add_library(ZLIB::ZLIB ALIAS zlib)
 target_link_libraries(lutra-gfx PRIVATE ZLIB::ZLIB)
@@ -90,9 +94,15 @@ FetchContent_Declare(
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL
     SYSTEM)
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(SPNG_STATIC ON CACHE BOOL "" FORCE)
-set(SPNG_SHARED OFF CACHE BOOL "" FORCE)
+if(NOT DEFINED CACHE{BUILD_EXAMPLES})
+    set(BUILD_EXAMPLES OFF CACHE BOOL "")
+endif()
+if(NOT DEFINED CACHE{SPNG_STATIC})
+    set(SPNG_STATIC ON CACHE BOOL "")
+endif()
+if(NOT DEFINED CACHE{SPNG_SHARED})
+    set(SPNG_SHARED OFF CACHE BOOL "")
+endif()
 FetchContent_MakeAvailable(spng)
 target_link_libraries(lutra-gfx PRIVATE spng_static)
 
@@ -147,5 +157,6 @@ endif()
 
 # Tests
 if (LUTRA_GFX_BUILD_TESTS)
+    enable_testing()
     add_subdirectory(tests)
 endif()
