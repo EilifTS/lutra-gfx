@@ -38,12 +38,11 @@ namespace lgx
 			if (write_index == max_writes)
 			{
 				dev.updateDescriptorSets(write_index, writes.data(), 0, {});
-				Clear();
 				write_index = 0;
 			}
 		}
 
 		dev.updateDescriptorSets(write_index, writes.data(), 0, {});
-		is_dirty = false;
+		Clear();
 	}
 }
