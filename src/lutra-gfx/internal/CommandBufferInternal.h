@@ -48,6 +48,12 @@ namespace lgx
 		DescriptorWriteCache descriptor_write_cache{};
 
 		GraphicsPipelineInternal* bound_pipeline{};
+
+		/* Forces Draw() to allocate and bind a fresh descriptor set even when no new
+		   resources were bound, since the previous descriptor set may belong to a
+		   different pipeline layout (after BindPipeline) or have been invalidated
+		   (after Reset). */
+		bool needs_descriptor_set_bind{ true };
 	};
 
 	void SubmitAndWaitInternal(GraphicsContextInternal& ctx, CommandBufferInternal& cmd_buf);

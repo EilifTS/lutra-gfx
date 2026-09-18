@@ -115,6 +115,7 @@ namespace lgx
 	{
 		bound_pipeline = &pipeline;
 		descriptor_write_cache.Clear();
+		needs_descriptor_set_bind = true;
 		cmd_buf->bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.GetPipeline());
 	}
 
@@ -196,11 +197,15 @@ namespace lgx
 	{
 		assert(bound_pipeline != nullptr);
 
-		if (descriptor_write_cache.IsDirty())
+		if (needs_descriptor_set_bind || descriptor_write_cache.IsDirty())
 		{
 			vk::DescriptorSet descriptor_set = descriptor_allocator.Alloc(bound_pipeline->GetDescriptorSetLayout());
-			descriptor_write_cache.Flush(*ctx->device, descriptor_set);
+			if (descriptor_write_cache.IsDirty())
+			{
+				descriptor_write_cache.Flush(*ctx->device, descriptor_set);
+			}
 			cmd_buf->bindDescriptorSets(vk::PipelineBindPoint::eGraphics, bound_pipeline->GetPipelineLayout(), 0, descriptor_set, {});
+			needs_descriptor_set_bind = false;
 		}
 
 		cmd_buf->draw(vertex_count, instance_count, 0, 0);
@@ -210,6 +215,7 @@ namespace lgx
 	{
 		buffer_memory_allocator.Reset(*ctx);
 		descriptor_allocator.Reset();
+		needs_descriptor_set_bind = true;
 		cmd_buf->reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 
 		/* Begin command buffer */
