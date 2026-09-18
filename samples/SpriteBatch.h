@@ -106,6 +106,7 @@ namespace lgx
 
 		std::vector<SpriteInternal> sprite_list{};
 		Buffer sprite_buffer{};
+		Buffer screen_size_buffer{};
 
 		static constexpr u32 max_texture_count = 16;
 		std::unordered_map<Texture*, u32> texture_index_lookup{};

@@ -17,6 +17,12 @@ SamplerState linear_clamp;
 [[vk::binding(2, 0)]]
 Texture2D texture[16];
 
+[[vk::binding(3, 0)]]
+cbuffer ScreenSizeBuffer
+{
+    float2 screen_size;
+};
+
 struct VSInput
 {
     uint vertex_id : SV_VertexID;
@@ -41,7 +47,6 @@ VSVarying VS(VSInput input)
     VSVarying output;
     
     const SpriteInfo sprite_info = sprite_data[input.instance_id];
-    const float2 screen_size = float2(800.0, 600.0); /* Hard coded screen size for now */
     const float2 sprite_position = 2.0f * (sprite_info.position - 0.5 * screen_size) / screen_size;
     const float2 sprite_size = sprite_info.size / screen_size;
     const uint4 sprite_color_int = (sprite_info.color.xxxx >> uint4(0, 8, 16, 24)) & uint(0xFF).xxxx;

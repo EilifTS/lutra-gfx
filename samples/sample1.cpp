@@ -33,7 +33,10 @@ int main()
 	while (window.IsOpen())
 	{
 		window.RetrieveEvents();
-		frame_manager.StartFrame(graphics_context);
+		if (!frame_manager.StartFrame(graphics_context))
+		{
+			continue;
+		}
 
 #ifdef USE_IMGUI
 		lgx::ImGuiWrapper::StartFrame();

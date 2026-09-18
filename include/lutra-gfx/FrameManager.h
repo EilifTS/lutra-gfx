@@ -21,7 +21,10 @@ namespace lgx
 		FrameManager& operator=(const FrameManager&) = delete;
 		FrameManager& operator=(FrameManager&&);
 
-		void StartFrame(GraphicsContext& ctx);
+		/* Returns false if no frame was started (swapchain needed recreating, e.g. after a
+		   resize, or the window is currently minimized) - skip rendering and EndFrame this
+		   iteration and just call StartFrame again next frame. */
+		bool StartFrame(GraphicsContext& ctx);
 		void EndFrame(GraphicsContext& ctx);
 
 		u32 FrameWidth() const;

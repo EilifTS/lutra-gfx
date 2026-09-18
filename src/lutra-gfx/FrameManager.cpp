@@ -14,9 +14,9 @@ namespace lgx
 	FrameManager::FrameManager(FrameManager&&) = default;
 	FrameManager& FrameManager::operator=(FrameManager&&) = default;
 
-	void FrameManager::StartFrame(GraphicsContext& ctx)
+	bool FrameManager::StartFrame(GraphicsContext& ctx)
 	{
-		internal->StartFrame(*ctx.internal);
+		return internal->StartFrame(*ctx.internal);
 	}
 
 	void FrameManager::EndFrame(GraphicsContext& ctx)

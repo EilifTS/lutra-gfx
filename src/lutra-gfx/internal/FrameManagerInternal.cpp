@@ -1,6 +1,7 @@
 #include "FrameManagerInternal.h"
 #include "GraphicsContextInternal.h"
 
+#include <algorithm>
 #include <iostream>
 
 namespace lgx
@@ -53,22 +54,23 @@ namespace lgx
 
 	FrameManagerInternal::FrameManagerInternal(GraphicsContextInternal& ctx, u32 window_width, u32 window_height)
 	{
-		vk::Result result = vk::Result::eSuccess;
-
 		dev = *ctx.device;
-		this->window_width = window_width;
-		this->window_height = window_height;
+		CreateSwapchain(ctx, window_width, window_height);
+	}
 
+	void FrameManagerInternal::CreateSwapchain(GraphicsContextInternal& ctx, u32 width, u32 height)
+	{
 		/* Select a surface format. */
 		const vk::SurfaceFormatKHR surface_format = select_surface_format(ctx.physical_device, *ctx.surface);
 
-		/* Define surface extent, this will be the same as the window size */
-		const vk::Extent2D surface_extent{
-			.width = window_width,
-			.height = window_height,
-		};
-
 		auto surface_caps = ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface);
+
+		/* Clamp the requested extent to what the surface actually supports right now
+		   (relevant after a resize). */
+		const vk::Extent2D surface_extent{
+			.width = std::clamp(width, surface_caps.minImageExtent.width, surface_caps.maxImageExtent.width),
+			.height = std::clamp(height, surface_caps.minImageExtent.height, surface_caps.maxImageExtent.height),
+		};
 
 		/* Select the swapchain image count, default to 3 for now */
 		constexpr u32 surface_count = 3;
@@ -99,12 +101,17 @@ namespace lgx
 			.compositeAlpha = composite_alpha,
 			.presentMode = present_mode,
 			.clipped = true,
-			.oldSwapchain = VK_NULL_HANDLE,
+			/* Null on the very first call (default-constructed UniqueHandle), the retiring
+			   swapchain on any later recreation. */
+			.oldSwapchain = *swapchain,
 		};
 		swapchain = ctx.device->createSwapchainKHRUnique(swapchain_info);
-		assert(result == vk::Result::eSuccess);
+
+		window_width = surface_extent.width;
+		window_height = surface_extent.height;
 
 		std::vector<vk::Image> swapchain_images = ctx.device->getSwapchainImagesKHR(*swapchain);
+		assert(swapchain_images.size() >= surface_count);
 
 		per_frame_res.resize(surface_count);
 
@@ -120,21 +127,20 @@ namespace lgx
 
 			SubmitAndWaitInternal(ctx, cmd_buf);
 		}
-		
 
 		/* Initialize per frame resources */
 		for (PerFrameResources& res : per_frame_res)
 		{
-			/* Create command buffer */
-			res.cmd_buf.internal = std::make_unique<CommandBufferInternal>(ctx);
+			/* Create command buffer, fence and semaphore once; these aren't tied to the
+			   swapchain's resolution so they're left alone on recreation. */
+			if (res.cmd_buf.internal == nullptr)
+			{
+				res.cmd_buf.internal = std::make_unique<CommandBufferInternal>(ctx);
+				res.frame_complete_fence = ctx.device->createFenceUnique({});
+				res.image_release_sem = ctx.device->createSemaphoreUnique({});
+			}
 
-			/* Create fence */
-			res.frame_complete_fence = ctx.device->createFenceUnique({});
-
-			/* Create semaphores */
-			res.image_release_sem = ctx.device->createSemaphoreUnique({});
-
-			/* Create image views */
+			/* (Re)create the image view, since it's tied to a specific swapchain image */
 			const vk::ImageViewCreateInfo image_view_info{
 				.image = res.image,
 				.viewType = vk::ImageViewType::e2D,
@@ -151,14 +157,40 @@ namespace lgx
 		}
 	}
 
+	bool FrameManagerInternal::RecreateSwapchain(GraphicsContextInternal& ctx)
+	{
+		const auto surface_caps = ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface);
+
+		/* Window is minimized (zero-sized framebuffer): nothing sensible to render yet. */
+		if (surface_caps.currentExtent.width == 0 || surface_caps.currentExtent.height == 0)
+		{
+			return false;
+		}
+
+		/* Make sure no in-flight work still references the old swapchain's images/views
+		   before we replace them. */
+		ctx.device->waitIdle();
+
+		CreateSwapchain(ctx, surface_caps.currentExtent.width, surface_caps.currentExtent.height);
+		return true;
+	}
+
 	FrameManagerInternal::~FrameManagerInternal()
 	{
 		dev.waitIdle();
 	}
 
-	void FrameManagerInternal::StartFrame(GraphicsContextInternal& ctx)
+	bool FrameManagerInternal::StartFrame(GraphicsContextInternal& ctx)
 	{
-		vk::Result result = vk::Result::eSuccess;
+		if (needs_recreate)
+		{
+			if (!RecreateSwapchain(ctx))
+			{
+				/* Still nothing sensible to render into (e.g. window still minimized) */
+				return false;
+			}
+			needs_recreate = false;
+		}
 
 		/* Find an acquire semaphore */
 		vk::UniqueSemaphore acquire_semahore{};
@@ -174,15 +206,23 @@ namespace lgx
 
 		/* Acquire the new image and get the image index */
 		u32 new_image_index = 0;
-		result = ctx.device->acquireNextImageKHR(*swapchain, UINT64_MAX, *acquire_semahore, VK_NULL_HANDLE, &new_image_index);
-		assert(result == vk::Result::eSuccess);
+		const vk::Result acquire_result = ctx.device->acquireNextImageKHR(*swapchain, UINT64_MAX, *acquire_semahore, VK_NULL_HANDLE, &new_image_index);
+
+		if (acquire_result == vk::Result::eErrorOutOfDateKHR)
+		{
+			/* No image was actually acquired, so the semaphore was never signalled - safe to reuse. */
+			free_semaphore_queue.push_back(std::move(acquire_semahore));
+			needs_recreate = true;
+			return false;
+		}
+		assert(acquire_result == vk::Result::eSuccess || acquire_result == vk::Result::eSuboptimalKHR);
 
 		/* Wait for the last frame using this image index to finish (Most likely finished already) */
 		PerFrameResources& new_frame_res = per_frame_res[new_image_index];
 		if (new_frame_res.has_fence_signal)
 		{
-			result = ctx.device->waitForFences(*new_frame_res.frame_complete_fence, true, UINT64_MAX);
-			assert(result == vk::Result::eSuccess);
+			const vk::Result wait_result = ctx.device->waitForFences(*new_frame_res.frame_complete_fence, true, UINT64_MAX);
+			assert(wait_result == vk::Result::eSuccess);
 			new_frame_res.has_fence_signal = false;
 
 			ctx.device->resetFences(*new_frame_res.frame_complete_fence);
@@ -221,6 +261,8 @@ namespace lgx
 
 		new_frame_res.cmd_buf.internal->cmd_buf->clearColorImage(new_frame_res.image, vk::ImageLayout::eGeneral, clear_color_value, range);
 		image_barrier(*new_frame_res.cmd_buf.internal->cmd_buf, new_frame_res.image, vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eColorAttachmentWrite);
+
+		return true;
 	}
 
 	void FrameManagerInternal::EndFrame(GraphicsContextInternal& ctx)
@@ -256,7 +298,20 @@ namespace lgx
 			.pSwapchains = &(swapchain.get()),
 			.pImageIndices = &current_frame_index,
 		};
-		const vk::Result result = ctx.queue.presentKHR(present_info);
-		assert(result == vk::Result::eSuccess);
+
+		/* Deliberately calling the pointer-taking overload here: the reference-taking one
+		   throws on eErrorOutOfDateKHR (not in its accepted-result list), but that's an
+		   expected, recoverable result after a resize - not an error we want to throw on. */
+		const vk::Result present_result = ctx.queue.presentKHR(&present_info);
+		if (present_result == vk::Result::eErrorOutOfDateKHR || present_result == vk::Result::eSuboptimalKHR)
+		{
+			/* Recreate before the next StartFrame instead of right now - the presented
+			   image still needs to stay alive for the presentation engine to consume. */
+			needs_recreate = true;
+		}
+		else
+		{
+			assert(present_result == vk::Result::eSuccess);
+		}
 	}
 }

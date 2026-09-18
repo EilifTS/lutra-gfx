@@ -24,7 +24,10 @@ namespace lgx
 		FrameManagerInternal(GraphicsContextInternal& ctx, u32 window_width, u32 window_height);
 		~FrameManagerInternal();
 
-		void StartFrame(GraphicsContextInternal& ctx);
+		/* Returns false if no frame was started (e.g. the swapchain needed to be recreated
+		   because of a resize, or the window is currently minimized) - the caller should skip
+		   rendering and EndFrame for this iteration and just try again next frame. */
+		bool StartFrame(GraphicsContextInternal& ctx);
 		void EndFrame(GraphicsContextInternal& ctx);
 
 		CommandBuffer& GetCurrentCommandBuffer()
@@ -50,5 +53,14 @@ namespace lgx
 		u32 window_width{};
 		u32 window_height{};
 		u32 current_frame_index = 0;
+
+	private:
+		void CreateSwapchain(GraphicsContextInternal& ctx, u32 width, u32 height);
+
+		/* Returns false if recreation couldn't happen yet (e.g. the window is minimized,
+		   giving a zero-sized surface) - the caller should try again next frame. */
+		bool RecreateSwapchain(GraphicsContextInternal& ctx);
+
+		bool needs_recreate{ false };
 	};
 }
