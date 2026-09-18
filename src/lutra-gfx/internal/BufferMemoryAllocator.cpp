@@ -35,9 +35,13 @@ namespace lgx
 	{
 		/* Try to fit in current block */
 		current_chunk_offset = AlignUpPow2(current_chunk_offset, alignment);
-		const u64 remaining_chunk_capacity = chunks.back().Size() - current_chunk_offset;
+		const u64 chunk_capacity = chunks.back().Size();
 
-		if (remaining_chunk_capacity < size)
+		/* Alignment padding can push current_chunk_offset past chunk_capacity; guard the
+		   subtraction below so that case is treated as "doesn't fit" instead of underflowing. */
+		const bool fits_in_current_chunk = current_chunk_offset <= chunk_capacity && (chunk_capacity - current_chunk_offset) >= size;
+
+		if (!fits_in_current_chunk)
 		{
 			/* Allocate a new block */
 			const u64 new_block_size = std::max(chunk_size, size);
