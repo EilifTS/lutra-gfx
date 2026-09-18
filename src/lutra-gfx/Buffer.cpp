@@ -18,7 +18,7 @@ namespace lgx
 			usage_flags |= vk::BufferUsageFlagBits::eUniformBuffer;
 		}
 
-		internal = std::make_unique<BufferInternal>(*ctx.internal, size, usage_flags, 0);
+		internal = std::make_unique<BufferInternal>(*ctx.internal, size, usage_flags, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 	}
 
 	Buffer::~Buffer() {}
