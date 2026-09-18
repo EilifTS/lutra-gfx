@@ -153,17 +153,21 @@ namespace lgx
 	{
 		if (global_window_count == 0)
 		{
-			if (!glfwInit())
+			const bool glfw_init_ok = glfwInit();
+			if (!glfw_init_ok)
 			{
 				std::cerr << "Failed to initialize GLFW" << std::endl;
 			}
+			assert(glfw_init_ok);
 		}
 		global_window_count++;
 
-		if (!glfwVulkanSupported())
+		const bool vulkan_supported = glfwVulkanSupported();
+		if (!vulkan_supported)
 		{
 			std::cerr << "GLFW with Vulkan is not supported on this system" << std::endl;
 		}
+		assert(vulkan_supported);
 
 		/* No OpenGL context */
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -172,6 +176,7 @@ namespace lgx
 		{
 			std::cerr << "Failed to create window" << std::endl;
 		}
+		assert(glfw_window);
 
 		glfwSetKeyCallback(glfw_window, GLFWKeyCallback);
 		glfwSetCursorPosCallback(glfw_window, GLFWMouseMoveCallback);
