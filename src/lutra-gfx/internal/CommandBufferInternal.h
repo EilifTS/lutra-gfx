@@ -36,6 +36,8 @@ namespace lgx
 		void ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, TextureInternal& dst_texture);
 
+		void Barrier(vk::Image image, vk::ImageAspectFlags aspect, ResourceUsage prev_usage, ResourceUsage next_usage);
+
 		void Draw(u32 vertex_count, u32 instance_count);
 
 		void Reset();

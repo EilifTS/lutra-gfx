@@ -35,6 +35,18 @@ namespace lgx
 		PointWrap
 	};
 
+	/* What a resource was/will be used for, for CommandBuffer::Barrier. Every image in this
+	   library stays in VK_IMAGE_LAYOUT_GENERAL permanently, so a barrier here only ever needs
+	   to synchronize stage/access - there's no layout tracking to do. */
+	enum class ResourceUsage
+	{
+		ColorAttachment,
+		DepthAttachment,
+		ShaderRead,
+		TransferSrc,
+		TransferDst,
+	};
+
 	struct GraphicsPipelineInfo
 	{
 		const char* vs_name{};

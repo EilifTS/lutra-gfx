@@ -11,6 +11,7 @@ namespace lgx
 	class Buffer;
 	class GraphicsContext;
 	class GraphicsPipeline;
+	class DepthStencilBuffer;
 
 	class CommandBuffer
 	{
@@ -34,6 +35,12 @@ namespace lgx
 
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);
+
+		/* Synchronizes access to a resource between what it was just used for and what it's
+		   about to be used for - e.g. Barrier(rt, ResourceUsage::ColorAttachment,
+		   ResourceUsage::ShaderRead) after rendering into a texture and before sampling it. */
+		void Barrier(Texture& texture, ResourceUsage prev_usage, ResourceUsage next_usage);
+		void Barrier(DepthStencilBuffer& depth_stencil_buffer, ResourceUsage prev_usage, ResourceUsage next_usage);
 
 		void Draw(u32 vertex_count, u32 instance_count);
 

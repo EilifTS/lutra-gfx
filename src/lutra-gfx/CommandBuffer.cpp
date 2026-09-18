@@ -1,8 +1,10 @@
 #include <lutra-gfx/CommandBuffer.h>
 #include <lutra-gfx/Buffer.h>
 #include <lutra-gfx/Texture.h>
+#include <lutra-gfx/DepthStencilBuffer.h>
 #include "internal/GraphicsContextInternal.h"
 #include "internal/CommandBufferInternal.h"
+#include "internal/DepthStencilBufferInternal.h"
 #include <vector>
 
 namespace lgx
@@ -36,6 +38,15 @@ namespace lgx
 
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer) { internal->ScheduleUpload(src_ptr, size, *dst_buffer.internal); };
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture& dst_texture) { internal->ScheduleUpload(src_ptr, *dst_texture.internal); };
+
+	void CommandBuffer::Barrier(Texture& texture, ResourceUsage prev_usage, ResourceUsage next_usage)
+	{
+		internal->Barrier(texture.internal->vma_image.GetImage(), vk::ImageAspectFlagBits::eColor, prev_usage, next_usage);
+	}
+	void CommandBuffer::Barrier(DepthStencilBuffer& depth_stencil_buffer, ResourceUsage prev_usage, ResourceUsage next_usage)
+	{
+		internal->Barrier(depth_stencil_buffer.internal->vma_image.GetImage(), vk::ImageAspectFlagBits::eDepth, prev_usage, next_usage);
+	}
 
 	void CommandBuffer::Draw(u32 vertex_count, u32 instance_count) { internal->Draw(vertex_count, instance_count); };
 

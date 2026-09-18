@@ -29,6 +29,31 @@ namespace lgx
 		);
 	}
 
+	struct ResourceUsageInfo
+	{
+		vk::PipelineStageFlags stage;
+		vk::AccessFlags access;
+	};
+
+	static ResourceUsageInfo GetResourceUsageInfo(ResourceUsage usage)
+	{
+		switch (usage)
+		{
+		case ResourceUsage::ColorAttachment:
+			return { vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::AccessFlagBits::eColorAttachmentWrite };
+		case ResourceUsage::DepthAttachment:
+			return { vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests, vk::AccessFlagBits::eDepthStencilAttachmentWrite };
+		case ResourceUsage::ShaderRead:
+			return { vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader, vk::AccessFlagBits::eShaderRead };
+		case ResourceUsage::TransferSrc:
+			return { vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eTransferRead };
+		case ResourceUsage::TransferDst:
+			return { vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eTransferWrite };
+		}
+		assert(0);
+		return {};
+	}
+
 	CommandBufferInternal::CommandBufferInternal(GraphicsContextInternal& ctx)
 		: ctx(&ctx), buffer_memory_allocator(ctx, chunk_size), descriptor_allocator(ctx)
 	{
@@ -190,6 +215,35 @@ namespace lgx
 		};
 
 		cmd_buf->copyBufferToImage(allocation.buffer, dst_image.vma_image.GetImage(), vk::ImageLayout::eGeneral, buffer_image_copy);
+	}
+
+	void CommandBufferInternal::Barrier(vk::Image image, vk::ImageAspectFlags aspect, ResourceUsage prev_usage, ResourceUsage next_usage)
+	{
+		const ResourceUsageInfo prev_info = GetResourceUsageInfo(prev_usage);
+		const ResourceUsageInfo next_info = GetResourceUsageInfo(next_usage);
+
+		const vk::ImageSubresourceRange range{
+			.aspectMask = aspect,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		};
+
+		/* Every image in this library stays in eGeneral permanently, so this is purely an
+		   access-mask/stage barrier - there's no layout to transition. */
+		const vk::ImageMemoryBarrier barrier{
+			.srcAccessMask = prev_info.access,
+			.dstAccessMask = next_info.access,
+			.oldLayout = vk::ImageLayout::eGeneral,
+			.newLayout = vk::ImageLayout::eGeneral,
+			.srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+			.dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+			.image = image,
+			.subresourceRange = range,
+		};
+
+		cmd_buf->pipelineBarrier(prev_info.stage, next_info.stage, vk::DependencyFlagBits::eByRegion, {}, {}, barrier);
 	}
 
 	void CommandBufferInternal::Draw(u32 vertex_count, u32 instance_count)
