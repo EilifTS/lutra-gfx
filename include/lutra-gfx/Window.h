@@ -24,6 +24,11 @@ namespace lgx
 		Window(unsigned int window_width, unsigned int window_height, const std::string& window_name);
 		~Window();
 
+		Window(const Window&) = delete;
+		Window(Window&&) noexcept;
+		Window& operator=(const Window&) = delete;
+		Window& operator=(Window&&) noexcept;
+
 		std::vector<Event> RetrieveEvents();
 
 		WindowHandle GetHandle() const;

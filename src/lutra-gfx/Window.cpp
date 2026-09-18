@@ -57,6 +57,22 @@ namespace
 	{
 		return (int)key != -1;
 	}
+
+	inline lgx::MouseButton translateMouseButton(int glfw_button)
+	{
+		switch (glfw_button)
+		{
+		case GLFW_MOUSE_BUTTON_LEFT: return lgx::MouseButton::Left;
+		case GLFW_MOUSE_BUTTON_MIDDLE: return lgx::MouseButton::Middle;
+		case GLFW_MOUSE_BUTTON_RIGHT: return lgx::MouseButton::Right;
+		default: return (lgx::MouseButton)-1;
+		}
+	}
+
+	inline bool isValidMouseButton(lgx::MouseButton button)
+	{
+		return (int)button != -1;
+	}
 }
 
 namespace lgx
@@ -112,13 +128,17 @@ namespace lgx
 		assert(window);
 		std::vector<Event>& events = window->events;
 
+		const MouseButton mouse_button = translateMouseButton(button);
+		if (!isValidMouseButton(mouse_button))
+		{
+			return;
+		}
+
 		if (action == GLFW_PRESS)
 		{
 			const EventType type = EventType::MouseButtonPress;
 			EventPayload payload{};
-			if (button == GLFW_MOUSE_BUTTON_LEFT) payload.mouse_button = MouseButton::Left;
-			else if (button == GLFW_MOUSE_BUTTON_MIDDLE) payload.mouse_button = MouseButton::Middle;
-			else if (button == GLFW_MOUSE_BUTTON_RIGHT) payload.mouse_button = MouseButton::Right;
+			payload.mouse_button = mouse_button;
 
 			events.push_back({ type, payload });
 		}
@@ -126,9 +146,7 @@ namespace lgx
 		{
 			const EventType type = EventType::MouseButtonRelease;
 			EventPayload payload{};
-			if (button == GLFW_MOUSE_BUTTON_LEFT) payload.mouse_button = MouseButton::Left;
-			else if (button == GLFW_MOUSE_BUTTON_MIDDLE) payload.mouse_button = MouseButton::Middle;
-			else if (button == GLFW_MOUSE_BUTTON_RIGHT) payload.mouse_button = MouseButton::Right;
+			payload.mouse_button = mouse_button;
 
 			events.push_back({ type, payload });
 		}
@@ -188,8 +206,63 @@ namespace lgx
 		is_open = true;
 	}
 
+	Window::Window(Window&& rhs) noexcept
+		: glfw_window(rhs.glfw_window), width(rhs.width), height(rhs.height), is_open(rhs.is_open), events(std::move(rhs.events))
+	{
+		rhs.glfw_window = nullptr;
+
+		/* Re-point the user pointer set up in the constructor at the moved-to object,
+		   otherwise the GLFW callbacks above would dereference a dangling Window*. */
+		if (glfw_window != nullptr)
+		{
+			glfwSetWindowUserPointer(glfw_window, static_cast<void*>(this));
+		}
+	}
+
+	Window& Window::operator=(Window&& rhs) noexcept
+	{
+		if (this == &rhs)
+		{
+			return *this;
+		}
+
+		/* Destroy whatever this window currently owns before taking over rhs's */
+		if (glfw_window != nullptr)
+		{
+			glfwDestroyWindow(glfw_window);
+
+			if (global_window_count == 1)
+			{
+				glfwTerminate();
+			}
+			global_window_count--;
+		}
+
+		glfw_window = rhs.glfw_window;
+		width = rhs.width;
+		height = rhs.height;
+		is_open = rhs.is_open;
+		events = std::move(rhs.events);
+
+		rhs.glfw_window = nullptr;
+
+		if (glfw_window != nullptr)
+		{
+			glfwSetWindowUserPointer(glfw_window, static_cast<void*>(this));
+		}
+
+		return *this;
+	}
+
 	Window::~Window()
 	{
+		/* A moved-from Window owns nothing: skip destruction and, importantly, don't
+		   touch global_window_count a second time for the same underlying window. */
+		if (glfw_window == nullptr)
+		{
+			return;
+		}
+
 		glfwDestroyWindow(glfw_window);
 
 		if (global_window_count == 1)
