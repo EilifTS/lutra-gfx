@@ -111,6 +111,11 @@ namespace lgx
 
 		/* Create descriptor set layout */
 		std::vector<vk::DescriptorSetLayoutBinding> desc_layout_bindings{};
+
+		/* Reserve up front: bindings below take the address of a `samplers` element, which would
+		   dangle if a later push_back reallocated the vector. */
+		samplers.reserve(info.bindings.size());
+
 		for (u32 i = 0; i < static_cast<u32>(info.bindings.size()); i++)
 		{
 			const auto& b = info.bindings[i];
