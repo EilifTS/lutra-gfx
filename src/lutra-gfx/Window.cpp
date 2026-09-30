@@ -2,9 +2,12 @@
 #include <cassert>
 #include <iostream>
 
-#define GLFW_INCLUDE_VULKAN
+/* volk.h first: it pulls in the Vulkan headers with VK_NO_PROTOTYPES, which makes glfw3.h
+   expose its Vulkan entry points without GLFW doing its own vulkan.h include. */
+#include "internal/VulkanLoader.h"
 #include <GLFW/glfw3.h>
 
+#include "internal/Diagnostics.h"
 #include <lutra-gfx/Window.h>
 
 static int global_window_count = 0;
@@ -171,30 +174,22 @@ namespace lgx
 	{
 		if (global_window_count == 0)
 		{
-			const bool glfw_init_ok = glfwInit();
-			if (!glfw_init_ok)
-			{
-				std::cerr << "Failed to initialize GLFW" << std::endl;
-			}
-			assert(glfw_init_ok);
+			/* Tell GLFW which loader to use before glfwInit, so it does not fall back to its
+			   own leaf-name dlopen - that fails on macOS for loaders outside /usr/lib. */
+			const PFN_vkGetInstanceProcAddr get_instance_proc_addr = load_vulkan_loader();
+			LGX_CHECK(get_instance_proc_addr != nullptr, vulkan_loader_search_report());
+			glfwInitVulkanLoader(get_instance_proc_addr);
+
+			LGX_CHECK(glfwInit(), "Failed to initialize GLFW");
 		}
 		global_window_count++;
 
-		const bool vulkan_supported = glfwVulkanSupported();
-		if (!vulkan_supported)
-		{
-			std::cerr << "GLFW with Vulkan is not supported on this system" << std::endl;
-		}
-		assert(vulkan_supported);
+		LGX_CHECK(glfwVulkanSupported(), "GLFW with Vulkan is not supported on this system. " + vulkan_loader_search_report());
 
 		/* No OpenGL context */
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfw_window = glfwCreateWindow(width, height, window_name.c_str(), nullptr, nullptr);
-		if (!glfw_window)
-		{
-			std::cerr << "Failed to create window" << std::endl;
-		}
-		assert(glfw_window);
+		LGX_CHECK(glfw_window != nullptr, "Failed to create window");
 
 		glfwSetKeyCallback(glfw_window, GLFWKeyCallback);
 		glfwSetCursorPosCallback(glfw_window, GLFWMouseMoveCallback);

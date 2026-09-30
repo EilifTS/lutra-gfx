@@ -1,6 +1,8 @@
 #include <lutra-gfx/GraphicsContext.h>
 
 #include "GraphicsContextInternal.h"
+#include "Diagnostics.h"
+#include "VulkanLoader.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 
@@ -292,8 +294,12 @@ namespace lgx
 
 	void GraphicsContextInternal::init(const char* app_name, const Window* window)
 	{
+		/* Resolve the loader ourselves instead of letting vulkan.hpp/volk dlopen it by leaf name */
+		const PFN_vkGetInstanceProcAddr get_instance_proc_addr = load_vulkan_loader();
+		LGX_CHECK(get_instance_proc_addr != nullptr, vulkan_loader_search_report());
+
 		/* First initialize step of the dispatcher */
-		VULKAN_HPP_DEFAULT_DISPATCHER.init();
+		VULKAN_HPP_DEFAULT_DISPATCHER.init(get_instance_proc_addr);
 
 		const bool has_window = window != nullptr;
 
@@ -303,11 +309,8 @@ namespace lgx
 		/* Second initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*instance);
 
-		/* Initialize volk */
-		if (volkInitialize())
-		{
-			assert(false);
-		}
+		/* Initialize volk with the same loader */
+		volkInitializeCustom(get_instance_proc_addr);
 		volkLoadInstance(*instance);
 
 #if _DEBUG /* VL */
