@@ -292,8 +292,16 @@ namespace lgx
 
 	void GraphicsContextInternal::init(const char* app_name, const Window* window)
 	{
+		/* Load the Vulkan loader once through volk, and share it with the vulkan.hpp dispatcher
+		   so both always talk to the same loader. */
+		if (volkInitialize() != VK_SUCCESS)
+		{
+			std::cerr << "Failed to load the Vulkan loader" << std::endl;
+			assert(false);
+		}
+
 		/* First initialize step of the dispatcher */
-		VULKAN_HPP_DEFAULT_DISPATCHER.init();
+		VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 
 		const bool has_window = window != nullptr;
 
@@ -303,11 +311,6 @@ namespace lgx
 		/* Second initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*instance);
 
-		/* Initialize volk */
-		if (volkInitialize())
-		{
-			assert(false);
-		}
 		volkLoadInstance(*instance);
 
 #if _DEBUG /* VL */
