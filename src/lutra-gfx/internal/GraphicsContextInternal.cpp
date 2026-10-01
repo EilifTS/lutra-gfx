@@ -326,7 +326,7 @@ namespace lgx
 		if (volkInitialize() != VK_SUCCESS)
 		{
 			std::cerr << "Failed to load the Vulkan loader" << std::endl;
-			assert(false);
+			std::abort();
 		}
 
 		/* First initialize step of the dispatcher */
