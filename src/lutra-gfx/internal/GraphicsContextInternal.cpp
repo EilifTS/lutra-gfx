@@ -329,6 +329,9 @@ namespace lgx
 		/* Third initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*device);
 
+		/* Load device-level entry points directly from the driver (skips loader trampolines) */
+		volkLoadDevice(*device);
+
 		/* Get the device queue */
 		queue = device->getQueue(queue_family_index, 0);
 
