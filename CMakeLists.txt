@@ -42,7 +42,12 @@ FetchContent_Declare(
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(volk)
-target_link_libraries(lutra-gfx PRIVATE volk_headers)
+
+# Volk's implementation is compiled once, in its own library shared by lutra-gfx and imgui
+add_library(lutra-gfx-volk STATIC src/volk-impl/VolkUsage.cpp)
+target_compile_features(lutra-gfx-volk PRIVATE cxx_std_20)
+target_link_libraries(lutra-gfx-volk PRIVATE Vulkan-Headers volk_headers)
+target_link_libraries(lutra-gfx PRIVATE volk_headers lutra-gfx-volk)
 
 # VMA
 FetchContent_Declare(
@@ -124,7 +129,6 @@ if (LUTRA_GFX_ENABLE_IMGUI)
         ${imgui_SOURCE_DIR}/imgui_widgets.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
         ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp
-        src/lutra-gfx/internal/VolkUsage.cpp
     )
 
     add_library(imgui STATIC ${IMGUI_SRC})
@@ -135,7 +139,7 @@ if (LUTRA_GFX_ENABLE_IMGUI)
     )
     target_compile_features(imgui PRIVATE cxx_std_20)
     target_compile_definitions(imgui PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
-    target_link_libraries(imgui PRIVATE Vulkan-Headers volk_headers glfw)
+    target_link_libraries(imgui PRIVATE Vulkan-Headers volk_headers lutra-gfx-volk glfw)
 
     target_compile_definitions(lutra-gfx PUBLIC USE_IMGUI)
     target_link_libraries(lutra-gfx PUBLIC imgui)
