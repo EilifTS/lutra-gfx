@@ -14,7 +14,7 @@ namespace lgx
 		void WaitIdle();
 
 		vk::UniqueInstance instance{};
-#if _DEBUG /* VL */
+#ifndef NDEBUG /* VL */
 		vk::UniqueDebugUtilsMessengerEXT messenger{};
 #endif
 		vk::PhysicalDevice physical_device{};

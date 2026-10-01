@@ -12,7 +12,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 #include <vulkan/vulkan_beta.h>
 #endif
 
-#if _DEBUG /* VL */
+#ifndef NDEBUG /* VL */
 
 VKAPI_ATTR vk::Bool32 VKAPI_CALL debug_utils_messenger_callback(
 	vk::DebugUtilsMessageSeverityFlagBitsEXT		message_severity,
@@ -48,7 +48,7 @@ namespace lgx
 	{
 		/* Define layers */
 		std::vector<const char*> requested_layers{};
-#if _DEBUG /* VL */
+#ifndef NDEBUG /* VL */
 		requested_layers.push_back("VK_LAYER_KHRONOS_validation");
 #endif
 		std::vector<vk::LayerProperties> supported_layers = VkCheck(vk::enumerateInstanceLayerProperties());
@@ -78,7 +78,7 @@ namespace lgx
 		/* Define instance extensions */
 		std::vector<const char*> instance_extensions{};
 
-#if _DEBUG /* VL */
+#ifndef NDEBUG /* VL */
 		instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 #endif
 #if ENABLE_PORTABILITY
@@ -105,7 +105,7 @@ namespace lgx
 			}
 		}
 
-#if _DEBUG /* VL */
+#ifndef NDEBUG /* VL */
 		const auto messenger_info = create_messenger_info();
 #endif
 
@@ -119,7 +119,7 @@ namespace lgx
 		};
 
 		const vk::InstanceCreateInfo instance_create_info{
-#if _DEBUG /* VL */
+#ifndef NDEBUG /* VL */
 			.pNext = &messenger_info,
 #endif
 #if ENABLE_PORTABILITY
@@ -322,7 +322,7 @@ namespace lgx
 
 		volkLoadInstance(*instance);
 
-#if _DEBUG /* VL */
+#ifndef NDEBUG /* VL */
 		messenger = VkCheck(instance->createDebugUtilsMessengerEXTUnique(create_messenger_info()));
 #endif
 
