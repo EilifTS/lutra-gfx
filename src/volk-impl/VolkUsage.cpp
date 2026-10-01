@@ -3,7 +3,7 @@
 #elif defined(__linux__) || defined(__unix__)
 #   define VK_USE_PLATFORM_XLIB_KHR
 #elif defined(__APPLE__)
-#   define VK_USE_PLATFORM_MACOS_MVK
+#   define VK_USE_PLATFORM_METAL_EXT
 #else
 #   error "Unsupported platform."
 #endif
