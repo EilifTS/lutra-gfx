@@ -78,6 +78,16 @@ namespace
 
 namespace lgx
 {
+	/* Ratio between framebuffer pixels and window screen coordinates (2 on Retina, 1 elsewhere) */
+	static void getPixelScale(GLFWwindow* glfw_window, double& scale_x, double& scale_y)
+	{
+		int window_w = 0, window_h = 0, fb_w = 0, fb_h = 0;
+		glfwGetWindowSize(glfw_window, &window_w, &window_h);
+		glfwGetFramebufferSize(glfw_window, &fb_w, &fb_h);
+		scale_x = window_w > 0 ? static_cast<double>(fb_w) / window_w : 1.0;
+		scale_y = window_h > 0 ? static_cast<double>(fb_h) / window_h : 1.0;
+	}
+
 	void GLFWKeyCallback(GLFWwindow* glfw_window, int key, int scancode, int action, int mods)
 	{
 		Window* window = static_cast<Window*>(glfwGetWindowUserPointer(glfw_window));
@@ -118,8 +128,12 @@ namespace lgx
 
 		const EventType type = EventType::MouseMove;
 		EventPayload payload{};
-		payload.position.x = static_cast<int>(mouse_x);
-		payload.position.y = static_cast<int>(mouse_y);
+
+		/* GLFW reports the cursor in screen coordinates, convert to framebuffer pixels */
+		double scale_x = 1.0, scale_y = 1.0;
+		getPixelScale(glfw_window, scale_x, scale_y);
+		payload.position.x = static_cast<int>(mouse_x * scale_x);
+		payload.position.y = static_cast<int>(mouse_y * scale_y);
 		events.push_back({ type, payload });
 	}
 
@@ -168,7 +182,6 @@ namespace lgx
 	}
 
 	Window::Window(unsigned int width, unsigned int height, const std::string& window_name)
-		: width(width), height(height)
 	{
 		if (global_window_count == 0)
 		{
@@ -208,7 +221,7 @@ namespace lgx
 	}
 
 	Window::Window(Window&& rhs) noexcept
-		: glfw_window(rhs.glfw_window), width(rhs.width), height(rhs.height), is_open(rhs.is_open), events(std::move(rhs.events))
+		: glfw_window(rhs.glfw_window), is_open(rhs.is_open), events(std::move(rhs.events))
 	{
 		rhs.glfw_window = nullptr;
 
@@ -240,8 +253,6 @@ namespace lgx
 		}
 
 		glfw_window = rhs.glfw_window;
-		width = rhs.width;
-		height = rhs.height;
 		is_open = rhs.is_open;
 		events = std::move(rhs.events);
 
@@ -284,6 +295,26 @@ namespace lgx
 	{
 		return (WindowHandle)glfw_window;
 	}
+	unsigned int Window::Width() const
+	{
+		int fb_w = 0, fb_h = 0;
+		if (glfw_window != nullptr)
+		{
+			glfwGetFramebufferSize(glfw_window, &fb_w, &fb_h);
+		}
+		return static_cast<unsigned int>(fb_w);
+	}
+
+	unsigned int Window::Height() const
+	{
+		int fb_w = 0, fb_h = 0;
+		if (glfw_window != nullptr)
+		{
+			glfwGetFramebufferSize(glfw_window, &fb_w, &fb_h);
+		}
+		return static_cast<unsigned int>(fb_h);
+	}
+
 	bool Window::IsOpen() const
 	{
 		return !glfwWindowShouldClose(glfw_window);

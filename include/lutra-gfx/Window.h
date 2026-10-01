@@ -34,8 +34,11 @@ namespace lgx
 		WindowHandle GetHandle() const;
 		bool IsOpen() const;
 		bool IsFullScreen() const;
-		unsigned int Width() const { return width; };
-		unsigned int Height() const { return height; };
+		/* Size of the window's framebuffer in pixels, which is what rendering and mouse positions
+		   are expressed in. On high-DPI displays (e.g. macOS Retina) this is larger than the
+		   window size in screen coordinates passed to the constructor. */
+		unsigned int Width() const;
+		unsigned int Height() const;
 		//void AddMessageHook(const MessageHook& message_hook) { message_hooks.push_back(message_hook); };
 
 		//void Clear() { sf_window.clear(); }
@@ -46,8 +49,6 @@ namespace lgx
 	private:
 		GLFWwindow* glfw_window{};
 
-		unsigned int width{};
-		unsigned int height{};
 		bool is_open{ true };
 
 		std::vector<Event> events{};
