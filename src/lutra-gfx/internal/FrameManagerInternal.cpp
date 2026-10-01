@@ -65,12 +65,16 @@ namespace lgx
 
 		auto surface_caps = VkCheck(ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface));
 
-		/* Clamp the requested extent to what the surface actually supports right now
-		   (relevant after a resize). */
-		const vk::Extent2D surface_extent{
-			.width = std::clamp(width, surface_caps.minImageExtent.width, surface_caps.maxImageExtent.width),
-			.height = std::clamp(height, surface_caps.minImageExtent.height, surface_caps.maxImageExtent.height),
-		};
+		/* If the surface dictates its extent, use it. It is in pixels, whereas the requested size
+		   is in window (screen) coordinates, which differ on high-DPI displays such as macOS Retina.
+		   Otherwise (extent is the special value 0xFFFFFFFF) clamp the requested extent to what the
+		   surface supports (relevant after a resize). */
+		const vk::Extent2D surface_extent = surface_caps.currentExtent.width != 0xFFFFFFFFu
+			? surface_caps.currentExtent
+			: vk::Extent2D{
+				.width = std::clamp(width, surface_caps.minImageExtent.width, surface_caps.maxImageExtent.width),
+				.height = std::clamp(height, surface_caps.minImageExtent.height, surface_caps.maxImageExtent.height),
+			};
 
 		/* Select the swapchain image count, default to 3 for now */
 		constexpr u32 surface_count = 3;
