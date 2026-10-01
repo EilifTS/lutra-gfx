@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
 
 #define GLFW_INCLUDE_VULKAN
@@ -184,8 +185,8 @@ namespace lgx
 		if (!vulkan_supported)
 		{
 			std::cerr << "GLFW with Vulkan is not supported on this system" << std::endl;
+			std::abort();
 		}
-		assert(vulkan_supported);
 
 		/* No OpenGL context */
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

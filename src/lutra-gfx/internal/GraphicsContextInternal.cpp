@@ -2,6 +2,7 @@
 
 #include "GraphicsContextInternal.h"
 #include <GLFW/glfw3.h>
+#include <cstdlib>
 #include <iostream>
 
 /* Vulkan HPP boiler plate for setting up a dispatcher */
@@ -89,6 +90,14 @@ namespace lgx
 		{
 			u32 glwf_instance_extension_count = 0;
 			const char** glwf_instance_extension = glfwGetRequiredInstanceExtensions(&glwf_instance_extension_count);
+			if (glwf_instance_extension == nullptr)
+			{
+				/* GLFW found no Vulkan loader (e.g. no Vulkan SDK/MoltenVK installed on macOS). Without
+				   its surface extensions no window surface can be created, so fail here with a clear
+				   message. Not an assert, since those are compiled out in release builds. */
+				std::cerr << "GLFW could not provide the required Vulkan instance extensions (is a Vulkan loader installed?)" << std::endl;
+				std::abort();
+			}
 
 			for (u32 i = 0; i < glwf_instance_extension_count; i++)
 			{
