@@ -23,6 +23,8 @@ namespace lgx
 		u32 queue_family_index{};
 
 		vk::UniqueSurfaceKHR surface{};
+		/* Format the swapchain uses (always sRGB-nonlinear color space). Only meaningful when there is a window. */
+		ColorFormat swapchain_color_format{};
 
 		VmaAllocator vma_allocator{};
 

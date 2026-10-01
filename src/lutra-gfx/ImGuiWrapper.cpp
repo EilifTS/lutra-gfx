@@ -8,6 +8,7 @@
 #include "internal/FrameManagerInternal.h"
 #include "internal/GraphicsContextInternal.h"
 #include "internal/VulkanHPP.h"
+#include "internal/CommonHelpers.h"
 
 #include <imgui.h>
 
@@ -60,7 +61,8 @@ namespace lgx
 
 		ImGui_ImplGlfw_InitForVulkan(reinterpret_cast<GLFWwindow*>(window.GetHandle()), true);
 
-		const vk::Format attachment_format = vk::Format::eR8G8B8A8Unorm;
+		/* ImGui renders straight to the swapchain image */
+		const vk::Format attachment_format = convert_color_format(ctx.internal->swapchain_color_format);
 		const vk::PipelineRenderingCreateInfo pipeline_rendering_info{
 			.colorAttachmentCount = 1,
 			.pColorAttachmentFormats = &attachment_format,

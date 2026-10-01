@@ -1,26 +1,12 @@
 #include "FrameManagerInternal.h"
 #include "GraphicsContextInternal.h"
+#include "CommonHelpers.h"
 
 #include <algorithm>
 #include <iostream>
 
 namespace lgx
 {
-	static vk::SurfaceFormatKHR select_surface_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
-	{
-		/* No special logic for now, just choose the first available */
-		std::vector<vk::SurfaceFormatKHR> supported_surface_formats = VkCheck(phys_dev.getSurfaceFormatsKHR(surface));
-		assert(supported_surface_formats.size() > 0);
-		for (auto f : supported_surface_formats)
-		{
-			if (f.format == vk::Format::eR8G8B8A8Unorm)
-			{
-				return f;
-			}
-		}
-		return supported_surface_formats[0];
-	}
-
 	static void image_barrier(vk::CommandBuffer cmd_buf, vk::Image image, vk::PipelineStageFlags src_stage, vk::PipelineStageFlags dst_stage, vk::AccessFlags src_access, vk::AccessFlagBits dst_access)
 	{
 		vk::ImageSubresourceRange range{
@@ -60,8 +46,8 @@ namespace lgx
 
 	void FrameManagerInternal::CreateSwapchain(GraphicsContextInternal& ctx, u32 width, u32 height)
 	{
-		/* Select a surface format. */
-		const vk::SurfaceFormatKHR surface_format = select_surface_format(ctx.physical_device, *ctx.surface);
+		/* The surface format was selected when the context was created, since pipelines depend on it. */
+		const vk::SurfaceFormatKHR surface_format{ convert_color_format(ctx.swapchain_color_format), vk::ColorSpaceKHR::eSrgbNonlinear };
 
 		auto surface_caps = VkCheck(ctx.physical_device.getSurfaceCapabilitiesKHR(*ctx.surface));
 

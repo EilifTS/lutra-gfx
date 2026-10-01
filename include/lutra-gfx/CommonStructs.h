@@ -26,6 +26,14 @@ namespace lgx
 		D32,
 	};
 
+	/* Color formats for render attachments. RenderTargets are always RGBA8, the swapchain format
+	   is platform dependent (see GraphicsContext::SwapchainFormat). */
+	enum class ColorFormat
+	{
+		RGBA8,
+		BGRA8,
+	};
+
 	enum class SamplerType
 	{
 		None,
@@ -87,6 +95,9 @@ namespace lgx
 		DSInfo ds_info{};
 
 		PrimitiveTopology topology{ PrimitiveTopology::TriangleList };
+
+		/* Format of the color attachment this pipeline renders to */
+		ColorFormat color_format{ ColorFormat::RGBA8 };
 
 		/* Kept as a nested alias so existing code referring to GraphicsPipelineInfo::Binding
 		   keeps compiling unchanged. */

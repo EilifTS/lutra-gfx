@@ -19,6 +19,7 @@ namespace lgx
 		pipeline_info.ps_name = "shaders/SpriteBatchShader.frag.spv";
 		pipeline_info.ds_info.depth_enabled = true;
 		pipeline_info.ds_info.ds_format = DepthStencilFormat::D32;
+		pipeline_info.color_format = ctx.SwapchainFormat();
 		pipeline_info.AddStorageBuffer(0, GraphicsPipelineInfo::Binding::Stage::Vertex);
 		pipeline_info.AddImmutableSampler(1, SamplerType::LinearClamp, GraphicsPipelineInfo::Binding::Stage::Fragment);
 		pipeline_info.AddTextures(2, max_texture_count, GraphicsPipelineInfo::Binding::Stage::Fragment);

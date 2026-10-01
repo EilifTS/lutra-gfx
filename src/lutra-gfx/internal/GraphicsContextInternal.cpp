@@ -1,6 +1,7 @@
 #include <lutra-gfx/GraphicsContext.h>
 
 #include "GraphicsContextInternal.h"
+#include "CommonHelpers.h"
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <iostream>
@@ -142,6 +143,25 @@ namespace lgx
 		VkResult result = glfwCreateWindowSurface(instance, glfw_window, nullptr, &temp_surface);
 		assert(result == VK_SUCCESS);
 		return vk::UniqueSurfaceKHR(temp_surface, instance);
+	}
+
+	static ColorFormat select_swapchain_format(vk::PhysicalDevice phys_dev, vk::SurfaceKHR surface)
+	{
+		/* Only formats exposed through ColorFormat are supported. Prefer RGBA8 (matches RenderTargets),
+		   but some platforms (e.g. MoltenVK) only offer BGRA. */
+		std::vector<vk::SurfaceFormatKHR> supported_surface_formats = VkCheck(phys_dev.getSurfaceFormatsKHR(surface));
+		for (const ColorFormat preferred : { ColorFormat::RGBA8, ColorFormat::BGRA8 })
+		{
+			for (const vk::SurfaceFormatKHR& f : supported_surface_formats)
+			{
+				if (f.format == convert_color_format(preferred) && f.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
+				{
+					return preferred;
+				}
+			}
+		}
+		std::cerr << "No supported surface format (RGBA8/BGRA8 UNORM) found" << std::endl;
+		std::abort();
 	}
 
 	static bool physicalDeviceCompatible(vk::PhysicalDevice pd)
@@ -334,6 +354,11 @@ namespace lgx
 
 		/* Get physical device */
 		std::tie(physical_device, queue_family_index) = select_physical_device_and_queue_family(instance.get(), *surface /* Surface is null handle when there is no window */);
+
+		if (has_window)
+		{
+			swapchain_color_format = select_swapchain_format(physical_device, *surface);
+		}
 
 		/* Create the logical device */
 		device = create_device(physical_device, queue_family_index);

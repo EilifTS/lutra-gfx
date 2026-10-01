@@ -19,6 +19,11 @@ namespace lgx
 	GraphicsContext::GraphicsContext(GraphicsContext&&) = default;
 	GraphicsContext& GraphicsContext::operator=(GraphicsContext&&) = default;
 
+	ColorFormat GraphicsContext::SwapchainFormat() const
+	{
+		return internal->swapchain_color_format;
+	}
+
 	void GraphicsContext::WaitIdle()
 	{
 		internal->WaitIdle();

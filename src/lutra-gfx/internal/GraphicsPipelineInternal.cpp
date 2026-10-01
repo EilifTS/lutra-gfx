@@ -15,7 +15,7 @@ namespace lgx
 		layout = std::move(layout_result.layout);
 		samplers = std::move(layout_result.samplers);
 
-		const vk::Format color_attachment_format = vk::Format::eR8G8B8A8Unorm;
+		const vk::Format color_attachment_format = convert_color_format(info.color_format);
 		const vk::PipelineRenderingCreateInfo rendering_info{
 			.colorAttachmentCount = 1,
 			.pColorAttachmentFormats = &color_attachment_format,
