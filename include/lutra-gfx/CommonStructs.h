@@ -43,6 +43,17 @@ namespace lgx
 		PointWrap
 	};
 
+	/* Optional device features an app can ask for when creating a GraphicsContext. They are only
+	   enabled if the GPU supports them, so check GraphicsContext::EnabledFeatures() and have a
+	   fallback ready. Everything is off by default. */
+	struct GraphicsFeatures
+	{
+		/* Atomic add on 32-bit floats in storage buffers (VK_EXT_shader_atomic_float).
+		   Shaders have to use OpAtomicFAddEXT, in HLSL through the vk::ext_instruction attribute,
+		   see tests/shaders/FloatAtomicAdd.hlsl. Not available on every platform (e.g. MoltenVK). */
+		bool shader_buffer_float_atomic_add{ false };
+	};
+
 	/* What a resource was/will be used for, for CommandBuffer::Barrier. Every image in this
 	   library stays in VK_IMAGE_LAYOUT_GENERAL permanently, so a barrier here only ever needs
 	   to synchronize stage/access - there's no layout tracking to do. */
@@ -52,6 +63,7 @@ namespace lgx
 		DepthAttachment,
 		ShaderRead,
 		ComputeWrite,
+		ComputeReadWrite,
 		TransferSrc,
 		TransferDst,
 	};

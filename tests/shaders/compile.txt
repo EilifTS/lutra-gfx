@@ -1,0 +1,3 @@
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS DoubleBuffer.hlsl -Fo DoubleBuffer.cs.spv
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS AtomicCounter.hlsl -Fo AtomicCounter.cs.spv
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS FloatAtomicAdd.hlsl -Fo FloatAtomicAdd.cs.spv

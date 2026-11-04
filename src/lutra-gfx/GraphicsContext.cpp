@@ -5,13 +5,23 @@
 namespace lgx
 {
 	GraphicsContext::GraphicsContext(const char* app_name)
+		: GraphicsContext(app_name, GraphicsFeatures{})
 	{
-		internal = std::make_unique<GraphicsContextInternal>(app_name);
 	}
 
 	GraphicsContext::GraphicsContext(const char* app_name, const Window& window)
+		: GraphicsContext(app_name, window, GraphicsFeatures{})
 	{
-		internal = std::make_unique<GraphicsContextInternal>(app_name, window);
+	}
+
+	GraphicsContext::GraphicsContext(const char* app_name, const GraphicsFeatures& requested_features)
+	{
+		internal = std::make_unique<GraphicsContextInternal>(app_name, requested_features);
+	}
+
+	GraphicsContext::GraphicsContext(const char* app_name, const Window& window, const GraphicsFeatures& requested_features)
+	{
+		internal = std::make_unique<GraphicsContextInternal>(app_name, window, requested_features);
 	}
 
 	GraphicsContext::~GraphicsContext() {}
@@ -22,6 +32,11 @@ namespace lgx
 	ColorFormat GraphicsContext::SwapchainFormat() const
 	{
 		return internal->swapchain_color_format;
+	}
+
+	const GraphicsFeatures& GraphicsContext::EnabledFeatures() const
+	{
+		return internal->enabled_features;
 	}
 
 	void GraphicsContext::WaitIdle()

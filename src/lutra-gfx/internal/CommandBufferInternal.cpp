@@ -47,6 +47,8 @@ namespace lgx
 			return { vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, vk::AccessFlagBits::eShaderRead };
 		case ResourceUsage::ComputeWrite:
 			return { vk::PipelineStageFlagBits::eComputeShader, vk::AccessFlagBits::eShaderWrite };
+		case ResourceUsage::ComputeReadWrite:
+			return { vk::PipelineStageFlagBits::eComputeShader, vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite };
 		case ResourceUsage::TransferSrc:
 			return { vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eTransferRead };
 		case ResourceUsage::TransferDst:

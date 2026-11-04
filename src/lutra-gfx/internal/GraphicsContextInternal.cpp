@@ -237,7 +237,7 @@ namespace lgx
 		return { physical_device, queue_family_index };
 	}
 
-	vk::UniqueDevice create_device(vk::PhysicalDevice physical_device, u32 queue_family_index)
+	vk::UniqueDevice create_device(vk::PhysicalDevice physical_device, u32 queue_family_index, const GraphicsFeatures& requested_features, GraphicsFeatures& enabled_features)
 	{
 		constexpr float queue_priority = 1.0f;
 		vk::DeviceQueueCreateInfo queue_create_info{
@@ -273,7 +273,41 @@ namespace lgx
 			assert(extension_supported);
 		}
 
+		/* Optional features, which are only enabled if they are requested and the device supports them */
+		std::vector<const char*> device_extensions = required_device_extensions;
+		const auto is_extension_supported = [&](const char* ex_name)
+		{
+			for (const vk::ExtensionProperties& prop : supported_device_extensions)
+			{
+				if (strcmp(ex_name, prop.extensionName) == 0)
+				{
+					return true;
+				}
+			}
+			return false;
+		};
+
+		enabled_features = {};
+		vk::PhysicalDeviceShaderAtomicFloatFeaturesEXT atomic_float_features{};
+		if (requested_features.shader_buffer_float_atomic_add && is_extension_supported(VK_EXT_SHADER_ATOMIC_FLOAT_EXTENSION_NAME))
+		{
+			/* Only ask the device about the feature struct when it knows about the extension */
+			vk::PhysicalDeviceShaderAtomicFloatFeaturesEXT supported_atomic_float_features{};
+			vk::PhysicalDeviceFeatures2 supported_features{
+				.pNext = &supported_atomic_float_features,
+			};
+			physical_device.getFeatures2(&supported_features);
+
+			if (supported_atomic_float_features.shaderBufferFloat32AtomicAdd)
+			{
+				atomic_float_features.shaderBufferFloat32AtomicAdd = true;
+				device_extensions.push_back(VK_EXT_SHADER_ATOMIC_FLOAT_EXTENSION_NAME);
+				enabled_features.shader_buffer_float_atomic_add = true;
+			}
+		}
+
 		vk::PhysicalDeviceVulkan13Features features13{
+			.pNext = enabled_features.shader_buffer_float_atomic_add ? &atomic_float_features : nullptr,
 			.dynamicRendering = true,
 		};
 
@@ -285,20 +319,20 @@ namespace lgx
 			.pNext = &features2,
 			.queueCreateInfoCount = 1,
 			.pQueueCreateInfos = &queue_create_info,
-			.enabledExtensionCount = static_cast<u32>(required_device_extensions.size()),
-			.ppEnabledExtensionNames = required_device_extensions.data(),
+			.enabledExtensionCount = static_cast<u32>(device_extensions.size()),
+			.ppEnabledExtensionNames = device_extensions.data(),
 		};
 		return VkCheck(physical_device.createDeviceUnique(device_info));
 	}
 
-	GraphicsContextInternal::GraphicsContextInternal(const char* app_name)
+	GraphicsContextInternal::GraphicsContextInternal(const char* app_name, const GraphicsFeatures& requested_features)
 	{
-		init(app_name, nullptr);
+		init(app_name, nullptr, requested_features);
 	}
 
-	GraphicsContextInternal::GraphicsContextInternal(const char* app_name, const Window& window)
+	GraphicsContextInternal::GraphicsContextInternal(const char* app_name, const Window& window, const GraphicsFeatures& requested_features)
 	{
-		init(app_name, &window);
+		init(app_name, &window, requested_features);
 	}
 
 	GraphicsContextInternal::~GraphicsContextInternal()
@@ -319,7 +353,7 @@ namespace lgx
 		VkCheck(device->waitIdle());
 	}
 
-	void GraphicsContextInternal::init(const char* app_name, const Window* window)
+	void GraphicsContextInternal::init(const char* app_name, const Window* window, const GraphicsFeatures& requested_features)
 	{
 		/* Load the Vulkan loader once through volk, and share it with the vulkan.hpp dispatcher
 		   so both always talk to the same loader. */
@@ -361,7 +395,7 @@ namespace lgx
 		}
 
 		/* Create the logical device */
-		device = create_device(physical_device, queue_family_index);
+		device = create_device(physical_device, queue_family_index, requested_features, enabled_features);
 
 		/* Third initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*device);

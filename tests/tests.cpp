@@ -106,6 +106,133 @@ TEST(Graphics, ComputeDoubleBuffer)
 	}
 }
 
+TEST(Graphics, ComputeIntegerAtomics)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	constexpr uint32_t group_count = 4;
+	constexpr uint32_t thread_count = group_count * 64;
+
+	const std::vector<int32_t> zeros(2, 0);
+	lgx::Buffer buffer(ctx, zeros.size() * sizeof(int32_t), lgx::BufferType::StorageBuffer);
+
+	const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/AtomicCounter.cs.spv";
+	lgx::ComputePipelineInfo pipeline_info{};
+	pipeline_info.cs_name = cs_path.c_str();
+	pipeline_info.AddStorageBuffer(0);
+	lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.ScheduleUpload(zeros.data(), zeros.size() * sizeof(int32_t), buffer);
+	cmd_buf.Barrier(buffer, lgx::ResourceUsage::TransferDst, lgx::ResourceUsage::ComputeReadWrite);
+	cmd_buf.BindPipeline(pipeline);
+	cmd_buf.BindBuffer(buffer, 0);
+	cmd_buf.Dispatch(group_count, 1, 1);
+	cmd_buf.Barrier(buffer, lgx::ResourceUsage::ComputeReadWrite, lgx::ResourceUsage::TransferSrc);
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	std::vector<int32_t> result(2, 0);
+	lgx::Download(ctx, buffer, result.data(), result.size() * sizeof(int32_t));
+
+	/* Every thread adds one to the first counter and its (one based) index to the second */
+	EXPECT_EQ(result[0], static_cast<int32_t>(thread_count));
+	EXPECT_EQ(result[1], static_cast<int32_t>(thread_count * (thread_count + 1) / 2));
+}
+
+TEST(Graphics, OptionalFeaturesAreOffByDefault)
+{
+	lgx::GraphicsContext ctx("Test context");
+	EXPECT_FALSE(ctx.EnabledFeatures().shader_buffer_float_atomic_add);
+
+	lgx::GraphicsContext ctx_no_request("Test context", lgx::GraphicsFeatures{});
+	EXPECT_FALSE(ctx_no_request.EnabledFeatures().shader_buffer_float_atomic_add);
+}
+
+/* Optional feature, so this test is skipped on GPUs without it */
+TEST(Graphics, ComputeFloatAtomicAdd)
+{
+	lgx::GraphicsFeatures features{};
+	features.shader_buffer_float_atomic_add = true;
+	lgx::GraphicsContext ctx("Test context", features);
+	if (!ctx.EnabledFeatures().shader_buffer_float_atomic_add)
+	{
+		GTEST_SKIP() << "The GPU does not support atomic float add on storage buffers";
+	}
+
+	constexpr uint32_t group_count = 4;
+	constexpr uint32_t thread_count = group_count * 64;
+
+	const std::vector<float> zeros(2, 0.0f);
+	lgx::Buffer buffer(ctx, zeros.size() * sizeof(float), lgx::BufferType::StorageBuffer);
+
+	const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/FloatAtomicAdd.cs.spv";
+	lgx::ComputePipelineInfo pipeline_info{};
+	pipeline_info.cs_name = cs_path.c_str();
+	pipeline_info.AddStorageBuffer(0);
+	lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.ScheduleUpload(zeros.data(), zeros.size() * sizeof(float), buffer);
+	cmd_buf.Barrier(buffer, lgx::ResourceUsage::TransferDst, lgx::ResourceUsage::ComputeReadWrite);
+	cmd_buf.BindPipeline(pipeline);
+	cmd_buf.BindBuffer(buffer, 0);
+	cmd_buf.Dispatch(group_count, 1, 1);
+	cmd_buf.Barrier(buffer, lgx::ResourceUsage::ComputeReadWrite, lgx::ResourceUsage::TransferSrc);
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	std::vector<float> result(2, 0.0f);
+	lgx::Download(ctx, buffer, result.data(), result.size() * sizeof(float));
+
+	/* Every thread adds 0.5 to the first sum and its index to the second. All partial sums are
+	   exact in a float, so the order the threads run in does not matter. */
+	EXPECT_EQ(result[0], 0.5f * thread_count);
+	EXPECT_EQ(result[1], static_cast<float>(thread_count * (thread_count - 1) / 2));
+}
+
+/* A simulation step needs a handful of dispatches, each with its own pipeline bind, so a frame
+   can easily need more descriptor sets than fit in one descriptor pool. */
+TEST(Graphics, ComputeManyDispatches)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	constexpr uint32_t dispatch_count = 500;
+	constexpr uint32_t thread_count = 64;
+
+	const std::vector<int32_t> zeros(2, 0);
+	lgx::Buffer buffer(ctx, zeros.size() * sizeof(int32_t), lgx::BufferType::StorageBuffer);
+
+	const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/AtomicCounter.cs.spv";
+	lgx::ComputePipelineInfo pipeline_info{};
+	pipeline_info.cs_name = cs_path.c_str();
+	pipeline_info.AddStorageBuffer(0);
+	lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+	lgx::CommandBuffer cmd_buf(ctx);
+
+	/* Record the same work twice, with a reset in between, to make sure the descriptor pools are reused */
+	for (uint32_t round = 0; round < 2; round++)
+	{
+		cmd_buf.Reset();
+		cmd_buf.ScheduleUpload(zeros.data(), zeros.size() * sizeof(int32_t), buffer);
+		cmd_buf.Barrier(buffer, lgx::ResourceUsage::TransferDst, lgx::ResourceUsage::ComputeReadWrite);
+		for (uint32_t i = 0; i < dispatch_count; i++)
+		{
+			cmd_buf.BindPipeline(pipeline);
+			cmd_buf.BindBuffer(buffer, 0);
+			cmd_buf.Dispatch(1, 1, 1);
+			cmd_buf.Barrier(buffer, lgx::ResourceUsage::ComputeReadWrite, lgx::ResourceUsage::ComputeReadWrite);
+		}
+		cmd_buf.Barrier(buffer, lgx::ResourceUsage::ComputeReadWrite, lgx::ResourceUsage::TransferSrc);
+		lgx::SubmitAndWait(ctx, cmd_buf);
+
+		std::vector<int32_t> result(2, 0);
+		lgx::Download(ctx, buffer, result.data(), result.size() * sizeof(int32_t));
+
+		EXPECT_EQ(result[0], static_cast<int32_t>(dispatch_count * thread_count));
+		EXPECT_EQ(result[1], static_cast<int32_t>(dispatch_count * thread_count * (thread_count + 1) / 2));
+	}
+}
+
 int main(int argc, char** argv)
 {
 	testing::InitGoogleTest(&argc, argv);
