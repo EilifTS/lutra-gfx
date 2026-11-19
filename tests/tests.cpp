@@ -488,6 +488,196 @@ TEST(Texture3D, SnormStorageWrite_ThenSample_ReadsWhatTheShaderWrote)
 	}
 }
 
+namespace
+{
+	std::vector<uint32_t> DownloadWords(lgx::GraphicsContext& ctx, lgx::Buffer& buffer, uint32_t word_count, uint64_t offset = 0)
+	{
+		std::vector<uint32_t> words(word_count, 0);
+		lgx::Download(ctx, buffer, words.data(), words.size() * sizeof(uint32_t), offset);
+		return words;
+	}
+
+	/* Makes a storage buffer with these words in it, ready to be used by anything */
+	lgx::Buffer CreateWordBuffer(lgx::GraphicsContext& ctx, const std::vector<uint32_t>& words, lgx::BufferType type = lgx::BufferType::StorageBuffer)
+	{
+		lgx::Buffer buffer(ctx, words.size() * sizeof(uint32_t), type);
+		lgx::CommandBuffer cmd_buf(ctx);
+		cmd_buf.ScheduleUpload(words.data(), words.size() * sizeof(uint32_t), buffer);
+		lgx::SubmitAndWait(ctx, cmd_buf);
+		return buffer;
+	}
+}
+
+TEST(Buffer, ContextLimits_AreUsableForOffsetsAndPushConstants)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	const uint32_t uniform_alignment = ctx.MinUniformBufferOffsetAlignment();
+	const uint32_t storage_alignment = ctx.MinStorageBufferOffsetAlignment();
+	EXPECT_GT(uniform_alignment, 0u);
+	EXPECT_EQ(uniform_alignment & (uniform_alignment - 1), 0u);
+	EXPECT_GT(storage_alignment, 0u);
+	EXPECT_EQ(storage_alignment & (storage_alignment - 1), 0u);
+	EXPECT_GE(ctx.MaxPushConstantsSize(), 128u);
+}
+
+TEST(Buffer, ScheduleUpload_AtAnOffset_ChangesOnlyThatRange)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Buffer buffer = CreateWordBuffer(ctx, std::vector<uint32_t>(8, 0));
+
+	const std::vector<uint32_t> part = { 1, 2, 3 };
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.ScheduleUpload(part.data(), part.size() * sizeof(uint32_t), buffer, 2 * sizeof(uint32_t));
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	EXPECT_EQ(DownloadWords(ctx, buffer, 8), (std::vector<uint32_t>{ 0, 0, 1, 2, 3, 0, 0, 0 }));
+}
+
+TEST(Buffer, Download_FromAnOffset_ReadsThatRange)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Buffer buffer = CreateWordBuffer(ctx, { 10, 11, 12, 13, 14, 15 });
+
+	EXPECT_EQ(DownloadWords(ctx, buffer, 3, 2 * sizeof(uint32_t)), (std::vector<uint32_t>{ 12, 13, 14 }));
+}
+
+TEST(Buffer, CopyBuffer_WithOffsets_CopiesTheRange)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Buffer src = CreateWordBuffer(ctx, { 0, 1, 2, 3, 4, 5, 6, 7 });
+	lgx::Buffer dst = CreateWordBuffer(ctx, std::vector<uint32_t>(8, 100));
+
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.CopyBuffer(src, dst, 3 * sizeof(uint32_t), 2 * sizeof(uint32_t), 4 * sizeof(uint32_t));
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	EXPECT_EQ(DownloadWords(ctx, dst, 8), (std::vector<uint32_t>{ 100, 100, 100, 100, 2, 3, 4, 100 }));
+	EXPECT_EQ(DownloadWords(ctx, src, 8), (std::vector<uint32_t>{ 0, 1, 2, 3, 4, 5, 6, 7 }));
+}
+
+TEST(Buffer, FillBuffer_Range_SetsOnlyThatRange)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Buffer buffer = CreateWordBuffer(ctx, std::vector<uint32_t>(8, 1));
+
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.FillBuffer(buffer, 0xDEADBEEF, 2 * sizeof(uint32_t), 3 * sizeof(uint32_t));
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	EXPECT_EQ(DownloadWords(ctx, buffer, 8), (std::vector<uint32_t>{ 1, 1, 0xDEADBEEF, 0xDEADBEEF, 0xDEADBEEF, 1, 1, 1 }));
+}
+
+TEST(Buffer, FillBuffer_WholeSize_SetsEverythingFromTheOffset)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Buffer buffer = CreateWordBuffer(ctx, std::vector<uint32_t>(8, 1));
+
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.FillBuffer(buffer, 7, 4 * sizeof(uint32_t));
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	EXPECT_EQ(DownloadWords(ctx, buffer, 8), (std::vector<uint32_t>{ 1, 1, 1, 1, 7, 7, 7, 7 }));
+}
+
+TEST(Buffer, BindBuffer_WithAnOffset_ShaderSeesOnlyThatPart)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	/* Three slots, where the one in the middle is what the shader gets as its whole buffer */
+	const uint32_t slot_words = ctx.MinStorageBufferOffsetAlignment() / sizeof(uint32_t);
+	std::vector<uint32_t> words(3 * slot_words);
+	for (uint32_t i = 0; i < words.size(); i++)
+	{
+		words[i] = i + 1;
+	}
+	lgx::Buffer buffer = CreateWordBuffer(ctx, words);
+
+	const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/DoubleBuffer.cs.spv";
+	lgx::ComputePipelineInfo pipeline_info{};
+	pipeline_info.cs_name = cs_path.c_str();
+	pipeline_info.AddStorageBuffer(0);
+	lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+	constexpr uint32_t part_words = 4;
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.BindPipeline(pipeline);
+	cmd_buf.BindBuffer(buffer, 0, slot_words * sizeof(uint32_t), part_words * sizeof(uint32_t));
+	cmd_buf.Dispatch(part_words, 1, 1);
+	cmd_buf.Barrier(buffer, lgx::ResourceUsage::ComputeWrite, lgx::ResourceUsage::TransferSrc);
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	std::vector<uint32_t> expected = words;
+	for (uint32_t i = slot_words; i < slot_words + part_words; i++)
+	{
+		expected[i] = words[i] * 2;
+	}
+	EXPECT_EQ(DownloadWords(ctx, buffer, static_cast<uint32_t>(words.size())), expected);
+}
+
+TEST(Buffer, UniformBuffer_AtAnOffset_IsReadByTheShaderAfterAUniformReadBarrier)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	const uint32_t alignment = ctx.MinUniformBufferOffsetAlignment();
+	lgx::Buffer uniform_buffer(ctx, 2 * alignment, lgx::BufferType::UniformBuffer);
+	lgx::Buffer results = CreateWordBuffer(ctx, std::vector<uint32_t>(4, 0));
+
+	const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/UniformCopy.cs.spv";
+	lgx::ComputePipelineInfo pipeline_info{};
+	pipeline_info.cs_name = cs_path.c_str();
+	pipeline_info.AddUniformBuffer(0);
+	pipeline_info.AddStorageBuffer(1);
+	lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+	const std::vector<uint32_t> values = { 5, 6, 7, 8 };
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.ScheduleUpload(values.data(), values.size() * sizeof(uint32_t), uniform_buffer, alignment);
+	cmd_buf.Barrier(uniform_buffer, lgx::ResourceUsage::TransferDst, lgx::ResourceUsage::UniformRead);
+	cmd_buf.BindPipeline(pipeline);
+	cmd_buf.BindBuffer(uniform_buffer, 0, alignment, values.size() * sizeof(uint32_t));
+	cmd_buf.BindBuffer(results, 1);
+	cmd_buf.Dispatch(1, 1, 1);
+	cmd_buf.Barrier(results, lgx::ResourceUsage::ComputeWrite, lgx::ResourceUsage::TransferSrc);
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	EXPECT_EQ(DownloadWords(ctx, results, 4), values);
+}
+
+TEST(Buffer, PushConstants_ChangeBetweenDispatches)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Buffer results = CreateWordBuffer(ctx, std::vector<uint32_t>(4, 0));
+
+	const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/PushConstants.cs.spv";
+	lgx::ComputePipelineInfo pipeline_info{};
+	pipeline_info.cs_name = cs_path.c_str();
+	pipeline_info.push_constant_size = 2 * sizeof(uint32_t);
+	pipeline_info.AddStorageBuffer(0);
+	lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+	/* The shader writes value * 2 at index */
+	const uint32_t first[2] = { 0, 10 };
+	const uint32_t second[2] = { 3, 21 };
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.BindPipeline(pipeline);
+	cmd_buf.BindBuffer(results, 0);
+	cmd_buf.PushConstants(first, sizeof(first));
+	cmd_buf.Dispatch(1, 1, 1);
+	cmd_buf.PushConstants(second, sizeof(second));
+	cmd_buf.Dispatch(1, 1, 1);
+	cmd_buf.Barrier(results, lgx::ResourceUsage::ComputeWrite, lgx::ResourceUsage::TransferSrc);
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	EXPECT_EQ(DownloadWords(ctx, results, 4), (std::vector<uint32_t>{ 20, 0, 0, 42 }));
+}
+
 int main(int argc, char** argv)
 {
 	testing::InitGoogleTest(&argc, argv);

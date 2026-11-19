@@ -33,12 +33,15 @@ namespace lgx
 
 		void BindPipeline(GraphicsPipelineInternal& pipeline);
 		void BindComputePipeline(ComputePipelineInternal& pipeline);
-		void BindBuffer(BufferInternal& buffer, u32 binding);
+		void BindBuffer(BufferInternal& buffer, u32 binding, u64 offset, u64 size);
 		void BindTexture(vk::ImageView view, u32 binding);
 		void BindTextures(std::span<vk::ImageView> views, u32 binding);
 		void BindStorageImage(vk::ImageView view, u32 binding);
 
-		void ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer);
+		void ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer, u64 dst_offset);
+		void CopyBuffer(BufferInternal& src_buffer, BufferInternal& dst_buffer, u64 size, u64 src_offset, u64 dst_offset);
+		void FillBuffer(BufferInternal& buffer, u32 value, u64 offset, u64 size);
+		void PushConstants(const void* data, u32 size, u32 offset);
 		void ScheduleUpload(const void* src_ptr, TextureInternal& dst_texture);
 		void ScheduleUpload(const void* src_ptr, Texture3DInternal& dst_texture, u32 mip);
 
@@ -74,7 +77,7 @@ namespace lgx
 	/* Blocking GPU -> CPU readback: submits its own one-off command buffer, waits for it to
 	   complete, then copies the result into dst_ptr. Meant for tests/tools, not a hot path -
 	   for per-frame work, schedule your own copy via a persistent CommandBuffer instead. */
-	void DownloadInternal(GraphicsContextInternal& ctx, BufferInternal& src_buffer, void* dst_ptr, u64 size);
+	void DownloadInternal(GraphicsContextInternal& ctx, BufferInternal& src_buffer, void* dst_ptr, u64 size, u64 src_offset);
 	void DownloadInternal(GraphicsContextInternal& ctx, TextureInternal& src_texture, void* dst_ptr);
 	void DownloadInternal(GraphicsContextInternal& ctx, RenderTargetInternal& src_render_target, void* dst_ptr);
 	void DownloadInternal(GraphicsContextInternal& ctx, Texture3DInternal& src_texture, void* dst_ptr, u32 mip);

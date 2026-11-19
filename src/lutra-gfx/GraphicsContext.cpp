@@ -39,6 +39,21 @@ namespace lgx
 		return internal->enabled_features;
 	}
 
+	u32 GraphicsContext::MinUniformBufferOffsetAlignment() const
+	{
+		return static_cast<u32>(internal->limits.minUniformBufferOffsetAlignment);
+	}
+
+	u32 GraphicsContext::MinStorageBufferOffsetAlignment() const
+	{
+		return static_cast<u32>(internal->limits.minStorageBufferOffsetAlignment);
+	}
+
+	u32 GraphicsContext::MaxPushConstantsSize() const
+	{
+		return internal->limits.maxPushConstantsSize;
+	}
+
 	void GraphicsContext::WaitIdle()
 	{
 		internal->WaitIdle();

@@ -21,5 +21,5 @@ namespace lgx
 		std::vector<vk::UniqueSampler> samplers{};
 	};
 
-	PipelineLayoutResult CreatePipelineLayout(vk::Device dev, const std::vector<PipelineBinding>& bindings);
+	PipelineLayoutResult CreatePipelineLayout(vk::Device dev, const std::vector<PipelineBinding>& bindings, u32 push_constant_size, vk::ShaderStageFlags push_constant_stages);
 }

@@ -35,7 +35,8 @@ namespace lgx
 
 	void CommandBuffer::BindPipeline(GraphicsPipeline& pipeline) { internal->BindPipeline(*pipeline.internal); };
 	void CommandBuffer::BindPipeline(ComputePipeline& pipeline) { internal->BindComputePipeline(*pipeline.internal); };
-	void CommandBuffer::BindBuffer(Buffer& buffer, u32 binding) { internal->BindBuffer(*buffer.internal, binding); };
+	void CommandBuffer::BindBuffer(Buffer& buffer, u32 binding) { internal->BindBuffer(*buffer.internal, binding, 0, whole_size); };
+	void CommandBuffer::BindBuffer(Buffer& buffer, u32 binding, u64 offset, u64 size) { internal->BindBuffer(*buffer.internal, binding, offset, size); };
 	void CommandBuffer::BindTexture(TextureView view, u32 binding) { internal->BindTexture(*reinterpret_cast<vk::ImageView*>(&view), binding); };
 	void CommandBuffer::BindTextures(std::span<TextureView> views, u32 binding)
 	{
@@ -44,7 +45,10 @@ namespace lgx
 	};
 	void CommandBuffer::BindStorageImage(TextureView texture, u32 binding) { internal->BindStorageImage(*reinterpret_cast<vk::ImageView*>(&texture), binding); };
 
-	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer) { internal->ScheduleUpload(src_ptr, size, *dst_buffer.internal); };
+	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer, u64 dst_offset) { internal->ScheduleUpload(src_ptr, size, *dst_buffer.internal, dst_offset); };
+	void CommandBuffer::CopyBuffer(Buffer& src_buffer, Buffer& dst_buffer, u64 size, u64 src_offset, u64 dst_offset) { internal->CopyBuffer(*src_buffer.internal, *dst_buffer.internal, size, src_offset, dst_offset); };
+	void CommandBuffer::FillBuffer(Buffer& buffer, u32 value, u64 offset, u64 size) { internal->FillBuffer(*buffer.internal, value, offset, size); };
+	void CommandBuffer::PushConstants(const void* data, u32 size, u32 offset) { internal->PushConstants(data, size, offset); };
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture& dst_texture) { internal->ScheduleUpload(src_ptr, *dst_texture.internal); };
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture3D& dst_texture, u32 mip) { internal->ScheduleUpload(src_ptr, *dst_texture.internal, mip); };
 
@@ -79,9 +83,9 @@ namespace lgx
 		SubmitAndWaitInternal(*ctx.internal, *cmd_buf.internal);
 	}
 
-	void Download(GraphicsContext& ctx, Buffer& src_buffer, void* dst_ptr, u64 size)
+	void Download(GraphicsContext& ctx, Buffer& src_buffer, void* dst_ptr, u64 size, u64 src_offset)
 	{
-		DownloadInternal(*ctx.internal, *src_buffer.internal, dst_ptr, size);
+		DownloadInternal(*ctx.internal, *src_buffer.internal, dst_ptr, size, src_offset);
 	}
 
 	void Download(GraphicsContext& ctx, Texture& src_texture, void* dst_ptr)

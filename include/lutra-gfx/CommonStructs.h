@@ -15,6 +15,9 @@ namespace lgx
 
 	using TextureView = void*;
 
+	/* For the size of a range of a buffer, to take everything from the offset to the end of the buffer */
+	constexpr u64 whole_size = ~u64(0);
+
 	enum class PrimitiveTopology
 	{
 		LineList,
@@ -92,6 +95,9 @@ namespace lgx
 		ComputeReadWrite,
 		TransferSrc,
 		TransferDst,
+
+		/* Reads of a uniform buffer, which ShaderRead does not cover */
+		UniformRead,
 	};
 
 	/* A single descriptor set binding, shared by GraphicsPipelineInfo and ComputePipelineInfo. */
@@ -166,6 +172,10 @@ namespace lgx
 			bindings.push_back({ binding, Binding::Type::UniformBuffer, 1, stage, SamplerType::None });
 		}
 
+		/* The size in bytes of the push constants of the shaders, which CommandBuffer::PushConstants sets.
+		   A multiple of four, at most GraphicsContext::MaxPushConstantsSize(). Both shaders can read them. */
+		u32 push_constant_size{};
+
 		std::vector<Binding> bindings{};
 	};
 
@@ -201,6 +211,10 @@ namespace lgx
 		{
 			bindings.push_back({ binding, Binding::Type::UniformBuffer, 1, Binding::Stage::Compute, SamplerType::None });
 		}
+
+		/* The size in bytes of the push constants of the shader, which CommandBuffer::PushConstants sets.
+		   A multiple of four, at most GraphicsContext::MaxPushConstantsSize(). */
+		u32 push_constant_size{};
 
 		std::vector<Binding> bindings{};
 	};

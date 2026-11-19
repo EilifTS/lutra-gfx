@@ -7,10 +7,11 @@ namespace lgx
 {
 	GraphicsPipelineInternal::GraphicsPipelineInternal(vk::Device dev, const GraphicsPipelineInfo& info)
 	{
+		push_constant_size = info.push_constant_size;
 		vs_module = CreateShaderModule(dev, info.vs_name);
 		ps_module = CreateShaderModule(dev, info.ps_name);
 
-		PipelineLayoutResult layout_result = CreatePipelineLayout(dev, info.bindings);
+		PipelineLayoutResult layout_result = CreatePipelineLayout(dev, info.bindings, info.push_constant_size, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 		desc_layout = std::move(layout_result.desc_layout);
 		layout = std::move(layout_result.layout);
 		samplers = std::move(layout_result.samplers);

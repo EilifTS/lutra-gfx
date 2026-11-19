@@ -18,6 +18,7 @@ namespace lgx
 		vk::UniqueDebugUtilsMessengerEXT messenger{};
 #endif
 		vk::PhysicalDevice physical_device{};
+		vk::PhysicalDeviceLimits limits{};
 		vk::UniqueDevice device{};
 		vk::Queue queue{};
 		u32 queue_family_index{};

@@ -103,7 +103,7 @@ namespace lgx
 		return VkCheck(dev.createSamplerUnique(info));
 	}
 
-	PipelineLayoutResult CreatePipelineLayout(vk::Device dev, const std::vector<PipelineBinding>& bindings)
+	PipelineLayoutResult CreatePipelineLayout(vk::Device dev, const std::vector<PipelineBinding>& bindings, u32 push_constant_size, vk::ShaderStageFlags push_constant_stages)
 	{
 		PipelineLayoutResult result{};
 
@@ -145,9 +145,17 @@ namespace lgx
 		};
 		result.desc_layout = VkCheck(dev.createDescriptorSetLayoutUnique(desc_layout_info));
 
+		const vk::PushConstantRange push_constant_range{
+			.stageFlags = push_constant_stages,
+			.offset = 0,
+			.size = push_constant_size,
+		};
+
 		const vk::PipelineLayoutCreateInfo layout_info{
 			.setLayoutCount = 1,
 			.pSetLayouts = &result.desc_layout.get(),
+			.pushConstantRangeCount = push_constant_size > 0 ? 1u : 0u,
+			.pPushConstantRanges = &push_constant_range,
 		};
 		result.layout = VkCheck(dev.createPipelineLayoutUnique(layout_info));
 

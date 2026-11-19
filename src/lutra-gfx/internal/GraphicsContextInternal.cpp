@@ -393,6 +393,8 @@ namespace lgx
 		/* Get physical device */
 		std::tie(physical_device, queue_family_index) = select_physical_device_and_queue_family(instance.get(), *surface /* Surface is null handle when there is no window */);
 
+		limits = physical_device.getProperties().limits;
+
 		if (has_window)
 		{
 			swapchain_color_format = select_swapchain_format(physical_device, *surface);

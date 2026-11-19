@@ -33,6 +33,14 @@ namespace lgx
 		/* The optional features that were requested and are supported, and therefore enabled */
 		const GraphicsFeatures& EnabledFeatures() const;
 
+		/* What the offset of a buffer that is bound with a range has to be a multiple of, one for uniform buffers
+		   and one for storage buffers, see CommandBuffer::BindBuffer */
+		u32 MinUniformBufferOffsetAlignment() const;
+		u32 MinStorageBufferOffsetAlignment() const;
+
+		/* The most bytes of push constants a pipeline can have, at least 128 */
+		u32 MaxPushConstantsSize() const;
+
 		std::unique_ptr<GraphicsContextInternal> internal{};
 	};
 }

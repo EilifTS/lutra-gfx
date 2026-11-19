@@ -9,7 +9,7 @@ namespace lgx
 	class DescriptorWriteCache
 	{
 	public:
-		void AddBufferWrite(u32 binding, vk::Buffer buffer, u64 buffer_size, bool is_uniform)
+		void AddBufferWrite(u32 binding, vk::Buffer buffer, u64 offset, u64 range, bool is_uniform)
 		{
 			write_infos.push_back({
 				.binding = binding,
@@ -20,7 +20,8 @@ namespace lgx
 
 			buffer_write_infos.push_back({
 				.buffer = buffer,
-				.range = buffer_size,
+				.offset = offset,
+				.range = range,
 			});
 			is_dirty = true;
 		};

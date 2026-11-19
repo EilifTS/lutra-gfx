@@ -4,3 +4,5 @@ C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS FloatAtomicAdd.hlsl -F
 C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS Texture3DFill.hlsl -Fo Texture3DFill.cs.spv
 C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS Texture3DFillSnorm.hlsl -Fo Texture3DFillSnorm.cs.spv
 C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS Texture3DSample.hlsl -Fo Texture3DSample.cs.spv
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS UniformCopy.hlsl -Fo UniformCopy.cs.spv
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS PushConstants.hlsl -Fo PushConstants.cs.spv

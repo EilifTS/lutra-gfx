@@ -53,6 +53,8 @@ namespace lgx
 			return { vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eTransferRead };
 		case ResourceUsage::TransferDst:
 			return { vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eTransferWrite };
+		case ResourceUsage::UniformRead:
+			return { vk::PipelineStageFlagBits::eVertexShader | vk::PipelineStageFlagBits::eFragmentShader | vk::PipelineStageFlagBits::eComputeShader, vk::AccessFlagBits::eUniformRead };
 		}
 		assert(0);
 		return {};
@@ -157,9 +159,15 @@ namespace lgx
 		cmd_buf->bindPipeline(vk::PipelineBindPoint::eCompute, pipeline.GetPipeline());
 	}
 
-	void CommandBufferInternal::BindBuffer(BufferInternal& buffer, u32 binding)
+	void CommandBufferInternal::BindBuffer(BufferInternal& buffer, u32 binding, u64 offset, u64 size)
 	{
-		descriptor_write_cache.AddBufferWrite(binding, buffer.buffer.GetBuffer(), buffer.Size(), buffer.IsUniform());
+		const u64 range = size == whole_size ? buffer.Size() - offset : size;
+		assert(offset + range <= buffer.Size());
+
+		const u64 alignment = buffer.IsUniform() ? ctx->limits.minUniformBufferOffsetAlignment : ctx->limits.minStorageBufferOffsetAlignment;
+		assert(offset % alignment == 0);
+
+		descriptor_write_cache.AddBufferWrite(binding, buffer.buffer.GetBuffer(), offset, range, buffer.IsUniform());
 	}
 
 	void CommandBufferInternal::BindTexture(vk::ImageView view, u32 binding)
@@ -177,8 +185,10 @@ namespace lgx
 		descriptor_write_cache.AddStorageImageWrite(binding, view);
 	}
 
-	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer)
+	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer, u64 dst_offset)
 	{
+		assert(dst_offset + size <= dst_buffer.Size());
+
 		/* Allocate */
 		BufferMemoryAllocation allocation = buffer_memory_allocator.Alloc(*ctx, size, 1);
 
@@ -195,11 +205,49 @@ namespace lgx
 		/* GPU -> GPU COPY */
 		const vk::BufferCopy buffer_copy{
 			.srcOffset = allocation.offset,
-			.dstOffset = 0,
+			.dstOffset = dst_offset,
 			.size = size,
 		};
 
 		cmd_buf->copyBuffer(allocation.buffer, dst_buffer.buffer.GetBuffer(), buffer_copy);
+	}
+
+	void CommandBufferInternal::CopyBuffer(BufferInternal& src_buffer, BufferInternal& dst_buffer, u64 size, u64 src_offset, u64 dst_offset)
+	{
+		assert(src_offset + size <= src_buffer.Size());
+		assert(dst_offset + size <= dst_buffer.Size());
+
+		const vk::BufferCopy buffer_copy{
+			.srcOffset = src_offset,
+			.dstOffset = dst_offset,
+			.size = size,
+		};
+		cmd_buf->copyBuffer(src_buffer.buffer.GetBuffer(), dst_buffer.buffer.GetBuffer(), buffer_copy);
+	}
+
+	void CommandBufferInternal::FillBuffer(BufferInternal& buffer, u32 value, u64 offset, u64 size)
+	{
+		assert(offset % 4 == 0 && (size == whole_size || size % 4 == 0));
+		assert(size == whole_size ? offset <= buffer.Size() : offset + size <= buffer.Size());
+
+		cmd_buf->fillBuffer(buffer.buffer.GetBuffer(), offset, size == whole_size ? vk::WholeSize : size, value);
+	}
+
+	void CommandBufferInternal::PushConstants(const void* data, u32 size, u32 offset)
+	{
+		assert(size % 4 == 0 && offset % 4 == 0);
+
+		if (bound_compute_pipeline != nullptr)
+		{
+			assert(offset + size <= bound_compute_pipeline->GetPushConstantSize());
+			cmd_buf->pushConstants(bound_compute_pipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eCompute, offset, size, data);
+		}
+		else
+		{
+			assert(bound_pipeline != nullptr);
+			assert(offset + size <= bound_pipeline->GetPushConstantSize());
+			cmd_buf->pushConstants(bound_pipeline->GetPipelineLayout(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, offset, size, data);
+		}
 	}
 
 	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, TextureInternal& dst_image)
@@ -378,18 +426,20 @@ namespace lgx
 		assert(result == vk::Result::eSuccess);
 	}
 
-	void DownloadInternal(GraphicsContextInternal& ctx, BufferInternal& src_buffer, void* dst_ptr, u64 size)
+	void DownloadInternal(GraphicsContextInternal& ctx, BufferInternal& src_buffer, void* dst_ptr, u64 size, u64 src_offset)
 	{
+		assert(src_offset + size <= src_buffer.Size());
+
 		/* Temporary, host-readable staging buffer to copy the GPU data into */
 		BufferInternal staging_buffer(ctx, size, vk::BufferUsageFlagBits::eTransferDst, VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
 
 		CommandBufferInternal cmd_buf(ctx);
 
 		/* Make sure any prior writes to src_buffer are visible to the copy below */
-		buffer_barrier(*cmd_buf.cmd_buf, src_buffer.buffer.GetBuffer(), 0, size, vk::PipelineStageFlagBits::eAllCommands, vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eMemoryWrite, vk::AccessFlagBits::eTransferRead);
+		buffer_barrier(*cmd_buf.cmd_buf, src_buffer.buffer.GetBuffer(), src_offset, size, vk::PipelineStageFlagBits::eAllCommands, vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eMemoryWrite, vk::AccessFlagBits::eTransferRead);
 
 		const vk::BufferCopy buffer_copy{
-			.srcOffset = 0,
+			.srcOffset = src_offset,
 			.dstOffset = 0,
 			.size = size,
 		};
