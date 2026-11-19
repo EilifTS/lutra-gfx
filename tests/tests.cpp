@@ -4,9 +4,11 @@
 #include <lutra-gfx/CommandBuffer.h>
 #include <lutra-gfx/RenderTarget.h>
 #include <lutra-gfx/ComputePipeline.h>
+#include <lutra-gfx/Image.h>
 #include <lutra-gfx/Texture3D.h>
 #include <vector>
 #include <cstdint>
+#include <filesystem>
 #include <string>
 
 TEST(Graphics, CreateContext)
@@ -232,6 +234,37 @@ TEST(Graphics, ComputeManyDispatches)
 		EXPECT_EQ(result[0], static_cast<int32_t>(dispatch_count * thread_count));
 		EXPECT_EQ(result[1], static_cast<int32_t>(dispatch_count * thread_count * (thread_count + 1) / 2));
 	}
+}
+
+TEST(Image, SaveThenLoad_GivesTheSameImage)
+{
+	lgx::Image image(5, 3);
+	for (uint32_t i = 0; i < 5 * 3 * 4; i++)
+	{
+		image.SetData(i, static_cast<char>(i * 17));
+	}
+
+	const std::string path = (std::filesystem::temp_directory_path() / "lutra_gfx_image_test.png").string();
+	ASSERT_TRUE(image.Save(path.c_str()));
+
+	lgx::Image loaded;
+	loaded.Load(path.c_str());
+	std::filesystem::remove(path);
+
+	ASSERT_EQ(loaded.Width(), 5u);
+	ASSERT_EQ(loaded.Height(), 3u);
+	for (uint32_t i = 0; i < 5 * 3 * 4; i++)
+	{
+		EXPECT_EQ(loaded.GetData(i), image.GetData(i)) << "byte " << i;
+	}
+}
+
+TEST(Image, Save_ToAFolderThatDoesNotExist_ReturnsFalse)
+{
+	const lgx::Image image(2, 2);
+
+	const std::string path = (std::filesystem::temp_directory_path() / "lutra_gfx_missing_folder" / "image.png").string();
+	EXPECT_FALSE(image.Save(path.c_str()));
 }
 
 TEST(Texture3D, MipHelpers_CountDownToASingleTexel)

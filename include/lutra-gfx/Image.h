@@ -12,6 +12,9 @@ namespace lgx
 
 		void Load(const char* filename);
 
+		/* Writes the image as an RGBA8 PNG. Returns false if it could not be encoded or the file could not be written. */
+		bool Save(const char* filename) const;
+
 		u32 Width() const { return width; }
 		u32 Height() const { return height; }
 		const char* GetDataPtr() const { return data.data(); }

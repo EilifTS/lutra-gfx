@@ -39,4 +39,36 @@ namespace lgx
 
 		spng_ctx_free(ctx);
 	}
+
+	bool Image::Save(const char* filename) const
+	{
+		spng_ctx* ctx = spng_ctx_new(SPNG_CTX_ENCODER);
+		spng_set_option(ctx, SPNG_ENCODE_TO_BUFFER, 1);
+
+		spng_ihdr image_header{
+			.width = width,
+			.height = height,
+			.bit_depth = 8,
+			.color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA,
+		};
+		spng_set_ihdr(ctx, &image_header);
+
+		bool saved = false;
+		if (spng_encode_image(ctx, data.data(), data.size(), SPNG_FMT_PNG, SPNG_ENCODE_FINALIZE) == 0)
+		{
+			size_t png_size = 0;
+			int error = 0;
+			void* png_data = spng_get_png_buffer(ctx, &png_size, &error);
+			if (error == 0)
+			{
+				std::ofstream file(filename, std::ios::binary);
+				file.write(static_cast<const char*>(png_data), static_cast<std::streamsize>(png_size));
+				saved = file.good();
+			}
+			free(png_data);
+		}
+
+		spng_ctx_free(ctx);
+		return saved;
+	}
 }
