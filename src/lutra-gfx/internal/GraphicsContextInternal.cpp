@@ -237,7 +237,7 @@ namespace lgx
 		return { physical_device, queue_family_index };
 	}
 
-	vk::UniqueDevice create_device(vk::PhysicalDevice physical_device, u32 queue_family_index, const GraphicsFeatures& requested_features, GraphicsFeatures& enabled_features)
+	vk::UniqueDevice create_device(vk::PhysicalDevice physical_device, u32 queue_family_index, bool has_window, const GraphicsFeatures& requested_features, GraphicsFeatures& enabled_features)
 	{
 		constexpr float queue_priority = 1.0f;
 		vk::DeviceQueueCreateInfo queue_create_info{
@@ -249,7 +249,12 @@ namespace lgx
 
 		std::vector<const char*> required_device_extensions{};
 		required_device_extensions.push_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
-		required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
+		/* The swapchain extension depends on VK_KHR_surface, which the instance only has for a window */
+		if (has_window)
+		{
+			required_device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		}
 
 #if ENABLE_PORTABILITY
 		required_device_extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
@@ -401,7 +406,7 @@ namespace lgx
 		}
 
 		/* Create the logical device */
-		device = create_device(physical_device, queue_family_index, requested_features, enabled_features);
+		device = create_device(physical_device, queue_family_index, has_window, requested_features, enabled_features);
 
 		/* Third initialize step of the dispatcher */
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*device);
