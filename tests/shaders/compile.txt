@@ -1,3 +1,6 @@
 C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS DoubleBuffer.hlsl -Fo DoubleBuffer.cs.spv
 C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS AtomicCounter.hlsl -Fo AtomicCounter.cs.spv
 C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS FloatAtomicAdd.hlsl -Fo FloatAtomicAdd.cs.spv
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS Texture3DFill.hlsl -Fo Texture3DFill.cs.spv
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS Texture3DFillSnorm.hlsl -Fo Texture3DFillSnorm.cs.spv
+C:\Users\eilif/dxc/bin/x64/dxc.exe -spirv -T cs_6_0 -E CS Texture3DSample.hlsl -Fo Texture3DSample.cs.spv

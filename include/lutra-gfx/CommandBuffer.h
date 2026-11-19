@@ -14,6 +14,7 @@ namespace lgx
 	class ComputePipeline;
 	class DepthStencilBuffer;
 	class RenderTarget;
+	class Texture3D;
 
 	class CommandBuffer
 	{
@@ -44,12 +45,18 @@ namespace lgx
 		void ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, Texture& dst_texture);
 
+		/* Uploads the texels of one mip, tightly packed with x first, then y, then z.
+		   The size is that of the mip in TextureFormatSize(format) bytes per texel. */
+		void ScheduleUpload(const void* src_ptr, Texture3D& dst_texture, u32 mip);
+
 		/* Synchronizes access to a resource between what it was just used for and what it's
 		   about to be used for - e.g. Barrier(rt, ResourceUsage::ColorAttachment,
 		   ResourceUsage::ShaderRead) after rendering into a texture and before sampling it. */
 		void Barrier(Texture& texture, ResourceUsage prev_usage, ResourceUsage next_usage);
 		void Barrier(DepthStencilBuffer& depth_stencil_buffer, ResourceUsage prev_usage, ResourceUsage next_usage);
 		void Barrier(RenderTarget& render_target, ResourceUsage prev_usage, ResourceUsage next_usage);
+		/* Covers every mip */
+		void Barrier(Texture3D& texture, ResourceUsage prev_usage, ResourceUsage next_usage);
 		void Barrier(Buffer& buffer, ResourceUsage prev_usage, ResourceUsage next_usage);
 
 		void Draw(u32 vertex_count, u32 instance_count);
@@ -70,4 +77,6 @@ namespace lgx
 	void Download(GraphicsContext& ctx, Buffer& src_buffer, void* dst_ptr, u64 size);
 	void Download(GraphicsContext& ctx, Texture& src_texture, void* dst_ptr);
 	void Download(GraphicsContext& ctx, RenderTarget& src_render_target, void* dst_ptr);
+	/* Reads one mip, tightly packed like ScheduleUpload takes it, so dst_ptr has to fit the whole mip */
+	void Download(GraphicsContext& ctx, Texture3D& src_texture, void* dst_ptr, u32 mip);
 }

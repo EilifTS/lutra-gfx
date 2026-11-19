@@ -34,6 +34,32 @@ namespace lgx
 		BGRA8,
 	};
 
+	/* Formats of the texels of a Texture3D. The Snorm and Unorm formats are read and written as floats
+	   in shaders, between -1 and 1 and between 0 and 1. */
+	enum class TextureFormat
+	{
+		R8Unorm,
+		R8Snorm,
+		R32Float,
+		RGBA8,
+		RGBA32Float,
+	};
+
+	/* The size in bytes of one texel of the format, which is also what it takes up in the data
+	   that is uploaded to and downloaded from a texture */
+	inline u32 TextureFormatSize(TextureFormat format)
+	{
+		switch (format)
+		{
+		case TextureFormat::R8Unorm: return 1;
+		case TextureFormat::R8Snorm: return 1;
+		case TextureFormat::R32Float: return 4;
+		case TextureFormat::RGBA8: return 4;
+		case TextureFormat::RGBA32Float: return 16;
+		}
+		return 0;
+	}
+
 	enum class SamplerType
 	{
 		None,

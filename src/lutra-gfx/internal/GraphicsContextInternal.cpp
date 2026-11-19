@@ -311,8 +311,12 @@ namespace lgx
 			.dynamicRendering = true,
 		};
 
+		/* Lets 8 bit and 16 bit formats be storage images, which a Texture3D needs to be written by compute shaders */
 		vk::PhysicalDeviceFeatures2 features2{
 			.pNext = &features13,
+			.features = {
+				.shaderStorageImageExtendedFormats = physical_device.getFeatures().shaderStorageImageExtendedFormats,
+			},
 		};
 
 		const vk::DeviceCreateInfo device_info{

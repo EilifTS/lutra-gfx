@@ -9,6 +9,7 @@
 #include "BufferInternal.h"
 #include "TextureInternal.h"
 #include "RenderTargetInternal.h"
+#include "Texture3DInternal.h"
 
 namespace lgx
 {
@@ -39,8 +40,9 @@ namespace lgx
 
 		void ScheduleUpload(const void* src_ptr, u64 size, BufferInternal& dst_buffer);
 		void ScheduleUpload(const void* src_ptr, TextureInternal& dst_texture);
+		void ScheduleUpload(const void* src_ptr, Texture3DInternal& dst_texture, u32 mip);
 
-		void Barrier(vk::Image image, vk::ImageAspectFlags aspect, ResourceUsage prev_usage, ResourceUsage next_usage);
+		void Barrier(vk::Image image, vk::ImageAspectFlags aspect, ResourceUsage prev_usage, ResourceUsage next_usage, u32 level_count = 1);
 		void Barrier(vk::Buffer buffer, ResourceUsage prev_usage, ResourceUsage next_usage);
 
 		void Draw(u32 vertex_count, u32 instance_count);
@@ -75,4 +77,5 @@ namespace lgx
 	void DownloadInternal(GraphicsContextInternal& ctx, BufferInternal& src_buffer, void* dst_ptr, u64 size);
 	void DownloadInternal(GraphicsContextInternal& ctx, TextureInternal& src_texture, void* dst_ptr);
 	void DownloadInternal(GraphicsContextInternal& ctx, RenderTargetInternal& src_render_target, void* dst_ptr);
+	void DownloadInternal(GraphicsContextInternal& ctx, Texture3DInternal& src_texture, void* dst_ptr, u32 mip);
 }

@@ -3,11 +3,13 @@
 #include <lutra-gfx/Texture.h>
 #include <lutra-gfx/DepthStencilBuffer.h>
 #include <lutra-gfx/RenderTarget.h>
+#include <lutra-gfx/Texture3D.h>
 #include <lutra-gfx/ComputePipeline.h>
 #include "internal/GraphicsContextInternal.h"
 #include "internal/CommandBufferInternal.h"
 #include "internal/DepthStencilBufferInternal.h"
 #include "internal/RenderTargetInternal.h"
+#include "internal/Texture3DInternal.h"
 #include "internal/ComputePipelineInternal.h"
 #include <vector>
 
@@ -44,6 +46,7 @@ namespace lgx
 
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, u64 size, Buffer& dst_buffer) { internal->ScheduleUpload(src_ptr, size, *dst_buffer.internal); };
 	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture& dst_texture) { internal->ScheduleUpload(src_ptr, *dst_texture.internal); };
+	void CommandBuffer::ScheduleUpload(const void* src_ptr, Texture3D& dst_texture, u32 mip) { internal->ScheduleUpload(src_ptr, *dst_texture.internal, mip); };
 
 	void CommandBuffer::Barrier(Texture& texture, ResourceUsage prev_usage, ResourceUsage next_usage)
 	{
@@ -56,6 +59,10 @@ namespace lgx
 	void CommandBuffer::Barrier(RenderTarget& render_target, ResourceUsage prev_usage, ResourceUsage next_usage)
 	{
 		internal->Barrier(render_target.internal->vma_image.GetImage(), vk::ImageAspectFlagBits::eColor, prev_usage, next_usage);
+	}
+	void CommandBuffer::Barrier(Texture3D& texture, ResourceUsage prev_usage, ResourceUsage next_usage)
+	{
+		internal->Barrier(texture.internal->vma_image.GetImage(), vk::ImageAspectFlagBits::eColor, prev_usage, next_usage, texture.internal->mip_count);
 	}
 	void CommandBuffer::Barrier(Buffer& buffer, ResourceUsage prev_usage, ResourceUsage next_usage)
 	{
@@ -85,5 +92,10 @@ namespace lgx
 	void Download(GraphicsContext& ctx, RenderTarget& src_render_target, void* dst_ptr)
 	{
 		DownloadInternal(*ctx.internal, *src_render_target.internal, dst_ptr);
+	}
+
+	void Download(GraphicsContext& ctx, Texture3D& src_texture, void* dst_ptr, u32 mip)
+	{
+		DownloadInternal(*ctx.internal, *src_texture.internal, dst_ptr, mip);
 	}
 }

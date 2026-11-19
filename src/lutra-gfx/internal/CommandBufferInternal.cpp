@@ -236,7 +236,41 @@ namespace lgx
 		cmd_buf->copyBufferToImage(allocation.buffer, dst_image.vma_image.GetImage(), vk::ImageLayout::eGeneral, buffer_image_copy);
 	}
 
-	void CommandBufferInternal::Barrier(vk::Image image, vk::ImageAspectFlags aspect, ResourceUsage prev_usage, ResourceUsage next_usage)
+	void CommandBufferInternal::ScheduleUpload(const void* src_ptr, Texture3DInternal& dst_image, u32 mip)
+	{
+		assert(mip < dst_image.mip_count);
+
+		const u32 mip_width = CalculateMipSize(dst_image.width, mip);
+		const u32 mip_height = CalculateMipSize(dst_image.height, mip);
+		const u32 mip_depth = CalculateMipSize(dst_image.depth, mip);
+		const u64 buffer_size = u64(mip_width) * mip_height * mip_depth * TextureFormatSize(dst_image.texture_format);
+
+		/* The offset of a buffer an image is copied from has to be a multiple of the texel size, and of four */
+		constexpr u64 largest_texel_size = 16;
+		BufferMemoryAllocation allocation = buffer_memory_allocator.Alloc(*ctx, buffer_size, largest_texel_size);
+
+		std::memcpy(allocation.ptr, src_ptr, buffer_size);
+
+		VkResult result = vmaFlushAllocation(ctx->vma_allocator, allocation.vma_allocation, allocation.offset, allocation.size);
+		assert(result == VK_SUCCESS);
+
+		buffer_barrier(*cmd_buf, allocation.buffer, allocation.offset, allocation.size, vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, vk::AccessFlagBits::eHostWrite, vk::AccessFlagBits::eTransferRead);
+
+		const vk::BufferImageCopy buffer_image_copy{
+			.bufferOffset = allocation.offset,
+			.imageSubresource = {
+				.aspectMask = vk::ImageAspectFlagBits::eColor,
+				.mipLevel = mip,
+				.baseArrayLayer = 0,
+				.layerCount = 1
+			},
+			.imageExtent = { mip_width, mip_height, mip_depth },
+		};
+
+		cmd_buf->copyBufferToImage(allocation.buffer, dst_image.vma_image.GetImage(), vk::ImageLayout::eGeneral, buffer_image_copy);
+	}
+
+	void CommandBufferInternal::Barrier(vk::Image image, vk::ImageAspectFlags aspect, ResourceUsage prev_usage, ResourceUsage next_usage, u32 level_count)
 	{
 		const ResourceUsageInfo prev_info = GetResourceUsageInfo(prev_usage);
 		const ResourceUsageInfo next_info = GetResourceUsageInfo(next_usage);
@@ -244,7 +278,7 @@ namespace lgx
 		const vk::ImageSubresourceRange range{
 			.aspectMask = aspect,
 			.baseMipLevel = 0,
-			.levelCount = 1,
+			.levelCount = level_count,
 			.baseArrayLayer = 0,
 			.layerCount = 1,
 		};
@@ -433,5 +467,58 @@ namespace lgx
 	void DownloadInternal(GraphicsContextInternal& ctx, RenderTargetInternal& src_render_target, void* dst_ptr)
 	{
 		DownloadColorImageInternal(ctx, src_render_target.vma_image.GetImage(), src_render_target.width, src_render_target.height, dst_ptr);
+	}
+
+	void DownloadInternal(GraphicsContextInternal& ctx, Texture3DInternal& src_texture, void* dst_ptr, u32 mip)
+	{
+		assert(mip < src_texture.mip_count);
+
+		const u32 mip_width = CalculateMipSize(src_texture.width, mip);
+		const u32 mip_height = CalculateMipSize(src_texture.height, mip);
+		const u32 mip_depth = CalculateMipSize(src_texture.depth, mip);
+		const u64 size = u64(mip_width) * mip_height * mip_depth * TextureFormatSize(src_texture.texture_format);
+
+		BufferInternal staging_buffer(ctx, size, vk::BufferUsageFlagBits::eTransferDst, VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
+
+		CommandBufferInternal cmd_buf(ctx);
+
+		const vk::ImageSubresourceRange range{
+			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.baseMipLevel = mip,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		};
+		const vk::ImageMemoryBarrier pre_copy_barrier{
+			.srcAccessMask = vk::AccessFlagBits::eMemoryWrite,
+			.dstAccessMask = vk::AccessFlagBits::eTransferRead,
+			.oldLayout = vk::ImageLayout::eGeneral,
+			.newLayout = vk::ImageLayout::eGeneral,
+			.srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+			.dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+			.image = src_texture.vma_image.GetImage(),
+			.subresourceRange = range,
+		};
+		cmd_buf.cmd_buf->pipelineBarrier(vk::PipelineStageFlagBits::eAllCommands, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlagBits::eByRegion, {}, {}, pre_copy_barrier);
+
+		const vk::BufferImageCopy buffer_image_copy{
+			.bufferOffset = 0,
+			.imageSubresource = {
+				.aspectMask = vk::ImageAspectFlagBits::eColor,
+				.mipLevel = mip,
+				.baseArrayLayer = 0,
+				.layerCount = 1
+			},
+			.imageExtent = { mip_width, mip_height, mip_depth },
+		};
+		cmd_buf.cmd_buf->copyImageToBuffer(src_texture.vma_image.GetImage(), vk::ImageLayout::eGeneral, staging_buffer.buffer.GetBuffer(), buffer_image_copy);
+
+		SubmitAndWaitInternal(ctx, cmd_buf);
+
+		void* mapped_ptr = staging_buffer.Map(*ctx.device);
+		VkResult result = vmaInvalidateAllocation(ctx.vma_allocator, staging_buffer.buffer.GetAllocation(), 0, size);
+		assert(result == VK_SUCCESS);
+		std::memcpy(dst_ptr, mapped_ptr, size);
+		staging_buffer.Unmap(*ctx.device);
 	}
 }

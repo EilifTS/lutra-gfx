@@ -33,12 +33,12 @@ namespace lgx
 	}
 
 	/* Helpers */
-	inline void change_layout(vk::CommandBuffer cmd_buf, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::ImageAspectFlags aspect)
+	inline void change_layout(vk::CommandBuffer cmd_buf, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout, vk::ImageAspectFlags aspect, uint32_t level_count = 1)
 	{
 		const vk::ImageSubresourceRange range{
 			.aspectMask = aspect,
 			.baseMipLevel = 0,
-			.levelCount = 1,
+			.levelCount = level_count,
 			.baseArrayLayer = 0,
 			.layerCount = 1,
 		};

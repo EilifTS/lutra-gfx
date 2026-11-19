@@ -4,6 +4,7 @@
 #include <lutra-gfx/CommandBuffer.h>
 #include <lutra-gfx/RenderTarget.h>
 #include <lutra-gfx/ComputePipeline.h>
+#include <lutra-gfx/Texture3D.h>
 #include <vector>
 #include <cstdint>
 #include <string>
@@ -230,6 +231,260 @@ TEST(Graphics, ComputeManyDispatches)
 
 		EXPECT_EQ(result[0], static_cast<int32_t>(dispatch_count * thread_count));
 		EXPECT_EQ(result[1], static_cast<int32_t>(dispatch_count * thread_count * (thread_count + 1) / 2));
+	}
+}
+
+TEST(Texture3D, MipHelpers_CountDownToASingleTexel)
+{
+	EXPECT_EQ(lgx::CalculateMipCount(8, 4, 2), 4u);
+	EXPECT_EQ(lgx::CalculateMipCount(1, 1, 1), 1u);
+	EXPECT_EQ(lgx::CalculateMipCount(128, 128, 1), 8u);
+	EXPECT_EQ(lgx::CalculateMipSize(8, 1), 4u);
+	EXPECT_EQ(lgx::CalculateMipSize(2, 3), 1u);
+}
+
+TEST(Texture3D, UploadDownloadRoundTrip_EveryMip)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Texture3DInfo info{};
+	info.width = 8;
+	info.height = 4;
+	info.depth = 2;
+	info.format = lgx::TextureFormat::RGBA8;
+	info.mip_count = lgx::CalculateMipCount(info.width, info.height, info.depth);
+	lgx::Texture3D texture(ctx, info);
+	EXPECT_EQ(texture.Width(), 8u);
+	EXPECT_EQ(texture.Height(), 4u);
+	EXPECT_EQ(texture.Depth(), 2u);
+	EXPECT_EQ(texture.MipCount(), 4u);
+
+	std::vector<std::vector<uint8_t>> mips;
+	lgx::CommandBuffer cmd_buf(ctx);
+	for (uint32_t mip = 0; mip < texture.MipCount(); mip++)
+	{
+		const uint32_t texel_count = lgx::CalculateMipSize(info.width, mip) * lgx::CalculateMipSize(info.height, mip) * lgx::CalculateMipSize(info.depth, mip);
+		std::vector<uint8_t> data(texel_count * 4);
+		for (size_t i = 0; i < data.size(); i++)
+		{
+			data[i] = static_cast<uint8_t>(mip * 50 + i);
+		}
+		cmd_buf.ScheduleUpload(data.data(), texture, mip);
+		mips.push_back(std::move(data));
+	}
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	for (uint32_t mip = 0; mip < texture.MipCount(); mip++)
+	{
+		std::vector<uint8_t> readback(mips[mip].size(), 0);
+		lgx::Download(ctx, texture, readback.data(), mip);
+		EXPECT_EQ(readback, mips[mip]) << "mip " << mip;
+	}
+}
+
+TEST(Texture3D, ComputeStorageWrite_ToOneMip_LeavesTheOthersAlone)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Texture3DInfo info{};
+	info.width = 8;
+	info.height = 4;
+	info.depth = 4;
+	info.format = lgx::TextureFormat::R32Float;
+	info.mip_count = lgx::CalculateMipCount(info.width, info.height, info.depth);
+	info.storage = true;
+	lgx::Texture3D texture(ctx, info);
+
+	const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/Texture3DFill.cs.spv";
+	lgx::ComputePipelineInfo pipeline_info{};
+	pipeline_info.cs_name = cs_path.c_str();
+	pipeline_info.AddStorageImage(0);
+	lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+	const std::vector<float> mip0_data(8 * 4 * 4, -1.0f);
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.ScheduleUpload(mip0_data.data(), texture, 0);
+	cmd_buf.Barrier(texture, lgx::ResourceUsage::TransferDst, lgx::ResourceUsage::ComputeWrite);
+	cmd_buf.BindPipeline(pipeline);
+	cmd_buf.BindStorageImage(texture.MipView(1), 0);
+	cmd_buf.Dispatch(1, 1, 1);
+	cmd_buf.Barrier(texture, lgx::ResourceUsage::ComputeWrite, lgx::ResourceUsage::TransferSrc);
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	std::vector<float> mip1(4 * 2 * 2, 0.0f);
+	lgx::Download(ctx, texture, mip1.data(), 1);
+	for (uint32_t z = 0; z < 2; z++)
+	{
+		for (uint32_t y = 0; y < 2; y++)
+		{
+			for (uint32_t x = 0; x < 4; x++)
+			{
+				EXPECT_EQ(mip1[(z * 2 + y) * 4 + x], static_cast<float>(x + 10 * y + 100 * z));
+			}
+		}
+	}
+
+	std::vector<float> mip0(mip0_data.size(), 0.0f);
+	lgx::Download(ctx, texture, mip0.data(), 0);
+	EXPECT_EQ(mip0, mip0_data);
+}
+
+namespace
+{
+	/* Samples the texture, at the position and mip of every query, in a compute shader with a linear clamp sampler */
+	std::vector<float> SampleTexture(lgx::GraphicsContext& ctx, lgx::Texture3D& texture, const std::vector<float>& queries_xyzw)
+	{
+		const uint32_t query_count = static_cast<uint32_t>(queries_xyzw.size() / 4);
+		lgx::Buffer query_buffer(ctx, queries_xyzw.size() * sizeof(float), lgx::BufferType::StorageBuffer);
+		lgx::Buffer result_buffer(ctx, query_count * sizeof(float), lgx::BufferType::StorageBuffer);
+
+		const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/Texture3DSample.cs.spv";
+		lgx::ComputePipelineInfo pipeline_info{};
+		pipeline_info.cs_name = cs_path.c_str();
+		pipeline_info.AddTexture(0);
+		pipeline_info.AddImmutableSampler(1, lgx::SamplerType::LinearClamp);
+		pipeline_info.AddStorageBuffer(2);
+		pipeline_info.AddStorageBuffer(3);
+		lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+		lgx::CommandBuffer cmd_buf(ctx);
+		cmd_buf.ScheduleUpload(queries_xyzw.data(), queries_xyzw.size() * sizeof(float), query_buffer);
+		cmd_buf.Barrier(query_buffer, lgx::ResourceUsage::TransferDst, lgx::ResourceUsage::ShaderRead);
+		cmd_buf.Barrier(texture, lgx::ResourceUsage::TransferDst, lgx::ResourceUsage::ShaderRead);
+		cmd_buf.BindPipeline(pipeline);
+		cmd_buf.BindTexture(texture.DefaultView(), 0);
+		cmd_buf.BindBuffer(query_buffer, 2);
+		cmd_buf.BindBuffer(result_buffer, 3);
+		cmd_buf.Dispatch(query_count, 1, 1);
+		cmd_buf.Barrier(result_buffer, lgx::ResourceUsage::ComputeWrite, lgx::ResourceUsage::TransferSrc);
+		lgx::SubmitAndWait(ctx, cmd_buf);
+
+		std::vector<float> results(query_count, 0.0f);
+		lgx::Download(ctx, result_buffer, results.data(), results.size() * sizeof(float));
+		return results;
+	}
+
+	constexpr float snorm_step = 1.0f / 127.0f;
+}
+
+TEST(Texture3D, Sampling_InterpolatesBetweenTexelsAndClampsAtTheEdge)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Texture3DInfo info{};
+	info.width = 2;
+	info.height = 2;
+	info.depth = 2;
+	info.format = lgx::TextureFormat::R8Snorm;
+	lgx::Texture3D texture(ctx, info);
+
+	/* The texel at (x, y, z) is 16 * (x + 2 y + 4 z) */
+	std::vector<int8_t> texels(8);
+	for (int8_t i = 0; i < 8; i++)
+	{
+		texels[i] = static_cast<int8_t>(i * 16);
+	}
+	lgx::CommandBuffer upload_cmd_buf(ctx);
+	upload_cmd_buf.ScheduleUpload(texels.data(), texture, 0);
+	lgx::SubmitAndWait(ctx, upload_cmd_buf);
+
+	const std::vector<float> queries = {
+		0.25f, 0.25f, 0.25f, 0.0f, /* the middle of the first texel */
+		0.75f, 0.75f, 0.75f, 0.0f, /* the middle of the last texel */
+		0.50f, 0.50f, 0.50f, 0.0f, /* between all of them */
+		0.50f, 0.25f, 0.25f, 0.0f, /* between the first and the second */
+		0.00f, 0.00f, 0.00f, 0.0f, /* outside, in front of the first texel */
+		1.50f, 1.50f, 1.50f, 0.0f, /* outside, behind the last texel */
+	};
+	const std::vector<float> results = SampleTexture(ctx, texture, queries);
+
+	constexpr float tolerance = 0.005f;
+	EXPECT_NEAR(results[0], 0.0f * snorm_step, tolerance);
+	EXPECT_NEAR(results[1], 112.0f * snorm_step, tolerance);
+	EXPECT_NEAR(results[2], 56.0f * snorm_step, tolerance);
+	EXPECT_NEAR(results[3], 8.0f * snorm_step, tolerance);
+	EXPECT_NEAR(results[4], 0.0f * snorm_step, tolerance);
+	EXPECT_NEAR(results[5], 112.0f * snorm_step, tolerance);
+}
+
+TEST(Texture3D, Sampling_PicksTheMipOfTheLevel)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Texture3DInfo info{};
+	info.width = 4;
+	info.height = 4;
+	info.depth = 4;
+	info.format = lgx::TextureFormat::R8Snorm;
+	info.mip_count = 3;
+	lgx::Texture3D texture(ctx, info);
+
+	lgx::CommandBuffer upload_cmd_buf(ctx);
+	std::vector<std::vector<int8_t>> mips;
+	for (uint32_t mip = 0; mip < info.mip_count; mip++)
+	{
+		const uint32_t side = lgx::CalculateMipSize(info.width, mip);
+		mips.emplace_back(side * side * side, static_cast<int8_t>((mip + 1) * 20));
+		upload_cmd_buf.ScheduleUpload(mips.back().data(), texture, mip);
+	}
+	lgx::SubmitAndWait(ctx, upload_cmd_buf);
+
+	const std::vector<float> queries = {
+		0.3f, 0.6f, 0.9f, 0.0f,
+		0.3f, 0.6f, 0.9f, 1.0f,
+		0.3f, 0.6f, 0.9f, 2.0f,
+	};
+	const std::vector<float> results = SampleTexture(ctx, texture, queries);
+
+	EXPECT_NEAR(results[0], 20.0f * snorm_step, 0.005f);
+	EXPECT_NEAR(results[1], 40.0f * snorm_step, 0.005f);
+	EXPECT_NEAR(results[2], 60.0f * snorm_step, 0.005f);
+}
+
+TEST(Texture3D, SnormStorageWrite_ThenSample_ReadsWhatTheShaderWrote)
+{
+	lgx::GraphicsContext ctx("Test context");
+
+	lgx::Texture3DInfo info{};
+	info.width = 4;
+	info.height = 4;
+	info.depth = 4;
+	info.format = lgx::TextureFormat::R8Snorm;
+	info.storage = true;
+	lgx::Texture3D texture(ctx, info);
+
+	const std::string cs_path = std::string(TESTS_SHADER_DIR) + "/Texture3DFillSnorm.cs.spv";
+	lgx::ComputePipelineInfo pipeline_info{};
+	pipeline_info.cs_name = cs_path.c_str();
+	pipeline_info.AddStorageImage(0);
+	lgx::ComputePipeline pipeline(ctx, pipeline_info);
+
+	lgx::CommandBuffer cmd_buf(ctx);
+	cmd_buf.BindPipeline(pipeline);
+	cmd_buf.BindStorageImage(texture.MipView(0), 0);
+	cmd_buf.Dispatch(1, 1, 1);
+	cmd_buf.Barrier(texture, lgx::ResourceUsage::ComputeWrite, lgx::ResourceUsage::TransferSrc);
+	lgx::SubmitAndWait(ctx, cmd_buf);
+
+	/* The shader writes -1, -1/3, 1/3 and 1 along x */
+	std::vector<int8_t> texels(4 * 4 * 4, 0);
+	lgx::Download(ctx, texture, texels.data(), 0);
+	const int8_t expected_row[4] = { -127, -42, 42, 127 };
+	for (uint32_t i = 0; i < texels.size(); i++)
+	{
+		EXPECT_EQ(texels[i], expected_row[i % 4]) << "texel " << i;
+	}
+
+	const std::vector<float> queries = {
+		0.125f, 0.5f, 0.5f, 0.0f,
+		0.375f, 0.5f, 0.5f, 0.0f,
+		0.625f, 0.5f, 0.5f, 0.0f,
+		0.875f, 0.5f, 0.5f, 0.0f,
+	};
+	const std::vector<float> results = SampleTexture(ctx, texture, queries);
+	for (uint32_t i = 0; i < 4; i++)
+	{
+		EXPECT_NEAR(results[i], static_cast<float>(expected_row[i]) * snorm_step, 0.005f);
 	}
 }
 
